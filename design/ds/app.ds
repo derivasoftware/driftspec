@@ -10,6 +10,8 @@ package driftspec@ds {
     @requirement REQ-00166-1
     @requirement REQ-00205-1
     @requirement REQ-00206-1
+    @requirement REQ-00302-1
+    @requirement REQ-00303-1
     @consumes driftspec@ds@workspace             // each verb runs its use case through the workspace's interface (DS-459)
 
     requirement REQ-00166-1 {
@@ -97,6 +99,149 @@ package driftspec@ds {
       never f in driftspec@ds@app
     }
 
+    // ---- the doors reach the engine through the workspace (DS-410, decisions 4 and 5; DS-474), as rules ----------
+    requirement REQ-00302-1 {
+      status: draft
+      @refines REQ-00205-1
+      title: The command line shall reach the engine only through the workspace, the sinks of emit, the language and its manual, the theme, and the parse and drawing of a render-IR document
+      text:
+        A command opens a workspace (api's Workspace, its files and what it is loaded for), runs its use case through
+        the workspace's interface with the request and the outcome of the service, lends it the sink SinkFactory
+        makes, held as an ISink, and turns NotImplemented into its exit code. It reads the metamodel and its manual
+        for the help (the exit codes, the questions ds query answers), and the theme for what it draws itself: a
+        render-IR document someone else produced, which has no workspace and no use case, parsed where it arrives
+        and drawn through render (svg, text) or described (layout, cells). Nothing else of the engine is the command
+        line's: it holds no model, asks no question of one and draws nothing of a workspace.
+      rationale:
+        DS-410 (Owner, 2026-11-24; decision 5): the command line reaches the engine only through the workspace.
+        DS-474 (coordinator, 2026-11-25): the allow-list as the command line needs it once see-design draws; the
+        questions' table moves into the manual (decision (c)), so the help reads the manual like every command's.
+      tags: architecture, cli, app
+      verification VER-00324-1 {
+        status: draft
+        title: Integration tests confirm the design of the command line reaches the engine only through what it is allowed, and is told when a command holds the model, names the scene, asks the check or draws a workspace itself
+        method: test
+        tests:
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheDesignOfDsKeepsTheRulesOfTheDoors
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.ACommandThatReachesTheEngineAroundTheWorkspaceIsTold
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheDrawingOfARenderIrDocumentIsTheCommandLinesOwn
+      }
+    }
+
+    requirement REQ-00303-1 {
+      status: draft
+      @refines REQ-00205-1
+      title: No door of ds shall depend on the model, its export to a render-IR, the query or format's writers, beyond what the workspace needs to hold and load a design
+      text:
+        The command line and the api are doors: they translate a request into a use case and its outcome into their
+        own convention, and draw nothing. No class of either holds or names the model, asks a workspace for it,
+        exports a diagram's render-IR, asks the query or names a writer of format (its factory, its interface, a
+        writer or their options). Two exemptions are written into the rule. For good: api's Workspace, Api and
+        Bound, the loading machinery, whose job is to hold the model and load it (bound, checked, the steps it
+        needs). For now: api's Browser, the playground's door, which reads the model for its artefacts and asks
+        what each diagram shows; DS-460 (the playground answers through a use case of its own) removes it.
+      rationale:
+        DS-410 (Owner, 2026-11-24; decision 4): doors know no model. Owner, 2026-11-25 (via code-62, DS-474): the
+        exemptions, Workspace, Api and Bound for good, Browser until DS-460, so the gap shows in the design.
+      tags: architecture, cli, api, app
+      verification VER-00325-1 {
+        status: draft
+        title: Integration tests confirm no door of ds's design depends on the model, the IR's export, the query or format's writers beyond the exempted classes, and any other class of app or api that does is told
+        method: test
+        tests:
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheDesignOfDsKeepsTheRulesOfTheDoors
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.ADoorThatHoldsOrAsksForTheModelIsTold
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.ADoorThatExportsTheIrAsksTheQueryOrNamesAWriterIsTold
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheExemptionsCoverTheLoadingMachineryAndTheBrowserAlone
+      }
+    }
+
+    // what a class reaches: what it depends on (a member that owns, refers to or uses; a behaviour that uses), and what
+    // a behaviour of one of its members calls, the operation and what holds it
+    definition reaches(a, b) {
+      title: a depends on b, or a behaviour of one of its members calls b or an operation b holds
+      if depends(a, b)
+      if m in a, s behaviour-of m, y in s, y calls b
+      if m in a, s behaviour-of m, y in s, y calls o, o in b
+    }
+
+    definition a-type(x) {
+      title: x is a type: a class (a dataclass among them), an enum or an interface
+      if x is class
+      if x is enum
+      if x is interface
+    }
+
+    // a door: a class of the command line or of the api
+    definition a-door(c) {
+      title: c is a class of a door of ds, the command line or the api
+      if c in driftspec@ds@app
+      if c in driftspec@ds@api
+    }
+
+    // what a door knows nothing of: the model, the workspace's model asked of it, the IR's export, the query, the
+    // writers of format
+    definition the-model-or-a-drawing(x) {
+      title: x is the model, the model a workspace holds, the export of a render-IR, a part of the query, or a writer of format, its factory, its interface or their options
+      if x = driftspec@ds@model::Model
+      if x = driftspec@ds@api::Workspace::model
+      if x = driftspec@ds@render::IrExport
+      if x in driftspec@ds@query
+      if x = driftspec@ds@format::FormatFactory
+      if x = driftspec@ds@format::FormatOptions
+      if x is class, x in driftspec@ds@format, name(x) = "IFormat"
+      if x is class, x in driftspec@ds@format, x inherits i, name(i) = "IFormat"
+    }
+
+    // the exemptions (the Owner, 2026-11-25): the loading machinery for good, whose job is to hold the model and load
+    // it; the playground's door until DS-460 gives it a use case of its own
+    definition holds-the-model(c) {
+      title: c is api's loading machinery, Workspace, Api or Bound, or, until DS-460, api's Browser
+      if c = driftspec@ds@api::Workspace
+      if c = driftspec@ds@api::Api
+      if c = driftspec@ds@api::Bound
+      if c = driftspec@ds@api::Browser   // until DS-460: the playground answers through a use case of its own
+    }
+
+    rule doors-know-no-model {
+      title: no class of the command line or the api but the loading machinery (and, until DS-460, the browser) depends on the model, the IR's export, the query or format's writers, so a door draws nothing and reaches the engine through a use case
+      @requirement REQ-00303-1
+      for class c in driftspec@ds
+      where a-door(c), not holds-the-model(c)
+      never reaches(c, x), the-model-or-a-drawing(x)
+    }
+
+    // what the command line reaches of the engine, and nothing else (DS-410, decision 5)
+    definition reached-by-the-command-line(x) {
+      title: x is the workspace or what it is opened and run with, a sink of emit's interface or its factory or failure, the language and its manual, the theme, or the parse and drawing of a render-IR document
+      if x in driftspec@ds@app
+      if x = driftspec@ds@workspace
+      if x in driftspec@ds@workspace
+      if x = driftspec@ds@api::Workspace
+      if x = driftspec@ds@api::Output
+      if x = driftspec@ds@service::Request
+      if x = driftspec@ds@service::Outcome
+      if x = driftspec@ds@service::BadRequest
+      if x = driftspec@ds@emit::SinkFactory
+      if x = driftspec@ds@emit::ISink
+      if x = driftspec@ds@emit::NotImplemented
+      if x = driftspec@ds@model::Metamodel
+      if x = driftspec@ds@model::Manual
+      if x in driftspec@ds@theme
+      if x = driftspec@ds@render::IrDocument
+      if x = driftspec@ds@render::Svg
+      if x = driftspec@ds@render::Text
+      if x = driftspec@ds@format::DescriptionFactory
+      if x = driftspec@ds@format::ADescription
+    }
+
+    rule the-command-line-reaches-the-engine-through-the-workspace {
+      title: no class of the command line reaches anything of the engine but the workspace, the sinks, the language and its manual, the theme, and the parse and drawing of a render-IR document
+      @requirement REQ-00302-1
+      for class c in driftspec@ds@app
+      never reaches(c, x), x in driftspec@ds, a-type(x), not reached-by-the-command-line(x)
+    }
+
     // the program's main hands its command line here (DS-311): C++ starts a program at a function, so it is app's one
     function main(argv: std::vector<std::string>) -> int
 
@@ -160,15 +305,14 @@ package driftspec@ds {
       + run() -> service::Outcome fails std::runtime_error, BadRequest, emit::NotImplemented
     }
 
-    // ds render: UC-00002-1 through see-design for the scene, a diagram's layout and its cells. What see-design does
-    // not offer yet is door work pending, kept as the command line has done it: the viewer's page around the scene and
-    // its focus, a diagram drawn in svg and text (until DS-400) or written as its IR (see-design does not offer it
-    // yet), the files a diagram reads that did not read whole (DS-433), and a render-IR document someone else
-    // produced, which has no workspace.
+    // ds render: UC-00002-1 through see-design for every format, the scene and the page, a diagram's IR, layout and
+    // cells, and its drawings in svg and text (DS-474). The door draws nothing of a workspace and holds no model; what
+    // it draws itself is a render-IR document someone else produced, which has no workspace and no use case.
     class RenderCommand : ICommand {
       @requirement REQ-00205-1
+      @requirement REQ-00302-1
       - refs metamodel_: model::Metamodel
-      - refs theme_: theme::Theme
+      - refs theme_: theme::Theme                    // what a render-IR document is drawn in (DS-393)
       - input_: std::string
       - diagram_: std::string
       - format_: std::string
@@ -181,14 +325,11 @@ package driftspec@ds {
       + name() -> std::string
       + summary() -> std::string
       + declare(sub: CLI::App) -> void
-      + run() -> service::Outcome fails std::runtime_error, BadRequest, NotImplemented, emit::NotImplemented
+      // a render-IR document of a kind render does not draw is std::invalid_argument, said as bad input, exit 2
+      + run() -> service::Outcome fails std::runtime_error, std::invalid_argument, BadRequest, NotImplemented, emit::NotImplemented
       - document() -> service::Outcome                          // a render-IR document: no workspace, so no viewer
-      - scene(workspace: api::Workspace) -> service::Outcome    // the viewer's scene, see-design's
-      - page(workspace: api::Workspace) -> service::Outcome     // the viewer's page: door work pending
-      - diagram(workspace: api::Workspace) -> service::Outcome  // a diagram: its layout and cells see-design's, its drawings and IR the door's
-      - unread(model: model::Model) -> std::string              // what a diagram reads that did not read whole (DS-433)
-      - draw(ir: render::IrDocument, workspace: bool) -> std::string   // handed the document (DS-458)
-      - drawingOptions(workspace: bool) -> format::FormatOptions
+      - request() -> service::Request                           // what see-design is asked: the format and every option given
+      - draw(ir: render::IrDocument) -> std::string             // a render-IR document drawn, handed the document (DS-458)
       - written(text: std::string, end: std::string, outcome: service::Outcome) -> service::Outcome   // unwritten when -o cannot be
     }
 
@@ -379,8 +520,12 @@ package driftspec@ds {
       return noWorkspace
     }
 
-    // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
+    // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376). Every format
+    // is see-design's (DS-474), in the sink of its technology: the structure in JSON, the scene and the IR indented for
+    // a reader, a layout and its cells compact, a line after (DS-398); a drawing in svg or text and the page in the
+    // text sink, as they are drawn
     sequence RenderCommand::run {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       -> Disk::isDirectory(input_) -> found
       opt a render-IR document someone else produced / document {
@@ -390,15 +535,14 @@ package driftspec@ds {
       -> Disk::whyNoWorkspace(input_) -> why
       -> Disk::files(input_) -> files
       -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
-      opt its scene / scene {
-        -> scene(workspace) -> outcome
-        return outcome
+      opt a diagram's format, with no diagram named / bad-usage {
+        return badUsage
       }
-      opt the viewer's page / page {
-        -> page(workspace) -> outcome
-        return outcome
-      }
-      -> diagram(workspace) -> outcome
+      -> emit::SinkFactory::of(technology, indented) -> sink
+      -> request() -> asked
+      -> loaded.run(seeDesign, asked, sink) -> outcome
+      -> sink.result() -> drawn
+      -> written(drawn, end, outcome) -> outcome
       return outcome
     }
 
@@ -408,20 +552,37 @@ package driftspec@ds {
       return noWorkspace
     }
 
+    // the diagram named is not in the workspace, or what it reads did not read whole (DS-433): see-design says it, and
+    // nothing is written
     sequence RenderCommand::run / no-diagram {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       -> Disk::files(input_) -> files
       -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
-      -> diagram(workspace) / no-diagram -> outcome
+      -> request() -> asked
+      -> loaded.run(seeDesign, asked, sink) -> outcome
       return outcome
     }
 
     sequence RenderCommand::run / unwritten {        // the file -o names cannot be written: the door's
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       -> Disk::files(input_) -> files
       -> api::Workspace::madeFor(metamodel_, files, shown, diagram_) -> workspace
-      -> scene(workspace) / unwritten -> outcome
+      -> loaded.run(seeDesign, asked, sink) -> outcome
+      -> written(drawn, end, outcome) / unwritten -> outcome
       return outcome
+    }
+
+    // the format and the diagram, the width, whether the terminal shows colour, the workspace as it was given and that a
+    // diagram is drawn only of what read whole (DS-433); for the page its title, a reader's stylesheet, whether it is
+    // embedded and how tall
+    sequence RenderCommand::request {
+      opt the viewer's page / page {
+        -> Disk::titleOf(input_) -> title
+        -> Disk::read(css_) -> style
+      }
+      return asked
     }
 
     // a render-IR document is written as it came, or read once where its text arrives (DS-458) and drawn as -f names;
@@ -440,106 +601,18 @@ package driftspec@ds {
         return outcome
       }
       -> render::IrDocument::parse(text) -> document
-      -> draw(document, false) -> picture
+      -> draw(document) -> picture
       -> written(picture, end, drawn) -> outcome
       return outcome
     }
 
-    // the scene is the document (DS-126), see-design's, described into the sink of the technology -f names, indented
-    // for a reader (DS-398)
-    sequence RenderCommand::scene {
-      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
-      -> emit::SinkFactory::of(format_, true) -> sink
-      -> loaded.run(seeDesign, request, sink) -> outcome
-      -> sink.result() -> scene
-      -> written(scene, end, outcome) -> outcome
-      return outcome
-    }
-
-    sequence RenderCommand::scene / unwritten {
-      -> written(scene, end, outcome) / unwritten -> outcome
-      return outcome
-    }
-
-    // door work pending: see-design frames no viewer on a diagram yet. What the diagram shows is the page's focus, and
-    // the page is the viewer's, the one FormatFactory finds by name, around the scene
-    sequence RenderCommand::page {
-      local query: query::IQuery
-      local scene: scene::IScene
-      local html: format::IFormat<scene::SceneDocument>
-      -> workspace.model() -> model
-      opt a diagram to open the viewer framed on / framed {
-        -> query::QueryFactory::of(model, metamodel_) -> query
-        -> query.ask(question, diagram_) -> shown
-        opt no such diagram / no-diagram {
-          return noDiagram
-        }
-      }
-      -> Disk::titleOf(input_) -> title
-      -> Disk::read(css_) -> style
-      -> emit::SinkFactory::json(false) -> sink
-      -> scene.build() -> document
-      -> format::FormatFactory::scene() -> writers
-      -> html.write(document, options, sink) -> page
-      -> written(page, end, drawn) -> outcome
-      return outcome
-    }
-
-    // a diagram is its IR (DS-126): its layout and its cells are see-design's, described in compact JSON, a line after
-    // (DS-398), and the workspace is loaded with only the steps of the check a drawing reads (DS-376). Its drawings in
-    // svg and text (until DS-400) and its IR (see-design does not offer it yet) are door work pending, written by the
-    // writer -f names; a diagram is not drawn of what did not read whole (DS-433)
-    sequence RenderCommand::diagram {
-      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
-      local ir: render::IrExport
-      -> workspace.model() -> model
-      -> unread(model) -> why
-      opt no diagram named / bad-usage {
-        return badUsage
-      }
-      alt its layout or its cells / described {
-        -> emit::SinkFactory::json(false) -> sink
-        -> loaded.run(seeDesign, request, sink) -> outcome
-        -> sink.result() -> picture
-      } else {
-        -> model::Identity::ofDiagram(diagram_) -> id
-        -> ir.document(id) -> document
-        alt the IR itself, indented for a reader / ir {      // described by the door, not read back (DS-418, DS-458)
-          -> emit::SinkFactory::json(true) -> indented
-          -> format::DescriptionFactory::ir(document) -> irDescription
-          -> irDescription.describe(indented)
-          -> indented.result() -> picture
-        } else {
-          -> draw(document, true) -> picture                 // the document drawn, with no text between (DS-458)
-        }
-      }
-      -> written(picture, end, outcome) -> outcome
-      return outcome
-    }
-
-    sequence RenderCommand::diagram / no-diagram {   // the diagram named is not in the workspace, or what it reads did not read whole
-      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
-      local ir: render::IrExport
-      -> workspace.model() -> model
-      -> unread(model) -> why
-      -> loaded.run(seeDesign, request, sink) -> outcome
-      -> ir.document(id) -> document
-      return noDiagram
-    }
-
-    sequence RenderCommand::unread {
-      local query: query::IQuery
-      -> model.find(id) -> diagram
-      -> query::QueryFactory::of(model, metamodel_) -> query
-      -> query.ask(question, diagram_) -> shown
-      -> model.findings() -> findings
-      return said
-    }
-
+    // the one drawing the command line makes itself, of a render-IR document, which has no workspace: its layout and
+    // its cells described in compact JSON, a line after (DS-398); a drawing in svg or text as render draws it
     sequence RenderCommand::draw {
-      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name: svg or text
-      -> emit::SinkFactory::json(false) -> sink
+      local svg: render::Svg
+      local text: render::Text
       opt its layout or its cells / described {
+        -> emit::SinkFactory::json(false) -> sink
         alt its layout / layout {
           -> format::DescriptionFactory::layout(ir, theme_, width_) -> description
         } else / cells {
@@ -549,9 +622,11 @@ package driftspec@ds {
         -> sink.result() -> picture
         return picture
       }
-      -> format::FormatFactory::diagram(theme_) -> writers
-      -> drawingOptions(workspace) -> options
-      -> chosen.write(ir, options, sink) -> picture
+      alt in svg / svg {
+        -> svg.render(ir, width_) -> picture
+      } else {
+        -> text.render(ir, color, width_) -> picture
+      }
       return picture
     }
 
@@ -565,6 +640,16 @@ package driftspec@ds {
       local output: Output
       -> output.write(text, end) -> done
       return unwritten
+    }
+
+    // its help reads the manual's one table of questions (DS-436, DS-474), as every command's exit codes do
+    sequence QueryCommand::summary {
+      -> model::Manual::usage() -> usage
+      return summary
+    }
+
+    sequence QueryCommand::declare {
+      -> model::Manual::questions() -> questions
     }
 
     // the answers, described into the sink of the technology asked for (DS-399): with --json the JSON sink (DS-398),

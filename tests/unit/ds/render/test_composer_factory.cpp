@@ -10,6 +10,7 @@
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
 #include "ds/render/SequenceComposer.hpp"
+#include "ds/render/TableComposer.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace {
@@ -53,7 +54,9 @@ TEST(TestComposerFactory, EachKindAndTechnologyHasItsComposerAndAnyOtherIsRefuse
   EXPECT_NE(dynamic_cast<const ds::render::SequenceComposer*>(sequenceSvg.get()), nullptr);
   const auto sequenceText = ds::render::ComposerFactory::of("sequence", "text", m);
   EXPECT_NE(dynamic_cast<const ds::render::SequenceComposer*>(sequenceText.get()), nullptr);
-  EXPECT_THROW(ds::render::ComposerFactory::of("table", "svg", m), std::invalid_argument);  // not yet below the drawing
+  const auto table = ds::render::ComposerFactory::of("table", "text", m);
+  EXPECT_NE(dynamic_cast<const ds::render::TableComposer*>(table.get()), nullptr);
+  EXPECT_THROW(ds::render::ComposerFactory::of("table", "png", m), std::invalid_argument);
 }
 
 }  // namespace

@@ -276,6 +276,14 @@ class PySink : public ds::emit::ISink {
   ds::emit::ISink& table(const std::vector<std::string_view>&) override { return *this; }
   ds::emit::ISink& row(const std::vector<std::string_view>&) override { return *this; }
   ds::emit::ISink& endTable() override { return *this; }
+  /// A text already written in its technology, a drawing or the viewer's page (DS-474): kept as the str it is, the
+  /// object built, so the Python face gets the drawing as ds render writes it. Once per document: a second one is
+  /// refused.
+  ds::emit::ISink& verbatim(std::string_view text) override {
+    if (verbatim_) throw std::logic_error("PySink: a second verbatim text in one document");
+    verbatim_ = true;
+    return put(PyUnicode_DecodeUTF8(text.data(), static_cast<Py_ssize_t>(text.size()), "strict"));
+  }
   /// The description of `document` ends: one that built nothing here fails NotImplemented, as the JSON sink does.
   ds::emit::ISink& described(std::string_view document) override {
     if (!root_) throw ds::emit::NotImplemented(std::string(document), "python", {});
@@ -288,6 +296,7 @@ class PySink : public ds::emit::ISink {
     PyObject* out = root_ ? root_ : (Py_INCREF(Py_None), Py_None);
     root_ = nullptr;
     open_.clear();
+    verbatim_ = false;
     return out;
   }
 
@@ -321,6 +330,7 @@ class PySink : public ds::emit::ISink {
   PyObject* root_ = nullptr;
   std::vector<PyObject*> open_;  ///< the record or list being written, innermost last (borrowed: their parent holds them)
   std::string key_;
+  bool verbatim_ = false;  ///< a verbatim text is the object built since the last take
 };
 
 // a request as a use case reads it: its arguments by name, each a text
@@ -341,7 +351,8 @@ bool requestOf(PyObject* dict, ds::service::Request* out) {
   return true;
 }
 
-// run(name, request) -> (outcome, object): the use case of that name over the design the workspace holds (DS-459).
+// run(name, request) -> (outcome, object, message): the use case of that name over the design the workspace holds
+// (DS-459), and what its outcome says, "" when it says nothing (DS-479).
 // The model is loaded with the GIL released, then the use case describes its document as Python objects, holding it;
 // a request that is not the use case's is ValueError, what the sink cannot write NotImplementedError as elsewhere
 PyObject* workspaceRun(PyObject* self, PyObject* args) {
@@ -398,7 +409,7 @@ PyObject* workspaceRun(PyObject* self, PyObject* args) {
     return nullptr;
   }
   PyObject* built = sink.take();
-  PyObject* out = Py_BuildValue("(sN)", outcome.name.c_str(), built);
+  PyObject* out = Py_BuildValue("(sNs)", outcome.name.c_str(), built, outcome.message.c_str());
   return out;
 }
 
@@ -449,7 +460,8 @@ PyMethodDef kWorkspaceMethods[] = {
     {"render", ask3<&ds::api::Workspace::render>, METH_VARARGS, "render(diagram, format, width) -> str: '' when none"},
     {"page", workspacePage, METH_VARARGS, "page(title, focus) -> str: the viewer, framed on the identities given"},
     {"reload", workspaceReload, METH_VARARGS, "reload(files) -> None: loaded again from the files given, in place"},
-    {"run", workspaceRun, METH_VARARGS, "run(name, request) -> (outcome, object): a use case, described as Python objects"},
+    {"run", workspaceRun, METH_VARARGS,
+     "run(name, request) -> (outcome, object, message): a use case, described as Python objects, and what its outcome says"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyType_Slot kWorkspaceSlots[] = {

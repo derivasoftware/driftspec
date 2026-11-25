@@ -88,6 +88,9 @@ class Theme {
   /// A token by its name; a name the theme lacks is a logic error.
   const Token& token(const std::string& name) const;
   const Font& font() const { return font_; }
+  /// A stylesheet with its values put in (DS-477): {{name}} is a token's light value, {{name:dark}} its dark one (the
+  /// light one when it has none), {{font-family}} and {{font-size}} this theme's font's.
+  std::string filled(const std::string& stylesheet, const std::vector<Token>& tokens) const;
   Measures measures(Sink sink) const { return sink == Sink::svg ? font_.svg : font_.text; }
   const std::vector<Terminal>& terminal() const { return terminal_; }
   /// A role's SGR parameter.

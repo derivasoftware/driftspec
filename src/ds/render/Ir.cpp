@@ -7,9 +7,7 @@
 namespace ds {
 namespace render {
 
-namespace {
-
-std::map<std::string, std::string> refsOf(const nlohmann::json& j) {
+std::map<std::string, std::string> IrDocument::refsOf(const nlohmann::json& j) {
   std::map<std::string, std::string> out;
   auto it = j.find("refs");
   if (it == j.end() || !it->is_object()) return out;
@@ -19,12 +17,10 @@ std::map<std::string, std::string> refsOf(const nlohmann::json& j) {
   return out;
 }
 
-std::string text(const nlohmann::json& j, const char* key) {
+std::string IrDocument::text(const nlohmann::json& j, const char* key) {
   auto it = j.find(key);
   return it != j.end() && it->is_string() ? it->get<std::string>() : std::string();
 }
-
-}  // namespace
 
 IrEdge IrEdge::between(const std::string& from, const std::string& to, const std::string& kind) {
   IrEdge edge;

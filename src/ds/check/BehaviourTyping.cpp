@@ -69,7 +69,7 @@ bool BehaviourTyping::reportOverloads(const model::Entity& seq, const std::strin
                                                  seq.name + " calls " + name + " with " + std::to_string(message.argc) + " argument" +
                                                      (message.argc == 1 ? "" : "s") + ", which " + std::to_string(overloads.size()) +
                                                      " operations of " + typeId + " take: " + names + "; it calls none of them",
-                                                 message.location));
+                                                 message.location, seq.id));
   return true;
 }
 
@@ -79,10 +79,11 @@ void BehaviourTyping::call(const model::Entity& msg, const model::Entity& op, co
   context_->checkVisibility(msg.field("from-type").empty() ? msg.scope : msg.field("from-type"), op.id, message.location);
   const int expected = static_cast<int>(op.params.size());
   if (expected != message.argc) {
+    // the subject is the operation: the sentence is about what it takes, not about the behaviour that calls it (DS-478)
     context_->report(context_->metamodel().finding(model::Code::E_MSG_ARITY,
                                                    op.id + " takes " + std::to_string(expected) + " parameter" +
                                                        (expected == 1 ? "" : "s") + ", " + std::to_string(message.argc) + " given",
-                                                   message.location));
+                                                   message.location, op.id));
   }
   if (expected == message.argc) checkArguments(msg, op, message);
   const auto returns = op.fields.find("returns");
@@ -111,7 +112,7 @@ void BehaviourTyping::expand(const model::Entity& msg, const model::Entity& op, 
     model_->annotate(msg.id, "expands-path", scenario->second);
   } else if (named) {
     context_->report(context_->metamodel().finding(model::Code::W_SCENARIO_UNDECLARED,
-                                                   op.id + " has no scenario '" + scenario->second + "'", message.location));
+                                                   op.id + " has no scenario '" + scenario->second + "'", message.location, op.id));
   }
 }
 
@@ -145,8 +146,9 @@ void BehaviourTyping::checkReturn(const bind::Message& message) {
     mismatch = !compatible(named, {returns->second, home});
   }
   if (mismatch) {
-    context_->report(context_->metamodel().finding(
-        model::Code::W_RETURN_TYPE, subject->id + " returns " + returns->second + ", and '" + value + "' is " + given, message.location));
+    context_->report(context_->metamodel().finding(model::Code::W_RETURN_TYPE,
+                                                   subject->id + " returns " + returns->second + ", and '" + value + "' is " + given,
+                                                   message.location, subject->id));
   }
 }
 
@@ -223,13 +225,14 @@ void BehaviourTyping::checkMessage(const bind::Message& message) {
     // and when it offers none the message is a label: the level below is not written yet, which is coverage, no finding
     context_->report(context_->metamodel().finding(
         model::Code::W_MESSAGE_NO_OPERATION,
-        seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location));
+        seq->name + " sends " + message.op + " to " + typeId + ", which offers no operation of that name", message.location, seq->id));
     return;
   }
   if (!op && reportOverloads(*seq, typeId, message)) return;
   if (!op) {
-    context_->report(context_->metamodel().finding(
-        model::Code::W_MSG_UNDECLARED, seq->name + " calls " + opId + ", which " + typeId + " does not declare", message.location));
+    context_->report(context_->metamodel().finding(model::Code::W_MSG_UNDECLARED,
+                                                   seq->name + " calls " + opId + ", which " + typeId + " does not declare",
+                                                   message.location, seq->id));
     return;
   }
   call(*msg, *op, message);
@@ -297,7 +300,7 @@ bool BehaviourTyping::callStatic(const model::Entity& seq, const model::Entity& 
   if (!op->has("static")) {
     context_->report(context_->metamodel().finding(
         model::Code::W_MSG_NOT_STATIC, seq.name + " calls " + op->id + " on its class, and it is not static: it needs an instance",
-        message.location));
+        message.location, seq.id));
     return true;
   }
   call(msg, *op, message);
@@ -379,10 +382,11 @@ void BehaviourTyping::checkArguments(const model::Entity& msg, const model::Enti
     }
     const std::pair<std::string, std::string> parameter{parameters[i].type, scope};
     if (compatible(argument, parameter, literal)) continue;
+    // the subject is the operation whose parameter is not met, as the sentence says (DS-478)
     context_->report(context_->metamodel().finding(model::Code::W_ARG_TYPE,
                                                    op.id + " takes " + parameters[i].name + ": " + parameters[i].type + ", and '" +
                                                        arguments[i] + "' is " + (literal ? std::string("a literal") : argument.first),
-                                                   message.location));
+                                                   message.location, op.id));
   }
 }
 
@@ -428,12 +432,12 @@ void BehaviourTyping::checkEvent(const bind::Event& event) {
   if (event.action) {
     context_->report(context_->metamodel().finding(
         model::Code::W_ACTION_UNDECLARED, "state " + event.state + " runs '" + event.event + "', which is not an operation of " + type,
-        event.location));
+        event.location, context_->current(event.state)));
     return;
   }
   context_->report(context_->metamodel().finding(
       model::Code::W_EVENT_UNDECLARED, "state " + event.state + " reacts to '" + event.event + "', which is not an operation of " + type,
-      event.location));
+      event.location, context_->current(event.state)));
 }
 
 }  // namespace check

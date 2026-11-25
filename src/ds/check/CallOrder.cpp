@@ -35,7 +35,7 @@ std::vector<model::Finding> CallOrder::check() {
                                                         "() when " + (own ? "it" : call.receiver) + " can only be " + either(call.from) +
                                                         ": the machine of " + e.name + " lets " + call.event + " happen from " +
                                                         either(written.sources(call.event)),
-                                                    message ? message->location : e.location));
+                                                    message ? message->location : e.location, call.behaviour));
     }
   }
   return found;

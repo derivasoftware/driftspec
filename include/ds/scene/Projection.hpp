@@ -29,6 +29,25 @@ class Projection {
   const std::map<std::string, Node>& nodes() const;
 
  private:
+  // Sizes in scene units (DS-477: members, no hidden namespace). A row is one member; a unit is sized by its longest row.
+  static constexpr double kRow = 11;
+  static constexpr double kHead = 22;
+  static constexpr double kUnitPadBottom = 6;
+  static constexpr double kCharWidth = 3.95;
+  static constexpr double kUnitMinW = 150;
+  static constexpr double kUnitMaxW = 430;
+  static constexpr double kModulePad = 24;
+  static constexpr double kModuleHead = 46;
+  static constexpr double kUnitGap = 22;
+  static constexpr double kPackagePad = 60;
+  static constexpr double kPackageHead = 90;
+  static constexpr double kBoxGap = 70;
+  static constexpr double kLeftForInterfaces = 300;
+  static constexpr double kInterfaceW = 360;
+  static constexpr double kOperationRow = 30;
+  static constexpr double kTopGap = 120;
+  static constexpr double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
+
   layout::Frame package(const model::Entity& e, const std::string& parent);
   layout::Frame module(const model::Entity& e, const std::string& parent);
   layout::Frame interface(const model::Entity& e, const std::string& parent);

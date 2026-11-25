@@ -627,6 +627,11 @@ TEST_F(TestQualification, ALargeClassDiagramIsDrawnAsTextWithinBoundedMemory) {
 
 // CST-00001-1: every command under a hundred milliseconds on a hundred classes
 TEST_F(TestQualification, AHundredClassesCheckAndDrawInUnderAHundredMilliseconds) {
+#ifdef DS_EVIDENCE_BUILD
+  // DS-480: the evidence build is -O0 and instrumented, and its tests run side by side; a time measured there says
+  // nothing of the product's, and a budget it missed would fail the evidence job. cpp-test measures it.
+  GTEST_SKIP() << "the evidence build measures no speed; cpp-test runs the budget";
+#endif
   const std::string tmp = scratch("ds-perf");
   std::ofstream ws(tmp + "/big.ds");
   ws << "package big {\n  module m {\n";

@@ -136,6 +136,8 @@ package driftspec@ds {
       -> render.run() -> outcome
     } on std::runtime_error {
       return 2
+    } on std::invalid_argument {
+      return 2
     } on BadRequest {
       return 2
     } on NotImplemented {
@@ -151,6 +153,8 @@ package driftspec@ds {
       -> render.run() / no-diagram -> outcome
     } on std::runtime_error {
       return 2
+    } on std::invalid_argument {
+      return 2
     } on BadRequest {
       return 2
     } on NotImplemented {
@@ -165,6 +169,8 @@ package driftspec@ds {
     attempt {
       -> render.run() / no-workspace -> outcome
     } on std::runtime_error {
+      return 2
+    } on std::invalid_argument {
       return 2
     } on BadRequest {
       return 2

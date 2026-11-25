@@ -93,17 +93,18 @@ TEST_F(TestTableView, TheTableIsDrawnAsSvgAndAsTextWithTheCellAgainstTheMachineM
   EXPECT_NE(svg.find("<g class=\"pr-cell pr-cell-against\"><title>Desk::rush calls cancel when it can be Shipped"), std::string::npos);
   EXPECT_NE(svg.find("<title>pay is called in Desk::rush, Desk::sell</title>"), std::string::npos);  // on the heading of the row
   const std::string text = ds::render::Text(theme()).render(doc, false, 0);
-  EXPECT_NE(text.find(" Order  \xE2\x94\x82 Open      \xE2\x94\x82 Paid      \xE2\x94\x82 Shipped      \xE2\x94\x82 Cancelled"),
+  // each column its text and two cells of room each side, as the svg (DS-464)
+  EXPECT_NE(text.find("  Order   \xE2\x94\x82 Open       \xE2\x94\x82 Paid       \xE2\x94\x82 Shipped       \xE2\x94\x82 Cancelled"),
             std::string::npos)
       << text;
-  EXPECT_NE(text.find(" cancel \xE2\x94\x82 Cancelled \xE2\x94\x82 Cancelled \xE2\x94\x82 ! Desk::rush \xE2\x94\x82 \xC2\xB7"),
+  EXPECT_NE(text.find("  cancel  \xE2\x94\x82 Cancelled  \xE2\x94\x82 Cancelled  \xE2\x94\x82 ! Desk::rush  \xE2\x94\x82 \xC2\xB7"),
             std::string::npos)
       << text;
   // the grid a terminal view asks for holds the same table
   ds::emit::JsonSink sink(false, true);
   ds::render::Text(theme()).cells(doc, 0, sink);
   const auto cells = nlohmann::json::parse(sink.result());
-  EXPECT_EQ(cells["rows"], 5);  // the headings, the rule, three events
+  EXPECT_EQ(cells["rows"], 8);  // the headings and their rule, then three events, two lines each (DS-464)
   EXPECT_NE(cells["text"].get<std::string>().find("! Desk::rush"), std::string::npos);
 }
 

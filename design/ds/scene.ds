@@ -827,6 +827,24 @@ package driftspec@ds {
       - static leaf(id: std::string, w: double, h: double) -> layout::Frame
       - static visibility(e: model::Entity) -> std::string
       - static signature(name: std::string, params: std::vector<model::Param>, returns: std::string) -> std::string
+      // its sizes in scene units, members since DS-477
+      - kRow: double
+      - kHead: double
+      - kUnitPadBottom: double
+      - kCharWidth: double
+      - kUnitMinW: double
+      - kUnitMaxW: double
+      - kModulePad: double
+      - kModuleHead: double
+      - kUnitGap: double
+      - kPackagePad: double
+      - kPackageHead: double
+      - kBoxGap: double
+      - kLeftForInterfaces: double
+      - kInterfaceW: double
+      - kOperationRow: double
+      - kTopGap: double
+      - kTreeGap: double
     }
 
     // the boxes placed and where each identity of the model lands among them: built once, read by

@@ -102,3 +102,36 @@ class TestSeverityThroughTheTable:
         s.until(lambda m: (published.append(m["params"]) if m.get("method") == "textDocument/publishDiagnostics" else None) or m.get("id") == rid)
         got = Counter((p["uri"][len("file://"):], d["range"]["start"]["line"] + 1, d["code"], d["severity"]) for p in published for d in p["diagnostics"])
         assert got == want and sum(got.values()) == len(report.findings) and report.coverage  # coverage there, not published
+
+
+class TestAFindingOnItsSubject:
+    """The editor shows a finding on the entity it is about (REQ-00330-1, DS-488): each diagnostic carries its subject,
+    and hover on an entity lists its own problems, wherever they are written."""
+
+    @pytest.fixture
+    def ruled(self, tmp_path, lsp):
+        # a rule written in a.ds that a class in b.ds breaks: the finding is said where the class is, about the rule
+        root = os.path.join(tmp_path, "ruled")
+        os.makedirs(root)
+        with open(os.path.join(root, "a.ds"), "w") as f:
+            f.write("package p {\n  requirement REQ-00001-1 {\n    title: Few boxes\n    status: draft\n  }\n  module m {\n"
+                    "    rule none {\n      @requirement REQ-00001-1\n      for class c in p@m\n      never c is class\n    }\n  }\n}\n")
+        with open(os.path.join(root, "b.ds"), "w") as f:
+            f.write("package p {\n  module m {\n    class A { }\n  }\n}\n")
+        return root, lsp(root)
+
+    def test_each_diagnostic_carries_the_entity_it_is_about(self, ruled):
+        root, s = ruled
+        open_file(s, os.path.join(root, "a.ds"))
+        said = diagnostics_of(s, os.path.join(root, "b.ds"), nonempty=True)
+        broken = next(d for d in said if d["code"] == "E-RULE-BROKEN")
+        assert broken["data"] == {"subject": "p@m::none"}
+
+    def test_hover_on_an_entity_lists_a_problem_written_in_another_file(self, ruled):
+        root, s = ruled
+        path = os.path.join(root, "a.ds")
+        open_file(s, path)
+        lines = open(path).read().splitlines()
+        line = next(i for i, l in enumerate(lines) if "rule none" in l)
+        shown = s.call("textDocument/hover", {"textDocument": {"uri": uri(path)}, "position": {"line": line, "character": lines[line].index("none") + 1}})
+        assert "E-RULE-BROKEN" in shown["contents"]["value"]

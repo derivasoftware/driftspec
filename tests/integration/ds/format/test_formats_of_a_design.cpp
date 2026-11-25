@@ -19,6 +19,8 @@
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 #include "ds/scene/Scene.hpp"
 #include "ds/theme/Theme.hpp"
 
@@ -80,11 +82,12 @@ TEST_F(TestSceneFormatsOfADesign, ThePageOfTheDesignIsAFrameCarryingItWholeWhenA
   EXPECT_NE(frame.find("srcdoc=\""), std::string::npos);
 }
 
-/// A diagram the design declares, in each of its five formats: two writers and three descriptions (DS-398, DS-458).
+/// A diagram the design declares, in each of its five formats: three descriptions and two drawings, see-design's, drawn
+/// through render (DS-398, DS-458, DS-474).
 class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
-  ASSERT_EQ(ds::format::FormatFactory::diagram(theme()).size(), 2u);  // svg, text; the IR, layout and cells are descriptions
+  ASSERT_EQ(ds::format::FormatFactory::scene().size(), 1u);  // the page alone is a writer: the drawings are see-design's (DS-474)
   const ds::api::Workspace workspace = ds::api::Workspace::madeFor(metamodel, files);
   std::set<std::string> drawn;
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
@@ -99,17 +102,17 @@ TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheD
 }
 
 TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDescribes) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const std::string text = ds::api::Api(metamodel).render(files, "CL_Hola", "ir", 0);
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
   const ds::render::IrDocument diagram = ds::render::IrDocument::parse(text);  // read once, as a door reads an IR file
-  const auto formats = ds::format::FormatFactory::diagram(theme());
-  const std::string svg = formats.at("svg")->write(diagram, {}, sink);
+  const std::string svg = ds::render::Svg(theme()).render(diagram, 0);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find("Greeter"), std::string::npos);
-  EXPECT_NE(formats.at("text")->write(diagram, {}, sink).find("Greeter"), std::string::npos);
+  const std::string drawn = ds::render::Text(theme()).render(diagram, false, 0);
+  EXPECT_NE(drawn.find("Greeter"), std::string::npos);
   EXPECT_EQ(svg, ds::api::Api(metamodel).render(files, "CL_Hola", "svg", 0));  // what ds render writes
+  EXPECT_EQ(drawn, ds::api::Api(metamodel).render(files, "CL_Hola", "text", 0));
 }
 
 /// The answers of a query and the report of a check on the design, each described once into the sink of the

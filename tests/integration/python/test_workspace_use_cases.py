@@ -47,9 +47,10 @@ def test_each_use_case_reaches_python_as_the_objects_its_json_parsed_back_to() -
         ("ask-model", {"question": "coverage"}, native.ask("coverage", "")),
         ("ask-model", {"question": "weather"}, native.ask("weather", "")),
     ]:
-        outcome, built = native.run(name, request)
+        outcome, built, message = native.run(name, request)
         assert same(built, json.loads(text)), name
         assert outcome in {"default", "unknown-question"}
+        assert message == "" or outcome != "default", name  # a default outcome says nothing more (DS-479)
     # the Python face reads them so: the same model, report and answers as before
     ws = driftspec.Workspace({"shop.ds": SHOP})
     assert ws.model() == driftspec._model(json.loads(native.export()))
@@ -62,7 +63,29 @@ def test_a_request_that_is_not_the_use_cases_is_a_value_error_and_an_unwritten_p
     with pytest.raises(ValueError, match="question"):
         native.run("ask-model", {})
     with pytest.raises(NotImplementedError):
-        native.run("see-design", {"format": "svg", "diagram": "CL_Shop"})  # a writer until DS-399
+        native.run("see-design", {"format": "yaml", "diagram": "CL_Shop"})  # a format see-design does not write
     with pytest.raises(NotImplementedError):
         native.run("teleport", {})
-    assert native.run("see-design", {"format": "layout", "diagram": "CL_Nope"}) == ("no-diagram", None)
+    assert native.run("see-design", {"format": "layout", "diagram": "CL_Nope"}) == ("no-diagram", None, "no diagram named CL_Nope")
+
+
+def test_an_outcome_that_is_not_the_default_hands_what_it_says() -> None:
+    # the message is the outcome's own, as the command line says it (DS-479): here, the manual's unknown topic
+    native = _native.Workspace({"shop.ds": SHOP})
+    outcome, built, message = native.run("learn-language", {"topic": "weather"})
+    assert outcome == "no-topic" and message.startswith("no page 'weather' in the manual; there are:")
+
+
+def test_a_drawing_reaches_python_as_the_text_ds_render_writes() -> None:
+    """see-design hands a drawing and the page to the sink as one verbatim text (DS-474): the Python sink keeps it as the
+    str it is, the drawing the workspace's render gives, as ds render writes it."""
+    native = _native.Workspace({"shop.ds": SHOP})
+    for format in ("svg", "text"):
+        for width in (0, 60):
+            outcome, drawn, _ = native.run("see-design", {"format": format, "diagram": "CL_Shop", "width": str(width)})
+            assert outcome == "default"
+            assert type(drawn) is str and drawn == native.render("CL_Shop", format, width), (format, width)
+    assert driftspec.Workspace({"shop.ds": SHOP}).render("CL_Shop", "svg").startswith("<svg")
+    outcome, page, _ = native.run("see-design", {"format": "html", "title": "shop", "focus": "p@m::Vault\n"})
+    assert outcome == "default" and page == native.page("shop", ["p@m::Vault"])
+    assert native.run("see-design", {"format": "svg", "diagram": "CL_Nope"}) == ("no-diagram", None, "no diagram named CL_Nope")

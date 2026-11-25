@@ -99,7 +99,7 @@ void DependencyCheck::checkDependencies() {
       if (declares || inside(subject, iface) || (offered != offeredBy.end() && inside(subject, offered->second))) continue;
       found_.push_back(context_->metamodel().finding(model::Code::W_CONSUMES_UNDECLARED,
                                                      subject + " calls " + op->id + ", and nothing it lives in declares @consumes " + iface,
-                                                     location));
+                                                     location, subject));
     } else if (op->kind == model::Kind::Method) {
       const auto r2 = realised.find(op->scope);
       const model::Entity* cls = model_->find(op->scope);
@@ -119,7 +119,7 @@ void DependencyCheck::checkDependencies() {
                                                      subject + " calls " + op->id + ", and " + cls->id + " realises " + iface +
                                                          ": call the interface (a local or a parameter typed " + iface +
                                                          ") and declare @consumes " + iface,
-                                                     location));
+                                                     location, subject));
     }
   }
   for (const auto& d : declared) {
@@ -136,7 +136,7 @@ void DependencyCheck::checkDependencies() {
       if (called[d.first].count(iface)) continue;
       found_.push_back(context_->metamodel().finding(model::Code::W_CONSUMES_UNUSED,
                                                      d.first + " declares @consumes " + iface + ", and none of its behaviours calls it",
-                                                     written[{d.first, iface}]));
+                                                     written[{d.first, iface}], d.first));
     }
   }
 }

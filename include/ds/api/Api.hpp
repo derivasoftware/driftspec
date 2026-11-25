@@ -27,6 +27,14 @@ struct Bound {
   std::set<std::string> broken;
 };
 
+/// The block a file leaves open, read from its indentation (CST-00007-1, DS-304): the line that opens it, the first
+/// line written outside it, and the opener. Empty when every block closes where it should.
+struct Unclosed {
+  int line = 0;   ///< the line that opens the block, 1-based
+  int until = 0;  ///< the first line written outside it
+  std::string opener;
+};
+
 class Api {
  public:
   explicit Api(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
@@ -68,6 +76,9 @@ class Api {
   std::string page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
+  /// The block a file leaves open, read from its indentation (CST-00007-1, DS-304, DS-477).
+  static Unclosed unclosedBlock(const std::string& text);
+
   const model::Metamodel& metamodel_;
 };
 

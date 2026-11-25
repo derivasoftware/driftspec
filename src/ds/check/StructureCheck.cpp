@@ -68,8 +68,9 @@ void StructureCheck::checkOwnershipCycles() {
         std::vector<std::string> key = cycle;
         std::sort(key.begin(), key.end());
         if (reportedCycles.insert(join(key, "|")).second) {
-          found_.push_back(context_->metamodel().finding(
-              model::Code::E_OWNERSHIP_CYCLE, "composition cycle: " + join(cycle, " owns ") + " owns " + edge.to, edge.location));
+          found_.push_back(context_->metamodel().finding(model::Code::E_OWNERSHIP_CYCLE,
+                                                         "composition cycle: " + join(cycle, " owns ") + " owns " + edge.to, edge.location,
+                                                         cycle.front()));  // the subject: where the sentence starts the cycle
         }
       } else if (!done.count(edge.to)) {
         walk(edge.to);
@@ -105,7 +106,7 @@ void StructureCheck::checkCycles(const std::string& relation, model::Code code, 
         std::sort(key.begin(), key.end());
         if (reported.insert(join(key, "|")).second)
           found_.push_back(context_->metamodel().finding(code, "a cycle: " + join(cycle, " " + verb + " ") + " " + verb + " " + edge.first,
-                                                         edge.second));
+                                                         edge.second, cycle.front()));  // the subject: where the sentence starts the cycle
       } else if (!done.count(edge.first)) {
         walk(edge.first);
       }
@@ -135,7 +136,7 @@ void StructureCheck::checkRefinesUpward() {
         model::Code::W_REFINES_UPWARD,
         child->id + " (in " + model::Scope(child->scope).box().text() + ") refines " + parent->id + ", which is written inside it (in " +
             model::Scope(parent->scope).box().text() + "): the detail stands above what it details",
-        r.location));
+        r.location, child->id));
   }
 }
 
@@ -213,7 +214,7 @@ void StructureCheck::checkSatisfiesHome() {
           context_->metamodel().finding(model::Code::W_SATISFIES_OUTSIDE_HOME,
                                         o.piece->id + " satisfies " + pair.first + ", whose home " + home +
                                             " does not hold it: the requirement is written at one place and realised outside it; " + where,
-                                        o.location));
+                                        o.location, o.piece->id));
   }
 }
 
@@ -229,24 +230,25 @@ void StructureCheck::checkArtefacts() {
     const auto status = e.fields.find("status");
     const bool approved = status != e.fields.end() && status->second == "approved";  // a draft owes nothing yet
     if (e.kind == model::Kind::Requirement && approved && !verified.count(e.id)) {
-      found_.push_back(
-          context_->metamodel().finding(model::Code::W_REQ_NO_VERIFICATION, e.id + " is approved and nothing verifies it", e.location));
+      found_.push_back(context_->metamodel().finding(model::Code::W_REQ_NO_VERIFICATION, e.id + " is approved and nothing verifies it",
+                                                     e.location, e.id));
     }
     std::set<std::string> seen;
     if (e.kind == model::Kind::Requirement && approved && !realised(e.id, satisfied, refinedBy, seen)) {  // DS-429
-      found_.push_back(context_->metamodel().finding(
-          model::Code::W_REQ_UNREALISED, e.id + " is approved and nothing satisfies it, by itself or through its refinements", e.location));
+      found_.push_back(context_->metamodel().finding(model::Code::W_REQ_UNREALISED,
+                                                     e.id + " is approved and nothing satisfies it, by itself or through its refinements",
+                                                     e.location, e.id));
     }
     if (e.kind == model::Kind::Constraint && approved && !verified.count(e.id)) {  // DS-430: obeying it is no verification
-      found_.push_back(
-          context_->metamodel().finding(model::Code::W_CST_NO_VERIFICATION, e.id + " is approved and nothing verifies it", e.location));
+      found_.push_back(context_->metamodel().finding(model::Code::W_CST_NO_VERIFICATION, e.id + " is approved and nothing verifies it",
+                                                     e.location, e.id));
     }
     const auto method = e.fields.find("method");
     if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
       const auto tests = e.fields.find("tests");
       if (tests == e.fields.end() || tests->second.empty())
         found_.push_back(
-            context_->metamodel().finding(model::Code::W_VER_NO_TEST, e.id + " verifies by test but names no tests", e.location));
+            context_->metamodel().finding(model::Code::W_VER_NO_TEST, e.id + " verifies by test but names no tests", e.location, e.id));
     }
   }
 }
@@ -273,7 +275,8 @@ void StructureCheck::checkExtensions() {
     if (e.expected && e.has("extension") && !context_->reported().count(e.id) && said.insert(e.id).second) {
       found_.push_back(context_->metamodel().finding(
           model::Code::W_REF_UNDECLARED,
-          metamodel_->nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace", e.location));
+          metamodel_->nameOf(e.kind) + " '" + e.id + "' is extended with annotations but defined nowhere in the workspace", e.location,
+          e.id));
     }
   }
 }
@@ -297,13 +300,13 @@ void StructureCheck::checkFields() {
               found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_VALUE,
                                                              metamodel_->nameOf(e.kind) + " '" + e.id + "' has " + f.first + ": " + v +
                                                                  ", which is none of " + join(spec->values, ", "),
-                                                             e.location));
+                                                             e.location, e.id));
         continue;
       }
       found_.push_back(context_->metamodel().finding(model::Code::W_FIELD_UNKNOWN,
                                                      metamodel_->nameOf(e.kind) + " '" + e.id + "' has a field '" + f.first + "' that a " +
                                                          metamodel_->nameOf(e.kind) + " does not declare",
-                                                     e.location));
+                                                     e.location, e.id));
     }
   }
 }
