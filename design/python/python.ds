@@ -26,6 +26,29 @@ package driftspec@driftspec {
     never depends(c, x), x in driftspec@ds
   }
 
+  requirement REQ-00263-1 {
+    status: draft
+    @refines REQ-00086-1
+    title: The Python face shall take what a use case describes as Python objects, built as the description writes them, with nothing written as text and parsed back
+    text:
+      The native module's Workspace runs a use case by name, run(name, request) -> (outcome, object): the
+      model is loaded with the GIL released, then the use case describes its document into a sink that builds
+      the Python objects as it writes, a record a dict with its fields in the order written, a list a list, a
+      value a str, int, float, bool or None, the same objects json.loads gave of the JSON text. A request that is
+      not the use case's is ValueError, what the sink cannot write NotImplementedError. Workspace.model(),
+      report(), ask() and shows() take them so; every Python caller gets what it got before.
+    rationale: Owner, 2026-11-24 (DS-406: the Python face as a sink, the driftdomain seam's interim sink, DS-44); code-62, 2026-11-25 (DS-459). The JSON text of a model was written only to be parsed back, 46 ms of json.loads on ds's design (DS-420).
+    tags: python, service
+    verification VER-00283-1 {
+      status: draft
+      title: Integration tests confirm each use case reaches Python as the objects its JSON parsed back to, and a request not the use case's is a ValueError, an unwritten pair NotImplementedError
+      method: test
+      tests:
+        tests/integration/python/test_workspace_use_cases.py::test_each_use_case_reaches_python_as_the_objects_its_json_parsed_back_to
+        tests/integration/python/test_workspace_use_cases.py::test_a_request_that_is_not_the_use_cases_is_a_value_error_and_an_unwritten_pair_not_implemented
+    }
+  }
+
   requirement REQ-00086-1 {
     status: approved
     @refines SREQ-00015-1
@@ -651,6 +674,50 @@ package driftspec@driftspec {
       + shows(diagram: std::string) -> std::string
       + render(diagram: std::string, format: std::string, width: int) -> std::string fails NotImplementedError
       + page(title: std::string, focus: std::vector<std::string>) -> std::string
+      // a use case run, described as Python objects (DS-459): loaded with the GIL released, described holding it
+      + run(name: std::string, request: std::map<std::string, std::string>) -> object fails ValueError, NotImplementedError {
+        @requirement REQ-00263-1
+      }
+    }
+
+    // The interim sink of the driftdomain seam (DS-44, DS-459): the Python objects a description writes, a record a
+    // dict in the order written, a list a list, a value a str, int, float, bool or None; no text is parsed back.
+    class PySink : driftspec@ds@emit::ISink {
+      @requirement REQ-00263-1
+      - owns root_: object
+      - owns many open_: std::vector<object>
+      - key_: std::string
+      + beginRecord() -> driftspec@ds@emit::ISink
+      + endRecord() -> driftspec@ds@emit::ISink
+      + field(name: std::string) -> driftspec@ds@emit::ISink
+      + beginList() -> driftspec@ds@emit::ISink
+      + endList() -> driftspec@ds@emit::ISink
+      + value(text: std::string) -> driftspec@ds@emit::ISink
+      + integer(value: std::int64_t) -> driftspec@ds@emit::ISink
+      + number(value: double) -> driftspec@ds@emit::ISink
+      + boolean(value: bool) -> driftspec@ds@emit::ISink
+      + null() -> driftspec@ds@emit::ISink
+      + result() -> std::string
+      + take() -> object
+      - put(value: object) -> driftspec@ds@emit::ISink
+      - open(container: object) -> driftspec@ds@emit::ISink
+      - close() -> driftspec@ds@emit::ISink
+    }
+
+    // a request not the use case's raised as ValueError, an unwritten pair as NotImplementedError (DS-459)
+    sequence Workspace::run {
+      local loaded: driftspec@ds@workspace  // the engine's in-process interface, not the class behind it
+      local sink: PySink
+      attempt {
+        -> loaded.prepare(name, request)
+        -> loaded.run(name, request, sink) -> outcome
+      } on BadRequest {
+        fail ValueError
+      } on emit::NotImplemented {
+        fail NotImplementedError
+      }
+      -> sink.take() -> built
+      return built
     }
 
     sequence Workspace::export {
