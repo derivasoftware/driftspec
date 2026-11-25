@@ -34,12 +34,9 @@ SEVERITY = {s["name"]: EDITOR[s["editor"]] for s in driftspec.severities()}
 
 
 class Kinds:
-    """The kinds of the language the door names, in one place (DS-422). The metamodel says no kind's category yet
-    (DS-427): until it does, these are written here once, and a test holds every kind named to the metamodel."""
+    """The editor's own words for the kinds (DS-422): the symbol each is listed as and the fields hover says. What a
+    kind is part of is the metamodel's (DS-427, Model.category_of), and a test holds every kind named to the metamodel."""
 
-    STRUCTURE = frozenset({"package", "module", "class", "enum", "function", "method", "attribute", "interface", "operation"})
-    ARTEFACT = frozenset({"requirement", "constraint", "verification", "usecase"})
-    DRAWN = frozenset({"diagram", "sequence"})  # what a line written in it draws as, beside the structure and the artefacts
     SYMBOL = {"package": lsp.SymbolKind.Package, "module": lsp.SymbolKind.Module, "class": lsp.SymbolKind.Class,
               "function": lsp.SymbolKind.Function, "method": lsp.SymbolKind.Method, "interface": lsp.SymbolKind.Interface,
               "requirement": lsp.SymbolKind.Key, "usecase": lsp.SymbolKind.Event}
@@ -48,7 +45,7 @@ class Kinds:
     @classmethod
     def named(cls) -> set[str]:
         """Every kind the door names."""
-        return set(cls.STRUCTURE | cls.ARTEFACT | cls.DRAWN | set(cls.SYMBOL))
+        return set(cls.SYMBOL)
 
 
 def path_of(uri: str) -> str:
@@ -138,13 +135,16 @@ class Editor:
         return [e for e in model.named(tail) if e.id.endswith(word) or e.name == word]
 
     def enclosing(self, path: str, line: int) -> driftspec.Entity | None:
-        """The declaration a line of a file is written in: the nearest one that opens above it."""
+        """The declaration a line of a file is written in: the nearest one that opens above it, whatever its kind
+        (DS-427), an operator, an outcome, a rule, a definition and a state as a class is. A message or a frame is
+        laid out by its behaviour, not declared: it is read as the sequence it is written in."""
         model = self.typed()
-        candidates = [e for e in model.in_file(path) if e.kind in Kinds.STRUCTURE | Kinds.ARTEFACT | Kinds.DRAWN
-                      and e.location.line - 1 <= line]
+        candidates = [e for e in model.in_file(path) if e.location.line - 1 <= line]
         if not candidates:
             return None
         best = max(candidates, key=lambda e: (e.location.line, e.location.column))
+        while model.laid_out(best.kind) and best.scope in model.entities:  # a message, a frame: its sequence
+            best = model.entities[best.scope]
         if best.kind == "sequence":  # a sequence draws through its subject
             subject = model.find(best.fields.get("subject", "")) or model.find(best.scope)
             return subject or best
@@ -166,7 +166,13 @@ class Editor:
         if entity:  # a member, an outcome, a rule in a member: drawn as what holds it (DS-122)
             entity = model.owner(entity)
             identity = entity.id
-        kind = "requirement" if entity and entity.kind in Kinds.ARTEFACT else "class"
+        if entity and model.category_of(entity.kind) == "logic":  # a state: drawn as its subject; a rule, in its box
+            subject = next((r.target for r in model.relations_of(entity.id) if r.source == entity.id and r.kind == "behaviour-of"), "")
+            held = model.find(subject) or model.entities.get(entity.scope)
+            if held:
+                entity = model.owner(held)
+                identity = entity.id
+        kind = "requirement" if entity and model.category_of(entity.kind) == "artefact" else "class"
         name = "__Focus"
         files = dict(files)
         files["__focus__.ds"] = f"diagram {name} {{\n  kind: {kind}\n  include: {identity}\n  neighbours: 1\n}}\n"

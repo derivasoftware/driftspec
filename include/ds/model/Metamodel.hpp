@@ -39,15 +39,20 @@ struct FieldSpec {
   bool identity = false;                 ///< it holds an entity's identity, which a rename carries along (DS-346)
 };
 
+/// What a kind is part of (DS-427, the Owner's five): what the design is made of, what it answers to, what it does, what
+/// judges it, and what shows it. Each door reads it rather than keeping its own table of kinds.
+enum class Category { Structure, Artefact, Behaviour, Logic, View };
+
 struct KindSpec {
   Kind kind = Kind::Package;
   std::string meaning;
   std::vector<FieldSpec> fields;
   std::vector<std::string> flags;
-  std::vector<Kind> parents;  ///< the kinds it may be declared inside; empty when it stands at the top
-  bool top = false;           ///< it may stand outside any package
-  std::string syntax = {};    ///< how it is written, for the manual
-  std::string example = {};   ///< a minimal workspace that declares one and checks clean
+  std::vector<Kind> parents;                ///< the kinds it may be declared inside; empty when it stands at the top
+  bool top = false;                         ///< it may stand outside any package
+  std::string syntax = {};                  ///< how it is written, for the manual
+  std::string example = {};                 ///< a minimal workspace that declares one and checks clean
+  Category category = Category::Structure;  ///< what it is part of (DS-427)
 };
 
 /// A finding code ds reports: what it means and what to do about it. The catalogue holds one per Code, in its order.
@@ -141,6 +146,10 @@ class Metamodel {
   std::string exampleOf(Kind kind) const;
   /// A kind as the language writes it: class, usecase, sequence; read from a table, never built per call.
   const std::string& nameOf(Kind kind) const;
+  /// What a kind is part of (DS-427): the one place that says it.
+  static Category categoryOf(Kind kind);
+  /// A category as the export, the manual and the scene write it: structure, artefact, behaviour, logic, view.
+  static std::string categoryName(Category category);
   /// Whether a kind is an artefact identified by its id with its revision: requirement, verification,
   /// constraint and use case (R5, DS-116).
   bool isArtefact(Kind kind) const;
