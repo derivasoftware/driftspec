@@ -10,234 +10,17 @@
 #include <string_view>
 #include <vector>
 
+#include "ds/render/Grid.hpp"
+#include "ds/render/SeqLine.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace render {
 
-namespace {
-
-/// One character of the drawing, in 7 bytes (DS-350): its UTF-8 bytes inline, the index of its colour in the
-/// grid's palette and what an edge drew there. A glyph longer than one code point (never drawn today) is kept
-/// in the grid's list of long glyphs and found by its index.
-struct Cell {
-  std::array<char, 4> glyph = {' ', 0, 0, 0};
-  std::uint8_t size = 1;    ///< bytes of glyph in use; kLong: glyph holds the index of a long glyph
-  std::uint8_t colour = 0;  ///< the grid's palette; 0 is the default colour
-  std::uint8_t line = 0;    ///< 1 horizontal, 2 vertical, 3 both: what an edge already drew here
-};
-
-constexpr std::uint8_t kLong = 0xFF;
-
-class Grid {
- public:
-  Grid(int minX, int minY, int w, int h) : minX_(minX), minY_(minY), w_(w), h_(h), cells_(sized(w, h)) {}
-
-  Cell* at(int x, int y) {
-    x -= minX_;
-    y -= minY_;
-    if (x < 0 || y < 0 || x >= w_ || y >= h_) return nullptr;
-    return &cells_[static_cast<size_t>(y) * w_ + x];
-  }
-
-  void put(int x, int y, const std::string& glyph, const std::string& color = "") {
-    if (Cell* c = at(x, y)) {
-      setGlyph(*c, glyph);
-      c->colour = paint(color);
-      c->line = 0;
-    }
-  }
-
-  void text(int x, int y, const std::string& s, const std::string& color = "") {
-    int col = x;
-    for (size_t i = 0; i < s.size();) {
-      // one UTF-8 code point per cell
-      size_t len = 1;
-      const unsigned char c = static_cast<unsigned char>(s[i]);
-      if (c >= 0xF0)
-        len = 4;
-      else if (c >= 0xE0)
-        len = 3;
-      else if (c >= 0xC0)
-        len = 2;
-      put(col++, y, s.substr(i, len), color);
-      i += len;
-    }
-  }
-
-  /// An edge segment cell: joins with what another edge already drew.
-  void line(int x, int y, bool horizontal, bool dashed, const std::string& color) {
-    Cell* c = at(x, y);
-    if (!c) return;
-    const int bit = horizontal ? 1 : 2;
-    if (c->line && (c->line | bit) == 3 && c->line != bit) {
-      setGlyph(*c, "\xE2\x94\xBC");  // ┼
-    } else if (c->line == bit) {
-      return;
-    } else {
-      setGlyph(*c, horizontal ? (dashed ? "\xE2\x94\x84" : "\xE2\x94\x80") : (dashed ? "\xE2\x94\x86" : "\xE2\x94\x82"));  // ┄ ─ ┆ │
-    }
-    c->line = static_cast<std::uint8_t>(c->line | bit);
-    c->colour = paint(color);
-  }
-
-  /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
-  std::string encode(const std::map<std::string, std::uint32_t>& rgb) const {
-    std::string bytes;
-    bytes.reserve(cells_.size() * 12);
-    auto put32 = [&](uint32_t v) {
-      for (int i = 0; i < 4; ++i) bytes.push_back(static_cast<char>((v >> (8 * i)) & 0xff));
-    };
-    for (const Cell& c : cells_) {
-      uint32_t cp = 0x20;
-      const std::string_view glyph = glyphOf(c);
-      const unsigned char b0 = glyph.empty() ? 0 : static_cast<unsigned char>(glyph[0]);
-      if (b0 < 0x80)
-        cp = b0;
-      else if (b0 >= 0xF0 && glyph.size() >= 4)
-        cp = ((b0 & 0x07u) << 18) | ((glyph[1] & 0x3fu) << 12) | ((glyph[2] & 0x3fu) << 6) | (glyph[3] & 0x3fu);
-      else if (b0 >= 0xE0 && glyph.size() >= 3)
-        cp = ((b0 & 0x0fu) << 12) | ((glyph[1] & 0x3fu) << 6) | (glyph[2] & 0x3fu);
-      else if (b0 >= 0xC0 && glyph.size() >= 2)
-        cp = ((b0 & 0x1fu) << 6) | (glyph[1] & 0x3fu);
-      const auto colour = rgb.find(palette_[c.colour]);
-      put32(cp);
-      put32(colour == rgb.end() ? 0x01000000u : colour->second);
-      put32(0x01000000u);
-    }
-    static const char* const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    std::string out;
-    size_t i = 0;
-    for (; i + 2 < bytes.size(); i += 3) {
-      const uint32_t n = (static_cast<unsigned char>(bytes[i]) << 16) | (static_cast<unsigned char>(bytes[i + 1]) << 8) |
-                         static_cast<unsigned char>(bytes[i + 2]);
-      out += alphabet[(n >> 18) & 63];
-      out += alphabet[(n >> 12) & 63];
-      out += alphabet[(n >> 6) & 63];
-      out += alphabet[n & 63];
-    }
-    if (i < bytes.size()) {
-      uint32_t n = static_cast<unsigned char>(bytes[i]) << 16;
-      if (i + 1 < bytes.size()) n |= static_cast<unsigned char>(bytes[i + 1]) << 8;
-      out += alphabet[(n >> 18) & 63];
-      out += alphabet[(n >> 12) & 63];
-      out += i + 1 < bytes.size() ? alphabet[(n >> 6) & 63] : '=';
-      out += '=';
-    }
-    return out;
-  }
-
-  int columns() const { return w_; }
-  int rows() const { return h_; }
-
-  /// Another grid copied onto this one, its first row at `row`: the parts of a drawing, one under the other.
-  void paste(const Grid& other, int row) {
-    // the other grid's palette and long glyphs are its own: each cell is told again in this grid's
-    std::vector<std::uint8_t> colours;
-    for (const auto& c : other.palette_) colours.push_back(paint(c));
-    for (int y = 0; y < other.h_ && row + y < h_; ++y)
-      for (int x = 0; x < other.w_ && x < w_; ++x) {
-        const Cell& from = other.cells_[static_cast<size_t>(y) * other.w_ + x];
-        Cell& to = cells_[static_cast<size_t>(row + y) * w_ + x];
-        to = from;
-        to.colour = colours[from.colour];
-        if (from.size == kLong) setGlyph(to, std::string(other.glyphOf(from)));
-      }
-  }
-
-  std::string dump(bool color) const {
-    std::string out;
-    for (int y = 0; y < h_; ++y) {
-      std::string row;
-      std::string current;
-      for (int x = 0; x < w_; ++x) {
-        const Cell& c = cells_[static_cast<size_t>(y) * w_ + x];
-        const std::string& colour = palette_[c.colour];
-        if (color && colour != current) {
-          row += colour.empty() ? "\x1b[0m" : "\x1b[" + colour + "m";
-          current = colour;
-        }
-        row += glyphOf(c);
-      }
-      if (color && !current.empty()) row += "\x1b[0m";
-      // trailing blanks are noise in a buffer
-      const auto end = row.find_last_not_of(' ');
-      out += (end == std::string::npos ? "" : row.substr(0, end + 1)) + "\n";
-    }
-    return out;
-  }
-
- private:
-  /// A drawing too large to hold as text is refused with what it would take, instead of exhausting the machine
-  /// (DS-350): some 128 million characters, about 0.9 GB of cells, is the most it holds.
-  static std::size_t sized(int w, int h) {
-    const std::size_t cells = static_cast<std::size_t>(std::max(w, 0)) * static_cast<std::size_t>(std::max(h, 0));
-    if (cells > kMaxCells)
-      throw std::length_error("the drawing would take " + std::to_string(w) + " x " + std::to_string(h) +
-                              " characters, too large for text: draw it as svg, or select less");
-    return cells;
-  }
-  static constexpr std::size_t kMaxCells = std::size_t{128} * 1024 * 1024;
-  /// The index of `color` in the palette, added the first time it is asked.
-  std::uint8_t paint(const std::string& color) {
-    for (std::size_t i = 0; i < palette_.size(); ++i)
-      if (palette_[i] == color) return static_cast<std::uint8_t>(i);
-    if (palette_.size() >= kLong) throw std::length_error("a text drawing of more than 254 colours");
-    palette_.push_back(color);
-    return static_cast<std::uint8_t>(palette_.size() - 1);
-  }
-  void setGlyph(Cell& c, const std::string& glyph) {
-    if (glyph.size() <= c.glyph.size()) {
-      std::copy(glyph.begin(), glyph.end(), c.glyph.begin());
-      c.size = static_cast<std::uint8_t>(glyph.size());
-      return;
-    }
-    const auto index = static_cast<std::uint32_t>(long_.size());
-    long_.push_back(glyph);
-    std::memcpy(c.glyph.data(), &index, sizeof index);
-    c.size = kLong;
-  }
-  std::string_view glyphOf(const Cell& c) const {
-    if (c.size != kLong) return std::string_view(c.glyph.data(), c.size);
-    std::uint32_t index = 0;
-    std::memcpy(&index, c.glyph.data(), sizeof index);
-    return long_[index];
-  }
-
-  int minX_, minY_, w_, h_;
-  std::vector<Cell> cells_;
-  std::vector<std::string> palette_{""};  ///< the colours the cells name, "" first: the default
-  std::vector<std::string> long_;         ///< the glyphs longer than one code point
-};
-
-void frame(Grid& g, const Rect& r, bool rounded, const std::string& color) {
-  const char* tl = rounded ? "\xE2\x95\xAD" : "\xE2\x94\x8C";  // ╭ ┌
-  const char* tr = rounded ? "\xE2\x95\xAE" : "\xE2\x94\x90";  // ╮ ┐
-  const char* bl = rounded ? "\xE2\x95\xB0" : "\xE2\x94\x94";  // ╰ └
-  const char* br = rounded ? "\xE2\x95\xAF" : "\xE2\x94\x98";  // ╯ ┘
-  for (int x = r.x + 1; x < r.x + r.w - 1; ++x) {
-    g.put(x, r.y, "\xE2\x94\x80", color);
-    g.put(x, r.y + r.h - 1, "\xE2\x94\x80", color);
-  }
-  for (int y = r.y + 1; y < r.y + r.h - 1; ++y) {
-    g.put(r.x, y, "\xE2\x94\x82", color);
-    g.put(r.x + r.w - 1, y, "\xE2\x94\x82", color);
-  }
-  g.put(r.x, r.y, tl, color);
-  g.put(r.x + r.w - 1, r.y, tr, color);
-  g.put(r.x, r.y + r.h - 1, bl, color);
-  g.put(r.x + r.w - 1, r.y + r.h - 1, br, color);
-}
-
-void clear(Grid& g, const Rect& r) {
-  for (int y = r.y; y < r.y + r.h; ++y) {
-    for (int x = r.x; x < r.x + r.w; ++x) g.put(x, y, " ");
-  }
-}
-
 /// `+ abstract run(model: Model) -> list<Finding>`: visibility coloured, types coloured.
-void member(Grid& g, int x, int y, const std::string& line, const TextPen& pen) {
+void Text::member(Grid& g, int x, int y, const std::string& line) const {
+  const TextPen& pen = pen_;
   const Metrics& M = pen.M;
   const std::string& kType = pen.type;
   const std::string& kPublic = pen.publicMember;
@@ -295,31 +78,32 @@ void member(Grid& g, int x, int y, const std::string& line, const TextPen& pen) 
   }
 }
 
-void box(Grid& g, const Placed& p, const TextPen& pen) {
+void Text::box(Grid& g, const Placed& p) const {
+  const TextPen& pen = pen_;
   const Metrics& M = pen.M;
   const std::string& kMuted = pen.muted;
   const std::string& kName = pen.name;
   const std::string& kNote = pen.note;
   const IrNode& n = *p.node;
   const Rect& r = p.rect;
-  clear(g, r);
+  g.clear(r);
   if (n.kind == "initial" || n.kind == "final") {  // a dot where the machine starts, a bullseye where it ends (DS-442)
     g.text(r.x + r.w / 2, r.y, n.kind == "initial" ? "\xE2\x97\x8F" : "\xE2\x97\x89", kName);  // ● ◉
     return;
   }
   if (n.kind == "note") {
-    frame(g, r, false, kNote);
+    g.frame(r, false, kNote);
     const auto lines = text::linesOf(n.label);
     for (size_t i = 0; i < lines.size(); ++i) g.text(r.x + M.PAD_X, r.y + M.PAD_Y + static_cast<int>(i), lines[i], kNote);
     return;
   }
   const auto change = n.refs.find("change");
   const std::string changeColor = change == n.refs.end() ? "" : pen.changeMarkOf(change->second).colour;
-  frame(g, r, true, changeColor);
+  g.frame(r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
-  const std::string badge = badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
-  if (n.kind == "state") {                                      // a state carries no badge (DS-442)
+  const std::string badge = IrNode::badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
+  if (n.kind == "state") {                                              // a state carries no badge (DS-442)
   } else if (change != n.refs.end()) {
     const std::string mark = pen.changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
@@ -337,28 +121,29 @@ void box(Grid& g, const Placed& p, const TextPen& pen) {
     g.put(r.x + r.w - 1, y, "\xE2\x94\xA4");  // ┤
     ++y;
     // what a closed box offers, all of one kind: each name with the letter a box of its own would carry (DS-244)
-    const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
+    const std::string offered = s < n.sectionKinds.size() && !IrNode::holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
     for (const auto& line : section) {
       if (!offered.empty()) {
-        g.text(r.x + M.PAD_X, y, badgeOf(offered, false), pen.badgeColour(offered, false));
+        g.text(r.x + M.PAD_X, y, IrNode::badgeOf(offered, false), pen.badgeColour(offered, false));
         g.text(r.x + M.PAD_X + M.BADGE_W, y++, line);
       } else if (members)
-        member(g, r.x + M.PAD_X, y++, line, pen);
+        member(g, r.x + M.PAD_X, y++, line);
       else
         g.text(r.x + M.PAD_X, y++, line);
     }
   }
 }
 
-void container(Grid& g, const Placed& p, const TextPen& pen) {
+void Text::container(Grid& g, const Placed& p) const {
+  const TextPen& pen = pen_;
   const std::string& kContainer = pen.container;
   const Rect& r = p.rect;
-  frame(g, r, false, kContainer);
+  g.frame(r, false, kContainer);
   g.text(r.x + 2, r.y, " " + p.node->label + " ", kContainer);
 }
 
 /// The marker glyph for an edge that enters its target moving in (dx, dy).
-std::string marker(const std::string& kind, int dx, int dy) {
+std::string Text::marker(const std::string& kind, int dx, int dy) {
   if (kind == "inheritance" || kind == "realization")
     return dy < 0 ? "\xE2\x96\xB3" : dy > 0 ? "\xE2\x96\xBD" : dx < 0 ? "\xE2\x97\x81" : "\xE2\x96\xB7";  // △ ▽ ◁ ▷
   if (kind == "composition") return "\xE2\x97\x86";                                                       // ◆
@@ -367,7 +152,8 @@ std::string marker(const std::string& kind, int dx, int dy) {
   return dy < 0 ? "\xE2\x96\xB2" : dy > 0 ? "\xE2\x96\xBC" : dx < 0 ? "\xE2\x97\x80" : "\xE2\x96\xB6";  // ▲ ▼ ◀ ▶
 }
 
-void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId, const TextPen& pen) {
+void Text::edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) const {
+  const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kEdge = pen.edge;
   if (route.points.size() < 2) return;
@@ -453,20 +239,8 @@ void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, con
   }
 }
 
-}  // namespace
-
-// ---- sequences: lifelines as columns, messages as rows ----------------------------
-
-namespace {
-
-struct SeqLine {
-  std::string id;
-  std::string label;
-  int centre = 0;
-  int width = 0;
-};
-
-Grid sequenceGrid(const IrDocument& doc, const TextPen& pen) {
+Grid Text::sequenceGrid(const IrDocument& doc) const {
+  const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kName = pen.name;
   const std::string& kEdge = pen.edge;
@@ -546,7 +320,7 @@ Grid sequenceGrid(const IrDocument& doc, const TextPen& pen) {
   // lifelines
   for (const auto& l : lines) {
     const int x0 = l.centre - l.width / 2;
-    frame(g, Rect{x0, 0, l.width, 3}, true, "");
+    g.frame(Rect{x0, 0, l.width, 3}, true, "");
     g.text(x0 + 2, 1, l.label, kName);
     for (int y = 3; y < rows; ++y) g.put(l.centre, y, "\xE2\x94\x86", kMuted);  // ┆
   }
@@ -625,11 +399,8 @@ Grid sequenceGrid(const IrDocument& doc, const TextPen& pen) {
   return g;
 }
 
-}  // namespace
-
-namespace {
-
-Grid classGrid(const IrDocument& doc, const LayoutResult& lay, const TextPen& pen) {
+Grid Text::classGrid(const IrDocument& doc, const LayoutResult& lay) const {
+  const TextPen& pen = pen_;
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {
     minX = std::min(minX, p.rect.x - 1);
@@ -655,18 +426,18 @@ Grid classGrid(const IrDocument& doc, const LayoutResult& lay, const TextPen& pe
   }
   std::stable_sort(frames.begin(), frames.end(),
                    [](const Placed* a, const Placed* b) { return a->rect.w * a->rect.h > b->rect.w * b->rect.h; });
-  for (const Placed* f : frames) container(g, *f, pen);
+  for (const Placed* f : frames) container(g, *f);
   for (size_t i = 0; i < doc.edges.size(); ++i) {
     const auto r = lay.routes.find(i);
-    if (r != lay.routes.end()) edge(g, doc.edges[i], r->second, byId, pen);
+    if (r != lay.routes.end()) edge(g, doc.edges[i], r->second, byId);
   }
   for (const auto& p : lay.placed) {
-    if (p.node->kind != "container") box(g, p, pen);
+    if (p.node->kind != "container") box(g, p);
   }
   return g;
 }
 
-bool isSequence(const IrDocument& doc) {
+bool Text::isSequence(const IrDocument& doc) {
   for (const auto& n : doc.nodes) {
     if (n.kind == "lifeline") return true;
   }
@@ -674,15 +445,10 @@ bool isSequence(const IrDocument& doc) {
 }
 
 /// The grid keeps a one-cell margin on each side: the layout gets the rest.
-int contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2) : 0; }
+int Text::contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2) : 0; }
 
-}  // namespace
-
-namespace {
-/// The parts of a drawing (DS-245), one under the other with a line between: a terminal reads down.
-// A drawing that is a table (DS-251): a row of headings, a rule under it, and a row for each of its rows; a
-// cell against the machine is marked with a bang.
-Grid tableGrid(const IrDocument& doc, const TextPen& pen) {
+Grid Text::tableGrid(const IrDocument& doc) const {
+  const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kAgainst = pen.against;
   const IrTable& t = doc.table;
@@ -730,14 +496,15 @@ Grid tableGrid(const IrDocument& doc, const TextPen& pen) {
   return g;
 }
 
-Grid partsGrid(const IrDocument& doc, int maxWidth, const TextPen& pen) {
+Grid Text::partsGrid(const IrDocument& doc, int maxWidth) const {
+  const TextPen& pen = pen_;
   const Metrics& M = pen.M;
   std::vector<Grid> grids;
   int w = 1, h = 0;
   for (const auto& name : doc.parts) {
     const IrDocument part = doc.part(name);
     const IrDocument bundled = part.bundled();
-    grids.push_back(isSequence(part) ? sequenceGrid(part, pen) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth)), pen));
+    grids.push_back(isSequence(part) ? sequenceGrid(part) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth))));
     w = std::max(w, grids.back().columns());
     h += grids.back().rows() + (h ? 1 : 0);
   }
@@ -749,29 +516,28 @@ Grid partsGrid(const IrDocument& doc, int maxWidth, const TextPen& pen) {
   }
   return all;
 }
-}  // namespace
 
 Text::Text(const theme::Theme& theme) : pen_(theme) {}
 
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableGrid(doc, pen_).dump(color);
-  if (!doc.parts.empty()) return partsGrid(doc, maxWidth, pen_).dump(color);
-  if (isSequence(doc)) return sequenceGrid(doc, pen_).dump(color);
+  if (!doc.table.columns.empty()) return tableGrid(doc).dump(color);
+  if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
+  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   const IrDocument bundled = doc.bundled();
   return render(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), color);
 }
 
 std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
-  if (isSequence(doc)) return sequenceGrid(doc, pen_).dump(color);
-  return classGrid(doc, lay, pen_).dump(color);
+  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
+  return classGrid(doc, lay).dump(color);
 }
 
 void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
   const IrDocument bundled = doc.bundled();
-  const Grid g = !doc.table.columns.empty() ? tableGrid(doc, pen_)
-                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth, pen_)
-                 : isSequence(doc)          ? sequenceGrid(doc, pen_)
-                                            : classGrid(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), pen_);
+  const Grid g = !doc.table.columns.empty() ? tableGrid(doc)
+                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth)
+                 : isSequence(doc)          ? sequenceGrid(doc)
+                                            : classGrid(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)));
   out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
   out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
 }

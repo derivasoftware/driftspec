@@ -183,7 +183,7 @@ std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
       out << "<text class=\"pr-header\" x=\"" << r.x + r.w / 2 << "\" y=\"" << ty << "\" text-anchor=\"middle\">"
           << text::escapeXml(n.label) << "</text>";
     } else {
-      const std::string letter = badgeOf(n.classifier, n.abstract);
+      const std::string letter = IrNode::badgeOf(n.classifier, n.abstract);
       out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
       out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">"
           << text::escapeXml(letter) << "</text>";
@@ -197,12 +197,12 @@ std::string emitNode(const Placed& p, const std::string& px, const Metrics& M) {
       out << "<line class=\"pr-sep\" x1=\"" << r.x << "\" y1=\"" << sepY << "\" x2=\"" << r.x + r.w << "\" y2=\"" << sepY << "\"/>";
       ty += M.SECTION_GAP;
       // what a closed box offers, all of one kind: each name with the badge a box of its own would carry (DS-244)
-      const std::string offered = s < n.sectionKinds.size() && !holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
+      const std::string offered = s < n.sectionKinds.size() && !IrNode::holdsMembers(n.sectionKinds[s]) ? n.sectionKinds[s] : "";
       for (const auto& line : section) {
         if (!offered.empty()) {
           out << "<g class=\"pr-offered pr-classifier-" << offered << "\"><circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 6
               << "\" cy=\"" << ty - 4 << "\" r=\"6\"/><text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 6 << "\" y=\"" << ty - 1
-              << "\" text-anchor=\"middle\">" << text::escapeXml(badgeOf(offered, false)) << "</text></g>";
+              << "\" text-anchor=\"middle\">" << text::escapeXml(IrNode::badgeOf(offered, false)) << "</text></g>";
           out << "<text x=\"" << r.x + M.PAD_X + M.BADGE_W << "\" y=\"" << ty << "\">" << text::escapeXml(line) << "</text>";
           ty += M.LINE_H;
           continue;

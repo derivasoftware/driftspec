@@ -26,6 +26,14 @@ struct IrNode {
   std::vector<std::string> sectionKinds;
   std::pair<int, int> span{-1, -1};                   ///< frame: first and last sequence row
   std::vector<std::pair<int, std::string>> dividers;  ///< frame: else sections
+
+  /// Whether a section of a box holds members, written as signatures: attributes or methods. Any other kind of
+  /// section holds the names of what a closed box offers, all of that kind (DS-244): "class", "interface", ...
+  static bool holdsMembers(const std::string& sectionKind);
+
+  /// The letter a node's badge carries, the same in every drawing (DS-118): by its classifier, A for an
+  /// abstract class with none, the classifier's first letter for one the table does not name.
+  static std::string badgeOf(const std::string& classifier, bool abstract);
 };
 
 /// One relation of a render-IR document.
@@ -92,14 +100,6 @@ struct IrDocument {
 struct IrText {
   std::string json;
 };
-
-/// Whether a section of a box holds members, written as signatures: attributes or methods. Any other kind of
-/// section holds the names of what a closed box offers, all of that kind (DS-244): "class", "interface", ...
-bool holdsMembers(const std::string& sectionKind);
-
-/// The letter a node's badge carries, the same in every drawing (DS-118): by its classifier, A for an
-/// abstract class with none, the classifier's first letter for one the table does not name.
-std::string badgeOf(const std::string& classifier, bool abstract);
 
 }  // namespace render
 }  // namespace ds
