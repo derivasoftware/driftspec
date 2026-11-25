@@ -170,6 +170,11 @@ package driftspec@ds {
       + static orthogonal(spacing: Spacing) -> std::unique_ptr<IRouter>
     }
 
+    sequence RouterFactory::orthogonal {
+      local router: OrthogonalRouter
+      return router
+    }
+
     dataclass Layering {                     // one component layered: what the layerer works out and the orderer and the positioner read and add to
       @requirement REQ-00210-1
       + real: int
