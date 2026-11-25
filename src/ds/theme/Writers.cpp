@@ -15,15 +15,16 @@ const char* const SvgStyleSheet::kStylesheet = R"CSS(
     --pr-name: {{name}}; --pr-type: {{type}}; --pr-param: {{param}}; --pr-punct: {{punct}};
     --pr-vis-public: {{vis-public}}; --pr-vis-private: {{vis-private}}; --pr-vis-protected: {{vis-protected}}; --pr-vis-package: {{vis-package}};
     --pr-port-in: {{port-in}}; --pr-port-out: {{port-out}}; --pr-focus: {{focus}}; --pr-dimmed: {{dimmed}};
-    --pr-stroke-width: {{stroke-width}}; --pr-container-stroke-width: {{container-stroke-width}}; --pr-edge-width: {{edge-width}}; --pr-edge-hit: {{edge-hit}}; }
+    --pr-stroke-width: {{stroke-width}}; --pr-container-stroke-width: {{container-stroke-width}}; --pr-edge-width: {{edge-width}}; --pr-edge-hit: {{edge-hit}};
+    --pr-line-requirement: {{line-requirement}}; --pr-line-constraint: {{line-constraint}}; --pr-line-usecase: {{line-usecase}}; --pr-line-verification: {{line-verification}}; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
     --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
-    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; } }
+    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; --pr-line-requirement: {{line-requirement:dark}}; --pr-line-constraint: {{line-constraint:dark}}; --pr-line-usecase: {{line-usecase:dark}}; --pr-line-verification: {{line-verification:dark}}; } }
   [data-theme="dark"] .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
     --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
-    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; }
+    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; --pr-line-requirement: {{line-requirement:dark}}; --pr-line-constraint: {{line-constraint:dark}}; --pr-line-usecase: {{line-usecase:dark}}; --pr-line-verification: {{line-verification:dark}}; }
   .pr-diagram text { fill: var(--pr-text); }
   .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
   .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
@@ -50,6 +51,15 @@ const char* const SvgStyleSheet::kStylesheet = R"CSS(
   .pr-diagram .pr-abstract .pr-header { font-style: italic; }
   .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
   .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--pr-badge-dataclass); }
+  .pr-diagram .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-namespace .pr-header + .pr-sep { stroke: var(--pr-stroke); stroke-width: 1; }
+  .pr-diagram .pr-classifier-requirement .pr-header + .pr-sep { stroke: var(--pr-line-requirement); }
+  .pr-diagram .pr-classifier-constraint .pr-header + .pr-sep { stroke: var(--pr-line-constraint); }
+  .pr-diagram .pr-classifier-usecase .pr-header + .pr-sep { stroke: var(--pr-line-usecase); }
+  .pr-diagram .pr-classifier-verification .pr-header + .pr-sep { stroke: var(--pr-line-verification); }
   .pr-diagram .pr-name { fill: var(--pr-name); }
   .pr-diagram .pr-type { fill: var(--pr-type); }
   .pr-diagram .pr-param { fill: var(--pr-param); }
