@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -25,9 +24,9 @@ class TestTableProjector : public ::testing::Test {
     return *model.find("diagram:" + name);
   }
 
-  static const nlohmann::json* node(const nlohmann::json& body, const std::string& id) {
-    for (const auto& n : body["nodes"]) {
-      if (n["id"] == id) return &n;
+  static const ds::render::IrNode* node(const ds::render::IrDocument& body, const std::string& id) {
+    for (const auto& n : body.nodes) {
+      if (n.id == id) return &n;
     }
     return nullptr;
   }
@@ -37,13 +36,13 @@ class TestTableProjector : public ::testing::Test {
 };
 
 TEST_F(TestTableProjector, TheTableHoldsTheMachineAndTheDrawingNoNode) {
-  const nlohmann::json body = ds::render::TableProjector(model, metamodel).project(diagram("states", "TB_Order"));
-  ASSERT_TRUE(body.contains("table"));
-  EXPECT_FALSE(body["table"]["columns"].empty());
-  EXPECT_FALSE(body["table"]["rows"].empty());
-  EXPECT_TRUE(body["nodes"].empty());
-  EXPECT_TRUE(body["edges"].empty());
-  EXPECT_FALSE(body.contains("ir"));  // the head is IrExport's: a projector writes the body alone
-  EXPECT_FALSE(body.contains("title"));
+  const ds::render::IrDocument body = ds::render::TableProjector(model, metamodel).project(diagram("states", "TB_Order"));
+  ASSERT_TRUE(body.table.has_value());
+  EXPECT_FALSE(body.table->columns.empty());
+  EXPECT_FALSE(body.table->rows.empty());
+  EXPECT_TRUE(body.nodes.empty());
+  EXPECT_TRUE(body.edges.empty());
+  EXPECT_TRUE(body.kind.empty());  // the head is IrExport's: a projector writes the body alone
+  EXPECT_TRUE(body.title.empty());
 }
 }  // namespace

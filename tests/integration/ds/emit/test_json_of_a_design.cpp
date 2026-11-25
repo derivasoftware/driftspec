@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/api/Api.hpp"
 #include "ds/api/Browser.hpp"
 #include "ds/api/Workspace.hpp"
@@ -98,7 +99,7 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
     }
     const ds::render::IrExport ir(model, metamodel());
     for (const auto& id : ir.diagrams()) {
-      const ds::render::IrText diagram{ir.render(id, false)};
+      const ds::render::IrText diagram{ds::test::irJson(ir, id)};
       if (diagram.json.size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
       for (const char* format : {"layout", "cells"}) {
         (std::string(format) == "layout" ? ds::format::DescriptionFactory::layout(diagram, kTheme, 0)

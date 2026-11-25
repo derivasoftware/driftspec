@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -25,9 +24,9 @@ class TestRequirementProjector : public ::testing::Test {
     return *model.find("diagram:" + name);
   }
 
-  static const nlohmann::json* node(const nlohmann::json& body, const std::string& id) {
-    for (const auto& n : body["nodes"]) {
-      if (n["id"] == id) return &n;
+  static const ds::render::IrNode* node(const ds::render::IrDocument& body, const std::string& id) {
+    for (const auto& n : body.nodes) {
+      if (n.id == id) return &n;
     }
     return nullptr;
   }
@@ -37,12 +36,12 @@ class TestRequirementProjector : public ::testing::Test {
 };
 
 TEST_F(TestRequirementProjector, EachRequirementIsABoxOfItsKind) {
-  const nlohmann::json body = ds::render::RequirementProjector(model, metamodel).project(diagram("artefacts", "REQ_Tracker"));
+  const ds::render::IrDocument body = ds::render::RequirementProjector(model, metamodel).project(diagram("artefacts", "REQ_Tracker"));
   ASSERT_NE(node(body, "REQ-00001-2"), nullptr);
-  EXPECT_EQ((*node(body, "REQ-00001-2"))["kind"], "box");
-  EXPECT_EQ((*node(body, "REQ-00001-2"))["classifier"], "requirement");
-  EXPECT_FALSE(body["edges"].empty());
-  EXPECT_FALSE(body.contains("ir"));  // the head is IrExport's: a projector writes the body alone
-  EXPECT_FALSE(body.contains("title"));
+  EXPECT_EQ(node(body, "REQ-00001-2")->kind, "box");
+  EXPECT_EQ(node(body, "REQ-00001-2")->classifier, "requirement");
+  EXPECT_FALSE(body.edges.empty());
+  EXPECT_TRUE(body.kind.empty());  // the head is IrExport's: a projector writes the body alone
+  EXPECT_TRUE(body.title.empty());
 }
 }  // namespace

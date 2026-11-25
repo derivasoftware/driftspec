@@ -3,6 +3,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -46,7 +47,7 @@ class TestFunctions : public ::testing::Test {
   }
 
   nlohmann::json render(const std::string& diagram) const {
-    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
+    return nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram));
   }
 };
 

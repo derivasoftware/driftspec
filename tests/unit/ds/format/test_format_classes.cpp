@@ -43,6 +43,44 @@ TEST(TestDiagramIr, TheIrAsItCameOrIndented) {
   EXPECT_EQ(nlohmann::json::parse(f.write(kDiagram, pretty, sink)), nlohmann::json::parse(kDiagram.json));
 }
 
+/// A diagram's render-IR written once (DS-418): every record's keys in byte order (the sink's check would throw
+/// otherwise), a key written when it says something: a node's label even when empty, abstract when said either way,
+/// a message's order from 0, every key of a table's records; an empty text, list or map not at all.
+TEST(TestIrDescription, EveryKeyInByteOrderAndWrittenWhenItSaysSomething) {
+  ds::render::IrDocument doc;
+  doc.kind = "class";
+  doc.title = "T";
+  ds::render::IrNode dot;
+  dot.id = "p@m::A::initial";
+  dot.kind = "initial";
+  dot.classifier = "initial";
+  ds::render::IrNode box;
+  box.id = "p@m::A";
+  box.kind = "box";
+  box.label = "A";
+  box.classifier = "class";
+  box.abstract = false;
+  box.sections = {{"+ x: int"}};
+  box.sectionKinds = {"attributes"};
+  box.refs = {{"location", "a.ds:3"}, {"change", "added"}};
+  doc.nodes = {dot, box};
+  ds::render::IrEdge first = ds::render::IrEdge::between("p@m::A", "p@m::B", "message");
+  first.order = 0;
+  first.dashed = true;
+  doc.edges = {first};
+  doc.table = ds::render::IrTable{"Order", {"Open"}, {{"pay", "", {{"", "none", ""}}}}};
+  ds::emit::JsonSink sink(false, true);  // checked: a key out of byte order or repeated throws
+  ds::format::IrDescription(doc).describe(sink);
+  EXPECT_EQ(
+      sink.result(),
+      R"({"edges":[{"dashed":true,"from":"p@m::A","kind":"message","order":0,"to":"p@m::B"}],"ir":1,"kind":"class",)"
+      R"("nodes":[{"classifier":"initial","id":"p@m::A::initial","kind":"initial","label":""},)"
+      R"({"abstract":false,"classifier":"class","id":"p@m::A","kind":"box","label":"A","refs":{"change":"added","location":"a.ds:3"},)"
+      R"("sectionKinds":["attributes"],"sections":[["+ x: int"]]}],)"
+      R"("table":{"columns":["Open"],"corner":"Order","rows":[{"cells":[{"kind":"none","text":"","title":""}],"label":"pay","title":""}]},)"
+      R"("title":"T"})");
+}
+
 TEST(TestLayoutDescription, EveryNodePlacedAndEveryEdgeRouted) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   ds::format::LayoutDescription(kDiagram, kTheme, 0).describe(sink);

@@ -218,6 +218,21 @@ package driftspec@ds {
       + describe(out_sink: emit::ISink) -> void fails NotImplemented
     }
 
+    // a diagram's render-IR (DS-418): the document IrExport made, written once, every record's keys in byte order, so it
+    // streams into any sink with nothing kept back; a key is written when it says something
+    class IrDescription : IDescription {
+      @requirement REQ-00106-3
+      - refs document_: render::IrDocument
+      + IrDescription(document: render::IrDocument)
+      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      - static node(node: render::IrNode, out_sink: emit::ISink) -> void
+      - static edge(edge: render::IrEdge, out_sink: emit::ISink) -> void
+      - static table(table: render::IrTable, out_sink: emit::ISink) -> void
+      - static text(name: std::string_view, value: std::string, out_sink: emit::ISink) -> void      // only when it holds something
+      - static refs(refs: std::map<std::string, std::string>, out_sink: emit::ISink) -> void        // in their map's order, only when any
+      - static texts(name: std::string_view, values: std::vector<std::string>, out_sink: emit::ISink) -> void
+    }
+
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
     class LayoutDescription : IDescription {
       @requirement REQ-00106-3
@@ -247,6 +262,7 @@ package driftspec@ds {
       + static scene(document: scene::SceneDocument) -> std::unique_ptr<IDescription>
       + static report(report: check::Report) -> std::unique_ptr<IDescription>
       + static answers(answers: std::vector<query::Answer>) -> std::unique_ptr<IDescription>
+      + static ir(document: render::IrDocument) -> std::unique_ptr<IDescription>   // a diagram's render-IR (DS-418)
       + static layout(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
       + static cells(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
     }
@@ -362,6 +378,11 @@ package driftspec@ds {
 
     sequence DescriptionFactory::answers {
       local description: AnswersDescription
+      return description
+    }
+
+    sequence DescriptionFactory::ir {
+      local description: IrDescription
       return description
     }
 

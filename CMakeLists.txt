@@ -323,6 +323,9 @@ foreach(test_src IN LISTS driftspec_TESTS)
   get_filename_component(test_name ${test_src} NAME_WE)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
+  target_include_directories(
+    ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
+                                                            # share (DS-418)
   if(test_src MATCHES "/tests/unit/ds/app/") # the command line's functions
                                              # (DS-311)
     target_link_libraries(${test_name} PRIVATE ds_app)
@@ -344,6 +347,9 @@ foreach(test_src IN LISTS driftspec_INTEGRATION_TESTS)
   get_filename_component(test_name ${test_src} NAME_WE)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
+  target_include_directories(
+    ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
+                                                            # share (DS-418)
   target_compile_definitions(
     ${test_name}
     PRIVATE DRIFTSPEC_EXAMPLES_DIR="${CMAKE_SOURCE_DIR}/examples"

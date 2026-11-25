@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <nlohmann/json.hpp>
 #include <string>
 
 #include "ds/bind/Binder.hpp"
@@ -25,9 +24,9 @@ class TestSequenceProjector : public ::testing::Test {
     return *model.find("diagram:" + name);
   }
 
-  static const nlohmann::json* node(const nlohmann::json& body, const std::string& id) {
-    for (const auto& n : body["nodes"]) {
-      if (n["id"] == id) return &n;
+  static const ds::render::IrNode* node(const ds::render::IrDocument& body, const std::string& id) {
+    for (const auto& n : body.nodes) {
+      if (n.id == id) return &n;
     }
     return nullptr;
   }
@@ -37,17 +36,17 @@ class TestSequenceProjector : public ::testing::Test {
 };
 
 TEST_F(TestSequenceProjector, TheCallerAndTheSubjectAreLifelinesAndTheMessagesAreOrdered) {
-  const nlohmann::json body = ds::render::SequenceProjector(model, metamodel).project(diagram("behaviour", "SEQ_Run"));
+  const ds::render::IrDocument body = ds::render::SequenceProjector(model, metamodel).project(diagram("behaviour", "SEQ_Run"));
   ASSERT_NE(node(body, "caller"), nullptr);
-  EXPECT_EQ((*node(body, "caller"))["classifier"], "actor");
+  EXPECT_EQ(node(body, "caller")->classifier, "actor");
   ASSERT_NE(node(body, "ds@ds::Checker"), nullptr);
-  EXPECT_EQ((*node(body, "ds@ds::Checker"))["kind"], "lifeline");
+  EXPECT_EQ(node(body, "ds@ds::Checker")->kind, "lifeline");
   int order = 0;
-  for (const auto& e : body["edges"]) {
-    if (e["kind"] == "message") EXPECT_EQ(e["order"], order++);
+  for (const auto& e : body.edges) {
+    if (e.kind == "message") EXPECT_EQ(e.order, order++);
   }
   EXPECT_GT(order, 2);
-  EXPECT_FALSE(body.contains("ir"));  // the head is IrExport's: a projector writes the body alone
-  EXPECT_FALSE(body.contains("title"));
+  EXPECT_TRUE(body.kind.empty());  // the head is IrExport's: a projector writes the body alone
+  EXPECT_TRUE(body.title.empty());
 }
 }  // namespace
