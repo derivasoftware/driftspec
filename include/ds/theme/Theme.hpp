@@ -14,6 +14,7 @@ namespace theme {
 struct Measures {
   int advance = 0;
   int lineHeight = 0;
+  int smallAdvance = 0;  ///< a character of the small text labels are written in (DS-464)
 };
 
 /// Where a drawing goes: a page (pixels) or a terminal (cells).

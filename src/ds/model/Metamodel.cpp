@@ -181,7 +181,9 @@ std::vector<KindSpec> Metamodel::build() {
   k.push_back({Kind::Outcome,
                "one way a use case ends: default when it goes well, a named scenario when it does not",
                {writtenField("text", FieldType::Text, "what is obtained, in a line"),
-                syntax("returns", FieldType::Type, "what it gives back when not what the use case returns")},
+                syntax("returns", FieldType::Type, "what it gives back when not what the use case returns"),
+                syntax("fails", FieldType::Name,
+                       "the failure it is the end of: one escaping the use case's scenario ends in this outcome (DS-467)")},
                {},
                {Kind::UseCase}});
   k.push_back(

@@ -416,7 +416,7 @@
     {
       "write": {
         "below": {
-          "find": "-> app::main(workspace) / check -> code"
+          "find": "local check: app::CheckCommand"
         },
         "text": "-> app::main(workspace, 2)"
       },

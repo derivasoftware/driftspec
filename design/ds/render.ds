@@ -665,6 +665,38 @@ package driftspec@ds {
 
     // a sequence composed for SVG: lanes wide enough for their heads and the labels that cross them, a row per
     // message in pixels, frames around the messages they span (DS-400)
+    // a sequence of the render-IR as the layout's sequence graph: lifelines as lanes, messages between two of them by
+    // row, frames that span rows as blocks; what each stands for kept beside it, in the same order (DS-464)
+    class SequenceProjection {
+      @requirement REQ-00007-1
+      - owns graph_: layout::SequenceGraph
+      - refs many lanes_: std::vector<const IrNode*>
+      - refs many messages_: std::vector<const IrEdge*>
+      - refs many blocks_: std::vector<const IrNode*>
+      - laneOf_: std::map<std::string, std::size_t>
+      + SequenceProjection(doc: IrDocument)
+      + graph() -> layout::SequenceGraph
+      + lanes() -> std::vector<const IrNode*>
+      + messages() -> std::vector<const IrEdge*>
+      + blocks() -> std::vector<const IrNode*>
+      + laneOf() -> std::map<std::string, std::size_t>   // a lifeline's lane, by its id
+      + takeLaneOf() -> std::map<std::string, std::size_t>   // handed over: the projection keeps none after
+    }
+
+    // the sequence projected into the layout's graph and placed by its sequence engine with the SVG's measures
+    // (DS-464); what each place stands for read back from the projection
+    sequence SequenceSvgComposer::compose {
+      local projection: SequenceProjection
+      local engine: layout::ISequenceEngine
+      opt there is no lifeline / no-lane {
+        return figure
+      }
+      -> layout::SequenceSpacing::of(advance, lineHeight, smallAdvance) -> spacing
+      -> layout::EngineFactory::sequence(spacing) -> made
+      -> engine.place(graph) -> placed
+      return figure
+    }
+
     class SequenceSvgComposer : IComposer {
       @requirement REQ-00007-1
       - owns metrics_: Metrics
@@ -731,6 +763,7 @@ package driftspec@ds {
       @requirement REQ-00231-1              // its text measures are the theme's (DS-393)
       + CHAR_W: int
       + LINE_H: int
+      + SMALL_W: int                         // a character of small text: the theme's measures (DS-464)
       + PAD_X: int
       + PAD_Y: int
       + SECTION_GAP: int

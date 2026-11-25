@@ -91,16 +91,17 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string namedFactory = "driftspec@ds@factories-are-named-factory";
   const std::string throughInterface = "driftspec@ds@families-are-reached-through-their-interface";
   const std::string givenAtConstruction = "driftspec@ds@what-a-class-refers-to-is-given-to-it";
+  const std::string appClasses = "driftspec@ds@app::app-operations-belong-to-classes";
 };
 
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,     alone,         builtOnce,        binderClasses,       modelClasses,  axisClasses,
-        axisReads,        exporterClasses, exporterReads, apiChooses,       machineClasses,      machineReads,  queryClasses,
-        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses,     sceneReads,          layerLayout,   packerModel,
-        namedI,           namedA,          namedFactory,  throughInterface, givenAtConstruction, layoutRender,  layoutScene,
-        sceneEngine,      renderEngine,    renderClasses, projectors,       drawingsModel,       drawingsQuery, drawingsAxis})
+       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses, axisClasses,      axisReads,
+        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses, stepsAsInterface, stepsAlone,
+        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,       namedA,           namedFactory,
+        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine, renderClasses,    projectors,
+        drawingsModel,    drawingsQuery,       drawingsAxis, appClasses})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -163,6 +164,19 @@ TEST_F(TestEnginePrinciples, AFunctionOfTheQueryIsTold) {
   EXPECT_FALSE(has(hidden, modelClasses));
 }
 
+/// A function of the command line is told, a public one or one hidden in the module (DS-409): reading the disk, writing
+/// a document and deciding the exit code are each a class's; main, the program's entry, is the one function app has.
+TEST_F(TestEnginePrinciples, AFunctionOfTheCommandLineIsTold) {
+  const std::vector<std::string> loose =
+      broken({{"ds/app.ds", "  module app {", "    function titleOf(dir: std::string) -> std::string\n"}});
+  EXPECT_TRUE(has(loose, appClasses));
+  EXPECT_FALSE(has(loose, queryClasses));
+  const std::vector<std::string> hidden =
+      broken({{"ds/app.ds", "  module app {", "    - function emit(output: std::string, text: std::string) -> int\n"}});
+  EXPECT_TRUE(has(hidden, appClasses));
+  EXPECT_FALSE(has(hidden, modelClasses));
+}
+
 TEST_F(TestEnginePrinciples, AnAxisThatChangesTheModelIsTold) {
   const std::vector<std::string> rules = broken({{"ds/axis.ds", "  module axis {",
                                                   "    class Marker {\n"
@@ -190,12 +204,12 @@ TEST_F(TestEnginePrinciples, AnExporterThatChangesTheModelIsTold) {
   EXPECT_FALSE(has(rules, exporterClasses));
 }
 
-/// Only the Api chooses which steps of the check a load runs (DS-376): a function of the command line or a class of
-/// the drawing that names the selection is told, and so is a behaviour outside the Api that makes the steps itself.
+/// Only the Api chooses which steps of the check a load runs (DS-376): a verb of the command line or a class of the
+/// drawing that names the selection is told, and so is a behaviour outside the Api that makes the steps itself.
 TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
-  const std::vector<std::string> byFunction = broken({{"ds/app.ds", "    - function diagramId(name: std::string) -> std::string",
-                                                       "    - function drawingSteps(format: std::string) -> check::Selection\n"}});
-  EXPECT_TRUE(has(byFunction, apiChooses));
+  const std::vector<std::string> byVerb =
+      broken({{"ds/app.ds", "    class RenderCommand : ICommand {", "      - drawingSteps(format: std::string) -> check::Selection\n"}});
+  EXPECT_TRUE(has(byVerb, apiChooses));
   const std::vector<std::string> byClass = broken({{"ds/render.ds", "    class IrExport {", "      - refs steps_: check::Selection\n"}});
   EXPECT_TRUE(has(byClass, apiChooses));
   EXPECT_FALSE(has(byClass, axisReads));
@@ -203,7 +217,8 @@ TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
 
 TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::StepFactory::of(selection) -> steps\n"}});
+      broken({{"ds/app.ds", "      -> api::Workspace::madeFor(metamodel_, files, whole, diagram) -> workspace",
+               "      -> check::StepFactory::of(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
 }

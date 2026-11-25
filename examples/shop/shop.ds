@@ -171,3 +171,45 @@ diagram TOUR_BuyBoxes {
   include: shop@shell::buy
   close: package
 }
+
+// A walk through the shop for someone who arrives today: each step shows one of the diagrams above and
+// lights what it is about, by identity, so a rename is told here too.
+diagram WALK_Buy {
+  kind: walkthrough
+  title: How the shop sells an item
+  step What the shop promises {
+    show: REQ_Shop
+    focus: SREQ-00001-1
+    highlight: SREQ-00002-1
+    at: SREQ-00001-1
+    text: The shop sells an item that is in stock, and its sales reach the warehouse only through the counter.
+  }
+  step Two packages and a counter between them {
+    show: HLD_Shop
+    focus: shop@sales
+    highlight: shop@warehouse
+    at: shop@sales
+    text: The sales take the order; the warehouse holds the stock and is reached through its counter.
+  }
+  step The way in {
+    show: SEQ_Buy
+    focus: shop@shell::buy
+    highlight: shop@sales@desk::Desk::sell
+    at: shop@sales@desk::Desk::sell
+    text: shop buy <item> asks the desk to sell it, and answers with the code the desk gives.
+  }
+  step When it is sold out {
+    show: SEQ_Buy / sold-out
+    focus: shop@sales@desk::Desk::sell
+    highlight: shop@warehouse@counter::take
+    at: shop@sales@desk::Desk::sell
+    text: If the counter hands nothing over, the desk answers 1 and the command exits 1.
+  }
+  step Who holds what {
+    show: CL_Shop
+    focus: shop@sales@desk::Desk
+    highlight: shop@warehouse@stock::Shelf
+    at: shop@sales@desk::Desk
+    text: The desk refers to the counter, never to the shelf: the rule sales-knows-no-shelf keeps it so.
+  }
+}

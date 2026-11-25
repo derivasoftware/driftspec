@@ -38,6 +38,9 @@ std::vector<model::Finding> FailureCheck::check() {
     if (operation && !e.expected) checkFailures(e);
     if (e.kind == model::Kind::UseCase && !e.expected) checkScenario(e);
   }
+  const std::set<std::string> named = failureNames();
+  for (const auto& pair : model_->entities())
+    if (pair.second.kind == model::Kind::UseCase && !pair.second.expected) checkOutcomes(pair.second, named);
   std::vector<model::Finding> out;
   out.swap(found_);
   return out;
@@ -124,10 +127,73 @@ void FailureCheck::checkScenario(const model::Entity& usecase) {
     const model::Entity* seq = model_->find(r.from);
     if (seq && model::Identity(seq->id).scenario().empty()) at = seq->location;
   }
-  for (const auto& name : text::splitTrimmed(usecase.field("escapes"), ','))
+  // a failure an outcome is the end of ends there (DS-467): the use case says it, as a signature would
+  std::set<std::string> ended;
+  for (const model::Entity* o : outcomesOf(usecase.id))
+    if (!o->field("fails").empty()) ended.insert(o->field("fails"));
+  for (const auto& name : text::splitTrimmed(usecase.field("escapes"), ',')) {
+    if (ended.count(name)) continue;
     found_.push_back(context_->metamodel().finding(
         model::Code::W_FAILURE_UNDECLARED,
         usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at));
+  }
+}
+
+std::vector<const model::Entity*> FailureCheck::outcomesOf(const std::string& usecase) const {
+  // up the chain of what it specialises, never round a cycle; an outcome redefined by name is the nearest one
+  std::vector<const model::Entity*> out;
+  std::set<std::string> seen, names;
+  for (std::string at = usecase; !at.empty() && seen.insert(at).second;) {
+    for (const auto& member : model_->index().members(at)) {
+      const model::Entity* o = model_->find(member);
+      if (o && o->kind == model::Kind::Outcome && names.insert(o->name).second) out.push_back(o);
+    }
+    const auto up = model_->index().fromOfKind(at, "inherits");
+    at = up.empty() ? std::string() : up.front().to;
+  }
+  return out;
+}
+
+std::set<std::string> FailureCheck::failureNames() const {
+  // what a failure is written as: a type, an error code an enum lists, what a signature promises, what a step fails
+  std::set<std::string> out;
+  const auto add = [&out](const std::string& name) {
+    if (name.empty() || name == "nothing") return;
+    out.insert(name);
+    out.insert(model::Identity(name).lastName());
+  };
+  for (const auto& pair : model_->entities()) {
+    const model::Entity& e = pair.second;
+    if (e.kind == model::Kind::Class || e.kind == model::Kind::Enum || e.kind == model::Kind::Interface) add(e.name);
+    if (e.kind == model::Kind::Enum)
+      for (const auto& v : text::splitTrimmed(e.field("values"), ',')) add(v);
+    for (const auto& f : text::splitTrimmed(e.field("fails"), ','))
+      if (e.kind != model::Kind::Outcome) add(f);
+  }
+  return out;
+}
+
+void FailureCheck::checkOutcomes(const model::Entity& usecase, const std::set<std::string>& named) {
+  std::map<std::string, const model::Entity*> ending;  // each failure, by the first outcome that is its end
+  for (const model::Entity* o : outcomesOf(usecase.id)) {
+    const std::string failure = o->field("fails");
+    if (failure.empty()) continue;
+    const bool own = model::Identity(o->id).text().rfind(usecase.id + "::", 0) == 0;
+    // what is named nowhere is a slip; a failure declared and failed by nothing yet is a design partly written (DS-467)
+    if (own && !named.count(failure) && !named.count(model::Identity(failure).lastName()))
+      found_.push_back(context_->metamodel().finding(
+          model::Code::W_OUTCOME_FAILURE_UNKNOWN,
+          o->id + " is the end of " + failure + ", which the workspace names nowhere: no type, value or signature has it", o->location));
+    const auto first = ending.find(failure);
+    if (first == ending.end()) {
+      ending[failure] = o;
+    } else if (own || model::Identity(first->second->id).text().rfind(usecase.id + "::", 0) == 0) {
+      found_.push_back(context_->metamodel().finding(model::Code::W_OUTCOME_FAILURE_TWICE,
+                                                     usecase.id + "'s outcomes " + first->second->name + " and " + o->name +
+                                                         " are both the end of " + failure + ": one failure ends in one outcome",
+                                                     o->location));
+    }
+  }
 }
 
 }  // namespace check
