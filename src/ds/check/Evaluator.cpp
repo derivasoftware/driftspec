@@ -24,7 +24,8 @@ std::string Evaluator::describe(const std::vector<std::pair<std::string, std::st
 }
 
 void Evaluator::report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at) {
-  found_.push_back(metamodel_.finding(code, owner + " " + message, at));
+  // the rule or definition is its subject, a breach too: the breach itself carries the entities it binds (DS-426)
+  found_.push_back(metamodel_.finding(code, owner + " " + message, at, owner));
 }
 
 std::vector<model::Finding> Evaluator::run() {

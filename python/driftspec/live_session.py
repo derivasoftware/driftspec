@@ -234,20 +234,13 @@ class Live:
                      for c in e.fields.get(key, "").split("; ") if c.strip()]
             breaches = [{"bindings": [list(p) for p in b.bindings], "witness": [list(p) for p in b.witness],
                          "file": rel(b.location.file), "line": b.location.line} for b in model.breaches.get(e.id, [])]
+            # a rule's problems are the findings about it, by identity (DS-426): no longer by place and message prefix
             problems = [{"code": f.code, "message": f.message.removeprefix(e.id + " ")} for f in findings
-                        if self.within(f.location, e.location) and f.code.startswith(("E-RULE", "W-RULE", "W-DEFINITION"))
-                        and f.code != "E-RULE-BROKEN"]
+                        if f.subject == e.id and f.code != "E-RULE-BROKEN"]
             rules.append({"id": e.id, "kind": e.kind, "name": e.name, "title": e.fields.get("title", ""), "scope": e.scope.rstrip("@"),
                           "lines": lines, "requirements": [r.target for r in model.relations if r.kind == "satisfies" and r.source == e.id],
                           "broken": breaches, "problems": problems, "file": rel(e.location.file), "line": e.location.line})
         return rules
-
-    @staticmethod
-    def within(place, span) -> bool:
-        """Whether a place is written inside a declaration's span, from where it opens to where it ends (DS-421): the
-        problems of a rule are the findings written in it, whatever their message says."""
-        end = (span.end_line, span.end_column) if span.end_line else (span.line, float("inf"))
-        return place.file == span.file and (span.line, span.column) <= (place.line, place.column) <= end
 
     def reload(self) -> bool:
         if not self.watcher.changed():

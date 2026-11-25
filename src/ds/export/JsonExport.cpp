@@ -51,7 +51,9 @@ void JsonExport::findings(const std::vector<model::Finding>& findings, emit::ISi
   for (const auto& f : findings) {
     out_sink.beginRecord().field("code").value(f.code).field("location");
     location(f.location, out_sink);
-    out_sink.field("message").value(f.message).field("severity").value(metamodel_.severityOf(f.severity).name).endRecord();
+    out_sink.field("message").value(f.message).field("severity").value(metamodel_.severityOf(f.severity).name);
+    if (!f.subject.empty()) out_sink.field("subject").value(f.subject);  // what it is about, when it says (DS-426)
+    out_sink.endRecord();
   }
   out_sink.endList();
 }
