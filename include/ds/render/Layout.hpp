@@ -23,6 +23,7 @@ struct Metrics {
   int SEQ_HEAD_LEAST = 0;   ///< the least room a sequence's head is drawn in (DS-464)
   int SEQ_SELF_LEAST = 0;   ///< the least room a message to its own lane is drawn in
   int SEQ_FRAME_LEAST = 0;  ///< the least room between a frame's edge and the next
+  int TABLE_MARKS = 0;      ///< whether a table's cells are marked in their text: "! " against the machine, "·" empty (DS-464)
   int PAD_X = 10;
   int PAD_Y = 10;
   int SECTION_GAP = 4;
@@ -67,6 +68,7 @@ struct Metrics {
     m.SEQ_HEAD_LEAST = 3;   // a boxed head: its border, its name, its border
     m.SEQ_SELF_LEAST = 3;   // a loop's label and arrow, and the row it returns on
     m.SEQ_FRAME_LEAST = 1;  // a frame's edge is a row of its own
+    m.TABLE_MARKS = 1;      // a terminal has no style to mark a cell with: it writes the mark
     m.ASPECT = 0.8;         // a terminal cell is about twice as tall as wide: 1.6 on screen is 0.8 in cells
     return m;
   }

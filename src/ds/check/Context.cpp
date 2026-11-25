@@ -20,7 +20,8 @@ void Context::checkVisibility(const std::string& from, const std::string& target
   const std::string what = h && h->field("visibility") == "#" ? "protected" : "private";
   report(metamodel_.finding(
       model::Code::W_NOT_VISIBLE,
-      from + " reaches " + target + (hidden == target ? ", which is " + what : " through " + hidden + ", which is " + what), location));
+      from + " reaches " + target + (hidden == target ? ", which is " + what : " through " + hidden + ", which is " + what), location,
+      from));
 }
 
 void Context::checkLeak(const std::string& from, const std::string& target, const model::Location& location) {
@@ -42,7 +43,7 @@ void Context::checkLeak(const std::string& from, const std::string& target, cons
     const auto visibility = e->fields.find("visibility");
     if (visibility != e->fields.end() && visibility->second == "-") return;
   }
-  report(metamodel_.finding(model::Code::W_PRIVATE_LEAK, from + " is public and shows " + target + ", which is private", location));
+  report(metamodel_.finding(model::Code::W_PRIVATE_LEAK, from + " is public and shows " + target + ", which is private", location, from));
 }
 
 std::vector<model::Finding> Context::take() {

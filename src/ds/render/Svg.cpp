@@ -12,6 +12,7 @@
 #include "ds/render/EdgeMarkup.hpp"
 #include "ds/render/Lane.hpp"
 #include "ds/render/SequenceLayout.hpp"
+#include "ds/render/TableLayout.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Writers.hpp"
 
@@ -498,48 +499,15 @@ std::string Svg::sequenceSvg(const Figure& figure) const {
 }
 
 /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
-std::string Svg::tableSvg(const IrDocument& doc) const {
+std::string Svg::tableSvg(const Figure& figure) const {
+  const IrDocument& doc = figure.document();
+  const TableLayout& L = *figure.table;
   const std::string& style = style_;
   const IrTable& t = *doc.table;  // drawn as a table only when it has one
-  const int charW = 8, padX = 14, rowH = 34, headH = 38, lineH = 17;
-  const std::size_t kWrap = 40;  // a cell is as wide as this many characters; what is longer goes on more lines (DS-268)
-  const auto lines = [&](const std::string& text) {
-    std::vector<std::string> out{""};
-    std::istringstream in(text);
-    std::string word;
-    while (in >> word) {
-      // measured in characters, as the terminal's table measures (DS-466): ≠ is one, though UTF-8 writes it in three bytes
-      if (!out.back().empty() && text::characters(out.back()) + 1 + text::characters(word) > kWrap) out.push_back("");
-      out.back() += (out.back().empty() ? "" : " ") + word;
-    }
-    return out;
-  };
-  const auto widest = [&](const std::string& text) {
-    std::size_t w = 0;
-    for (const auto& l : lines(text)) w = std::max(w, text::characters(l));
-    return static_cast<int>(w);
-  };
-  std::vector<int> widths{widest(t.corner)};
-  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], widest(row.label));
-  for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    int longest = widest(t.columns[c]);
-    for (const IrRow& row : t.rows)
-      if (c < row.cells.size()) longest = std::max(longest, widest(row.cells[c].text));
-    widths.push_back(longest);
-  }
-  int width = 0;
-  for (int& w : widths) {
-    w = w * charW + 2 * padX;
-    width += w;
-  }
-  std::vector<int> heights;
-  int height = headH;
-  for (const IrRow& row : t.rows) {
-    std::size_t most = lines(row.label).size();
-    for (const IrCell& it : row.cells) most = std::max(most, lines(it.text).size());
-    heights.push_back(std::max(rowH, static_cast<int>(most) * lineH + 17));
-    height += heights.back();
-  }
+  const int padX = L.padX, lineH = L.lineHeight, headH = L.headHeight;
+  const std::vector<int>& widths = L.columnWidth;
+  const std::vector<int>& heights = L.rowHeight;
+  const int width = L.width, height = L.height;
   std::ostringstream out;
   out << "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"-10 -10 " << width + 20 << " " << height + 20 << "\" width=\"" << width + 20
       << "\" height=\"" << height + 20 << "\" style=\"max-width:100%;height:auto\" class=\"pr-diagram\" role=\"img\">\n";
@@ -551,9 +519,8 @@ std::string Svg::tableSvg(const IrDocument& doc) const {
          "\n  .pr-diagram .pr-cell-against rect { stroke: var(--pr-removed); stroke-width: 2; }"
          "\n  .pr-diagram .pr-cell-against text { fill: var(--pr-removed); font-weight: 600; }"
       << "</style>\n";
-  const auto cell = [&](int x, int y, int w, int h, const std::string& text, const std::string& kind, const std::string& title,
-                        bool centred) {
-    const auto written = lines(text);
+  const auto cell = [&](int x, int y, int w, int h, const std::vector<std::string>& written, const std::string& kind,
+                        const std::string& title, bool centred) {
     out << "<g class=\"pr-cell pr-cell-" << kind << "\">";
     if (!title.empty()) out << "<title>" << text::escapeXml(title) << "</title>";
     out << "<rect x=\"" << x << "\" y=\"" << y << "\" width=\"" << w << "\" height=\"" << h << "\"/>";
@@ -564,19 +531,19 @@ std::string Svg::tableSvg(const IrDocument& doc) const {
     out << "</g>\n";
   };
   int x = 0;
-  cell(x, 0, widths[0], headH, t.corner, "head", "", false);
+  cell(x, 0, widths[0], headH, L.corner, "head", "", false);
   x += widths[0];
   for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    cell(x, 0, widths[c + 1], headH, t.columns[c], "head", "", true);
+    cell(x, 0, widths[c + 1], headH, L.headings[c], "head", "", true);
     x += widths[c + 1];
   }
   int y = headH;
   for (std::size_t r = 0; r < t.rows.size(); ++r) {
-    cell(0, y, widths[0], heights[r], t.rows[r].label, "head", t.rows[r].title, false);
+    cell(0, y, widths[0], heights[r], L.labels[r], "head", t.rows[r].title, false);
     x = widths[0];
     for (std::size_t c = 0; c < t.columns.size() && c < t.rows[r].cells.size(); ++c) {
       const IrCell& it = t.rows[r].cells[c];
-      cell(x, y, widths[c + 1], heights[r], it.text, it.kind, it.title, lines(it.text).size() == 1);
+      cell(x, y, widths[c + 1], heights[r], L.cells[r][c], it.kind, it.title, L.cells[r][c].size() == 1);
       x += widths[c + 1];
     }
     y += heights[r];
@@ -622,7 +589,7 @@ Svg::Svg(const theme::Theme& theme)
       sequenceStyle_(theme::ThemeWriterFactory::of().at("sequence")->write(theme)) {}
 
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
-  if (doc.table && !doc.table->columns.empty()) return tableSvg(doc);
+  if (doc.table && !doc.table->columns.empty()) return draw(ComposerFactory::of("table", "svg", metrics_)->compose(doc, maxWidth));
   if (!doc.parts.empty()) {
     std::vector<std::pair<std::string, std::string>> drawings;
     for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});
@@ -636,6 +603,7 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
 
 std::string Svg::draw(const Figure& figure) const {
   if (figure.sequence) return sequenceSvg(figure);
+  if (figure.table) return tableSvg(figure);
   const IrDocument& doc = figure.document();
   const LayoutResult& lay = figure.layout;
   const Metrics& M = metrics_;

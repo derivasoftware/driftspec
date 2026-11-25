@@ -199,7 +199,8 @@ publish-python:
   rules:
     - if: $ARGOS_ON_DEMAND
       when: never
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # bump on merge: the merge commit still carries the published version, the bump commit's pipeline publishes (DDEV-1557)
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_TITLE =~ /^Bump version/
   needs: [python-wheel]
   interruptible: false
   script:

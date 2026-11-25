@@ -151,7 +151,7 @@ std::vector<model::Finding> LevelCoherence::check() {
         found.push_back(context_->metamodel().finding(
             model::Code::W_LEVEL_NOT_BELOW,
             says + ", which the behaviour below it (" + through + ") does not show yet: what " + c.from + " does is not all written",
-            c.location));
+            c.location, scenario.id));
         continue;
       }
       // it is done below, at a place no other crossing said takes: the order is what differs
@@ -162,13 +162,14 @@ std::vector<model::Finding> LevelCoherence::check() {
         elsewhere = elsewhere || !taken.count(static_cast<int>(j));
       }
       if (elsewhere) {
-        found.push_back(context_->metamodel().finding(
-            model::Code::W_LEVEL_ORDER, says + " here, and the behaviour below it (" + through + ") does it in another order", c.location));
+        found.push_back(context_->metamodel().finding(model::Code::W_LEVEL_ORDER,
+                                                      says + " here, and the behaviour below it (" + through + ") does it in another order",
+                                                      c.location, scenario.id));
       } else {
         found.push_back(context_->metamodel().finding(
             model::Code::W_LEVEL_NO_CROSSING,
             says + ", and the behaviour below it (" + through + ") " + (atAll ? "does not do it that many times" : "never does"),
-            c.location));
+            c.location, scenario.id));
       }
     }
   }

@@ -76,7 +76,7 @@ void DiagramCheck::checkDiagrams() {
           continue;
         found_.push_back(context_->metamodel().finding(model::Code::W_SCENARIO_UNDECLARED,
                                                        pair.second.name + " asks for " + pattern + ", a scenario nobody declares",
-                                                       pair.second.location));
+                                                       pair.second.location, pair.second.id));
       }
     }
     // a pattern that names what nothing declares is a broken reference, as in the model (DS-212); a box that
@@ -89,16 +89,17 @@ void DiagramCheck::checkDiagrams() {
         if (kind || namesSomething(pattern)) continue;
         found_.push_back(context_->metamodel().finding(
             model::Code::W_DIAGRAM_UNDECLARED, pair.second.name + " " + key + "s " + pattern + ", which the workspace declares nowhere",
-            pair.second.location));
+            pair.second.location, pair.second.id));
       }
     }
     // the diagram a cut is taken from is a reference like any other
     const std::string lender = pair.second.field("cut");
     const model::Entity* lent = lender.empty() ? nullptr : model_->find("diagram:" + lender);
     if (!lender.empty() && (!lent || lent->kind != model::Kind::Diagram)) {
-      found_.push_back(context_->metamodel().finding(
-          model::Code::W_DIAGRAM_UNDECLARED,
-          pair.second.name + " takes the cut of " + lender + ", a diagram the workspace declares nowhere", pair.second.location));
+      found_.push_back(
+          context_->metamodel().finding(model::Code::W_DIAGRAM_UNDECLARED,
+                                        pair.second.name + " takes the cut of " + lender + ", a diagram the workspace declares nowhere",
+                                        pair.second.location, pair.second.id));
     }
     // a number field too large for an int is no number either, and a finding where it used to abort (DS-337);
     // neighbours: is read as depth: is, with no * of its own, and each has a code of its own (DS-362)
@@ -110,7 +111,7 @@ void DiagramCheck::checkDiagrams() {
       found_.push_back(context_->metamodel().finding(depth ? model::Code::W_DIAGRAM_DEPTH : model::Code::W_DIAGRAM_NEIGHBOURS,
                                                      pair.second.name + " asks for " + key + " '" + written->second +
                                                          "': " + (depth ? "a number, or * for every level" : "a number of steps"),
-                                                     pair.second.location));
+                                                     pair.second.location, pair.second.id));
     }
   }
 }

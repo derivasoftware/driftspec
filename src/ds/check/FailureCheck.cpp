@@ -86,7 +86,7 @@ void FailureCheck::checkHandlers() {
         model::Code::W_HANDLER_UNREACHED,
         "the handler of " + failure + " handles nothing: no step of its attempt fails with it" +
             (possible.empty() ? "" : " (they fail with " + join(std::vector<std::string>(possible.begin(), possible.end()), ", ") + ")"),
-        handler.location));
+        handler.location, handler.id));
   }
 }
 
@@ -108,14 +108,15 @@ void FailureCheck::checkFailures(const model::Entity& op) {
         model::Code::W_FAILURE_UNDECLARED,
         op.id + " lets " + name + " escape (" + how + "), and " +
             (promises ? "its signature does not say it may fail with it" : "a boundary must say what it fails with"),
-        op.location));
+        op.location, op.id));
   }
   const bool behaviour = !model_->index().toOfKind(op.id, "behaviour-of").empty();
   if (!behaviour) return;  // with no behaviour, the signature is what it fails with
   for (const auto& name : declared) {
     if (escaping.count(name)) continue;
-    found_.push_back(context_->metamodel().finding(
-        model::Code::W_FAILURE_UNREACHED, op.id + " says it may fail with " + name + ", and no path of its behaviour does", op.location));
+    found_.push_back(context_->metamodel().finding(model::Code::W_FAILURE_UNREACHED,
+                                                   op.id + " says it may fail with " + name + ", and no path of its behaviour does",
+                                                   op.location, op.id));
   }
 }
 
@@ -135,7 +136,8 @@ void FailureCheck::checkScenario(const model::Entity& usecase) {
     if (ended.count(name)) continue;
     found_.push_back(context_->metamodel().finding(
         model::Code::W_FAILURE_UNDECLARED,
-        usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at));
+        usecase.id + " lets " + name + " escape (" + usecase.field("escape." + name) + "), and its scenario does not handle it", at,
+        usecase.id));
   }
 }
 
@@ -183,7 +185,8 @@ void FailureCheck::checkOutcomes(const model::Entity& usecase, const std::set<st
     if (own && !named.count(failure) && !named.count(model::Identity(failure).lastName()))
       found_.push_back(context_->metamodel().finding(
           model::Code::W_OUTCOME_FAILURE_UNKNOWN,
-          o->id + " is the end of " + failure + ", which the workspace names nowhere: no type, value or signature has it", o->location));
+          o->id + " is the end of " + failure + ", which the workspace names nowhere: no type, value or signature has it", o->location,
+          o->id));
     const auto first = ending.find(failure);
     if (first == ending.end()) {
       ending[failure] = o;
@@ -191,7 +194,7 @@ void FailureCheck::checkOutcomes(const model::Entity& usecase, const std::set<st
       found_.push_back(context_->metamodel().finding(model::Code::W_OUTCOME_FAILURE_TWICE,
                                                      usecase.id + "'s outcomes " + first->second->name + " and " + o->name +
                                                          " are both the end of " + failure + ": one failure ends in one outcome",
-                                                     o->location));
+                                                     o->location, usecase.id));  // the sentence is about the use case's outcomes
     }
   }
 }

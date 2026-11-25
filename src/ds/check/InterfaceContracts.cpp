@@ -77,7 +77,7 @@ void InterfaceContracts::checkInterfaces() {
     const std::string behaviour = model::Identity(e.id).sequence().text();
     if (!model_->find(behaviour)) {
       found_.push_back(context_->metamodel().finding(model::Code::W_OPERATION_NO_BEHAVIOUR,
-                                                     e.id + " has no sequence that says how it is handled", e.location));
+                                                     e.id + " has no sequence that says how it is handled", e.location, e.id));
     }
     for (const auto& field : e.fields) {
       if (field.first.rfind("exit ", 0) != 0) continue;
@@ -91,7 +91,7 @@ void InterfaceContracts::checkInterfaces() {
       if (!model_->find(id)) {
         found_.push_back(context_->metamodel().finding(model::Code::W_SCENARIO_UNDECLARED,
                                                        e.id + " exits " + code + " on '" + field.second + "', and it has no such scenario",
-                                                       e.location));
+                                                       e.location, e.id));
         continue;
       }
       std::set<std::string> seen;
@@ -99,7 +99,7 @@ void InterfaceContracts::checkInterfaces() {
       if (!outcome.empty() && outcome != code) {
         found_.push_back(context_->metamodel().finding(
             model::Code::W_OUTCOME_MISMATCH,
-            e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location));
+            e.id + " promises exit " + code + " on '" + field.second + "', and that trace ends in " + outcome, e.location, e.id));
       }
     }
   }
@@ -133,7 +133,7 @@ void InterfaceContracts::checkRealisations() {
       found_.push_back(context_->metamodel().finding(model::Code::W_INTERFACE_SIGNATURE,
                                                      method->id + " takes and gives " + signature(*method) + ", and " + op->id +
                                                          ", which " + cls->id + " realises, takes and gives " + signature(*op),
-                                                     method->location));
+                                                     method->location, method->id));
     }
   }
 }
@@ -154,7 +154,7 @@ void InterfaceContracts::checkViews(const model::Entity& state) {
         if (!views.count(name)) {
           found_.push_back(context_->metamodel().finding(
               model::Code::W_VIEW_UNDECLARED, "the navigation of " + state.name + " names '" + name + "', which is not one of its views",
-              state.location));
+              state.location, state.id));
         }
       }
       if (from != to) next[from].insert(to);  // staying where you are is no way in or out
@@ -174,10 +174,10 @@ void InterfaceContracts::checkViews(const model::Entity& state) {
     const model::Entity* v = model_->find(state.id + "::" + view);
     if (!reached.count(view)) {
       found_.push_back(context_->metamodel().finding(model::Code::W_VIEW_UNREACHABLE,
-                                                     "nothing leads to the view " + view + " of " + state.name, v->location));
+                                                     "nothing leads to the view " + view + " of " + state.name, v->location, v->id));
     } else if (views.size() > 1 && next[view].empty()) {
       found_.push_back(context_->metamodel().finding(model::Code::W_VIEW_NO_WAY_OUT,
-                                                     "nothing leaves the view " + view + " of " + state.name, v->location));
+                                                     "nothing leaves the view " + view + " of " + state.name, v->location, v->id));
     }
   }
 }
@@ -194,7 +194,7 @@ void InterfaceContracts::checkStates(const model::Entity& state) {
     if (std::find(finals.begin(), finals.end(), move.from) == finals.end()) continue;
     found_.push_back(context_->metamodel().finding(
         model::Code::W_STATE_LEAVES_FINAL, "the transition " + move.from + " -> " + move.to + " of " + state.name + " leaves a final state",
-        state.location));
+        state.location, state.id));
   }
   const std::string initial = machine::Machine(*model_, state).initial();
   if (initial.empty()) return;
@@ -219,7 +219,7 @@ void InterfaceContracts::checkStates(const model::Entity& state) {
     if (reached.count(name)) continue;
     found_.push_back(context_->metamodel().finding(
         model::Code::W_STATE_UNREACHABLE, "nothing leads to the state " + name + " of " + state.name + " from its initial state " + initial,
-        state.location));
+        state.location, model_->find(state.id + "::" + name) ? state.id + "::" + name : state.id));
   }
 }
 

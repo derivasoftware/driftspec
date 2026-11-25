@@ -351,7 +351,8 @@ bool requestOf(PyObject* dict, ds::service::Request* out) {
   return true;
 }
 
-// run(name, request) -> (outcome, object): the use case of that name over the design the workspace holds (DS-459).
+// run(name, request) -> (outcome, object, message): the use case of that name over the design the workspace holds
+// (DS-459), and what its outcome says, "" when it says nothing (DS-479).
 // The model is loaded with the GIL released, then the use case describes its document as Python objects, holding it;
 // a request that is not the use case's is ValueError, what the sink cannot write NotImplementedError as elsewhere
 PyObject* workspaceRun(PyObject* self, PyObject* args) {
@@ -408,7 +409,7 @@ PyObject* workspaceRun(PyObject* self, PyObject* args) {
     return nullptr;
   }
   PyObject* built = sink.take();
-  PyObject* out = Py_BuildValue("(sN)", outcome.name.c_str(), built);
+  PyObject* out = Py_BuildValue("(sNs)", outcome.name.c_str(), built, outcome.message.c_str());
   return out;
 }
 
@@ -459,7 +460,8 @@ PyMethodDef kWorkspaceMethods[] = {
     {"render", ask3<&ds::api::Workspace::render>, METH_VARARGS, "render(diagram, format, width) -> str: '' when none"},
     {"page", workspacePage, METH_VARARGS, "page(title, focus) -> str: the viewer, framed on the identities given"},
     {"reload", workspaceReload, METH_VARARGS, "reload(files) -> None: loaded again from the files given, in place"},
-    {"run", workspaceRun, METH_VARARGS, "run(name, request) -> (outcome, object): a use case, described as Python objects"},
+    {"run", workspaceRun, METH_VARARGS,
+     "run(name, request) -> (outcome, object, message): a use case, described as Python objects, and what its outcome says"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyType_Slot kWorkspaceSlots[] = {
