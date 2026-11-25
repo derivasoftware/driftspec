@@ -312,7 +312,9 @@ package driftspec@ds {
       + exportModel(files: Files) -> std::string
       + static expectedAt(text: std::string, line: int, column: int) -> std::string
       + severities() -> std::string            // the severity table, as JSON: name, fails, keptApart, editor (DS-386)
-      + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string
+      // the format named, drawn as the workspace draws it; one that is none of the five fails NotImplemented, never
+      // a text drawing instead (DS-453)
+      + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented
       + page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
     }
 
@@ -397,6 +399,7 @@ package driftspec@ds {
       return json
     }
 
+    // the format goes to the workspace as it is named, and its NotImplemented to the caller (DS-453)
     sequence Api::render {
       local workspace: Workspace
       -> workspace.render(diagram, format, width) -> drawing
@@ -484,10 +487,11 @@ package driftspec@ds {
       same revision says render draws cells and layout too (DS-453).
     tags: api, python
     // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
-    // byte for byte as after the whole check
-    verification VER-00094-3 {
-      status: approved
-      title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, says what the grammar takes at a place, and draws a diagram with only the steps of the check it reads, chosen by the Api alone, as after the whole check
+    // byte for byte as after the whole check; revision 4 (DS-453): in each of its five formats, as the workspace
+    // draws it, cells and layout no longer as text
+    verification VER-00094-4 {
+      status: draft
+      title: Integration tests confirm the engine checks, exports, draws and pages a workspace given as text, says what the grammar takes at a place, and draws a diagram in each of its five formats as the workspace draws it, with only the steps of the check it reads, chosen by the Api alone, as after the whole check
       method: test
       tests:
         tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.TheExampleChecksCleanAsTheCommandLineSays

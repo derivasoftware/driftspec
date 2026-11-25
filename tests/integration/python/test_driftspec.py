@@ -113,6 +113,23 @@ class TestDrawing:
         assert "Greeter" in driftspec.render(hola, "CL_Hola", "text", 120)
         assert driftspec.render(hola, "NoSuchDiagram") == ""
 
+    def test_a_diagram_draws_in_the_format_it_is_asked_for(self, hola):
+        # each of the five as a workspace draws it, as ds render -f writes it: cells and layout are no text drawing
+        # (DS-453)
+        ws = driftspec.Workspace(hola)
+        drawn = {format: driftspec.render(hola, "CL_Hola", format, 120) for format in ("cells", "ir", "layout", "svg", "text")}
+        for format, drawing in drawn.items():
+            assert drawing and drawing == ws.render("CL_Hola", format, 120), format
+        assert len(set(drawn.values())) == 5
+
+    def test_a_format_a_diagram_has_no_writer_for_raises_not_implemented(self, hola):
+        # the engine's NotImplemented, as Workspace.render raises it (DS-398), never a text drawing instead (DS-453)
+        with pytest.raises(driftspec.NotImplemented) as raised:
+            driftspec.render(hola, "CL_Hola", "yaml")
+        assert isinstance(raised.value, NotImplementedError)
+        assert (raised.value.document, raised.value.technology) == ("diagram", "yaml")
+        assert str(raised.value) == "the diagram is not written in yaml; there is: cells ir layout svg text"
+
     def test_the_viewer_opens_framed_where_it_is_asked(self, hola):
         page = driftspec.page(hola, "hola", ["hola@core::Greeter"])
         assert page.startswith("<!doctype html>") and 'const FOCUS=["hola@core::Greeter"];' in page
