@@ -4,24 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>/*TITLE*/ · DriftSpec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 /* theme: viewer, written from the theme (DS-393): tools/theme.py --write */
 :root{
-  --bg:#f6f4ef;--panel:#fffdf8;--fg:#1d1c1a;--muted:#6b675f;--line:#d6d0c3;--soft:#ece8de;
-  --accent:#2f5d8a;--accent-soft:#d6e4f2;--req:#8a4b2f;--req-soft:#f3e3d8;
-  --priv:#8c8579;--pkg:#efe9dc;--mod:#f8f5ee;--ifc:#e3edf7;
-  --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#2f8a4a;--warn:#d9822b;--bad:#c0392b;
-  --r-owns:#c2185b;--r-agg:#00838f;--r-uses:#5c6bc0;--r-calls:#c62828;
-  --you:#2f62c9;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
-  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
-  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#eeeeee;--panel:#ffffff;--fg:#1d1d1d;--muted:#6a6a6a;--line:#dcdcdc;--soft:#f2f2f2;
+  --accent:#6B3FB8;--accent-soft:#e4dcf2;--req:#168a4d;--req-soft:#dcede4;
+  --priv:#9e9e9e;--pkg:#f6f6f6;--mod:#fbfbfb;--ifc:#ffffff;
+  --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#168a4d;--warn:#a47a00;--bad:#d1343f;
+  --r-owns:#9a6b00;--r-agg:#0f766e;--r-uses:#1d5fbf;--r-calls:#cf4a14;
+  --rule:#9a9a9a;--v-pub:#1e8e3e;--v-prot:#a67c00;--v-priv:#d1343f;--s-ty:#267f99;--s-pn:#001080;
+  --you:#6B3FB8;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#151618;--panel:#1d1f22;--fg:#e8e6e1;--muted:#9a968d;--line:#3a3d42;--soft:#26292d;
-  --accent:#7fb0e0;--accent-soft:#203a55;--req:#e3a27f;--req-soft:#3a271d;
-  --priv:#857f75;--pkg:#1a1c1f;--mod:#212427;--ifc:#1c2a37;
-  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#6cc68a;--warn:#f0a35a;--bad:#f07a6a;
-  --r-owns:#f06292;--r-agg:#4dd0e1;--r-uses:#9fa8da;--r-calls:#ef7f7f;}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
+  --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
+  --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
+  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
+  --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
+  --rule:#5a5a5a;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --you:#B79CF0;}}
+:root[data-theme="dark"]{
+  --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
+  --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
+  --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
+  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
+  --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
+  --rule:#5a5a5a;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --you:#B79CF0;}
 /* end theme: viewer */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
@@ -44,6 +57,7 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .mini{position:absolute;left:10px;bottom:10px;width:170px;height:120px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;z-index:2}
 .legend{position:absolute;left:190px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;z-index:2;max-width:calc(100% - 260px)}
 .legend i{display:inline-block;width:5px;height:12px;vertical-align:-2px;margin-right:3px}
+.legend i.bd{width:13px;height:13px;border-radius:50%;font:700 8.5px/13px var(--mono);font-style:normal;text-align:center;color:var(--panel);vertical-align:-2px}
 .legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
 .card{position:absolute;right:62px;top:54px;width:min(330px,calc(100% - 80px));max-height:calc(100% - 120px);overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow);padding:10px 12px;font-size:13px;z-index:4}
 .card[hidden],.pop[hidden]{display:none}
@@ -163,7 +177,8 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 /* ds render --css: the reader's stylesheet goes here, after the viewer's, so it wins.
    The viewer draws with these variables: --bg --panel --fg --muted --line --soft --accent --accent-soft
    --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum --k-interface --k-abstract
-   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --you --shadow --shadow-pop --shadow-soft --mono --sans */
+   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --rule --v-pub --v-prot --v-priv --s-ty --s-pn --you --shadow
+   --shadow-pop --shadow-soft --mono --sans */
 /*CSS*/
 </style>
 </head>
@@ -176,7 +191,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
-  <div class="legend"><span><i style="background:var(--k-class)"></i>class</span><span><i style="background:var(--k-function)"></i>function</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>linked to a requirement</span><span><b style="background:var(--warn)"></b>no requirement</span><span>dashed: private</span><span>◁ inherits · ◁┄ realises</span><span>on touching a box: <b style="background:var(--r-owns)"></b>composes <b style="background:var(--r-agg)"></b>aggregates <b style="background:var(--r-calls)"></b>calls <b style="background:var(--r-uses)"></b>uses</span></div>
+  <div class="legend"><span><i class="bd" style="background:var(--k-class)">C</i>class</span><span><i class="bd" style="background:var(--k-function)">F</i>function</span><span><i class="bd" style="background:var(--k-dataclass)">D</i>dataclass</span><span><i class="bd" style="background:var(--k-enum)">E</i>enum</span><span><b style="background:var(--ok);border-radius:2px"></b>linked to a requirement</span><span><b style="background:var(--warn);border-radius:2px"></b>no requirement</span><span>members: <b style="background:var(--v-pub)"></b>public <b style="background:var(--v-priv)"></b>private</span><span>dashed: private</span><span>◁ inherits · ◁┄ realises</span><span>on touching a box: <b style="background:var(--r-owns)"></b>composes <b style="background:var(--r-agg)"></b>aggregates <b style="background:var(--r-calls)"></b>calls <b style="background:var(--r-uses)"></b>uses</span></div>
   <div class="card" id="card" hidden></div>
 </div>
 <aside class="tour" id="tour" hidden aria-label="Tour">
@@ -263,8 +278,31 @@ let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),you:g('--you'),shadow:g('--shadow'),ok:g('--ok'),warn:g('--warn'),bad:g('--bad'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-interface'),abstract:g('--k-abstract')},
-    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')},
+    rule:g('--rule')||g('--fg'),vpub:g('--v-pub')||g('--ok'),vprot:g('--v-prot')||g('--warn'),vpriv:g('--v-priv')||g('--priv'),ty:g('--s-ty')||g('--fg'),pn:g('--s-pn')||g('--fg')};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
+// the playground's look (DS-495): the theme set on the page, and the fonts once they arrive, redraw the map in them
+new MutationObserver(()=>{css(); loop();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+// the playground's fonts, asked for once the page has loaded so the first draw never waits on the network; the system's
+// meanwhile, or for good offline, and the map drawn again when they arrive
+if(document.fonts) document.fonts.addEventListener('loadingdone',()=>loop());
+addEventListener('load',()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap'; document.head.appendChild(l);},0));
+const LETTER={class:'C',interface:'I',dataclass:'D',enum:'E',function:'F',abstract:'A',package:'P',module:'M'}, TIP=.75;
+// a kind's badge, as the playground draws one: a disc in its colour, its letter in the panel's
+function badge(x,y,r,col,letter){ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fillStyle=col; ctx.fill(); const t=r*1.36;
+  ctx.font=`700 ${t}px ${K.mono}`; ctx.fillStyle=K.panel; ctx.textAlign='center'; ctx.fillText(letter,x,y+t*.36); ctx.textAlign='left';}
+// a member written as the playground writes one: its visibility a dot, the name, then what it takes and gives in their
+// colours; the text is the row's label, at the size and place it had
+function member(label,x,y,px,vis,weight){const dot=vis==='-'?K.vpriv:vis==='#'?K.vprot:K.vpub, dr=Math.max(1.5,px*.24);
+  ctx.beginPath(); ctx.arc(x+dr,y-px*.34,dr,0,7); ctx.fillStyle=dot; ctx.fill(); x+=dr*2+px*.45;
+  const t=label.replace(/^[+\-#~]\s*/,''), k=t.search(/[(:]/), name=k<0?t:t.slice(0,k), rest=k<0?'':t.slice(k);
+  ctx.font=`${weight||''} ${px}px ${K.mono}`; const put=(t,c)=>{if(!t) return; ctx.fillStyle=c; ctx.fillText(t,x,y); x+=ctx.measureText(t).width;};
+  put(name,vis==='-'?K.priv:K.fg); const close=rest.indexOf(')');
+  if(rest.startsWith('(')&&close>=0){put('(',K.muted); rest.slice(1,close).split(/(,\s*|:\s*)/).forEach((q,i)=>put(q,/^[,:]/.test(q)?K.muted:(i%4===2?K.ty:K.pn))); put(')',K.muted);
+    const after=rest.slice(close+1), m=after.match(/^(\s*(?:→|->|:)\s*)(.*)$/); if(m){put(m[1],K.muted); put(m[2],K.ty);} else put(after,K.muted);}
+  else {const m=rest.match(/^(:\s*)(.*)$/); if(m){put(m[1],K.muted); put(m[2],K.ty);} else put(rest,K.ty);}
+  return x;}
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
 new ResizeObserver(resize).observe(stage);
@@ -287,41 +325,46 @@ function draw(){
   ctx.setTransform(DPR*U,0,0,DPR*U,0,0); ctx.fillStyle=K.bg; ctx.fillRect(0,0,W,H);
   // packages and modules
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
-    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.fg; ctx.lineWidth=sel||hl?2.6:pkg?1.6:1.3; ctx.stroke();
+    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.line; ctx.lineWidth=sel||hl?2.6:pkg?1.4:1.1; ctx.stroke();
     const px=Math.min(pkg?18:16,Math.max(11,(pkg?30:22)*cam.s)); const room=(pkg?90:46)*cam.s;
-    if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.fg,'700'); return;}
+    if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.muted,'700'); return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    const st=`«${n.kind}» `; ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+10,b.y+px+8,px*.72,K.muted); text(n.label,b.x+10+off,b.y+px+8,px,K.fg,'700'); ctx.restore();});
+    const br=px*.42; badge(b.x+10+br,b.y+px*.64+8,br,K.muted,LETTER[n.kind]); text(n.label,b.x+10+2*br+px*.4,b.y+px+8,px,K.muted,'700'); ctx.restore();});
   // units with their rows
   UNITS.forEach(id=>{const n=N[id], b=scr(n); if(n.hidden||!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=(SEL||REQSEL)&&SEL!==id&&!(SEL&&anc(id).includes(SEL))&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
     const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1);}
-    ctx.setLineDash(GHOST.has(id)?[3,3]:n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
-    const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
-    const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){ctx.beginPath(); ctx.arc(b.x+b.w-dr-4,b.y+dr+4,dr,0,7); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
+    ctx.setLineDash(GHOST.has(id)?[3,3]:n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.rule); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1:.6); ctx.stroke(); ctx.setLineDash([]);
+    const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s));
+    const kid=(KIDS[id]||[]).find(r=>visible(N[r])), hh=Math.max(0,Math.min((kid?scr(N[kid]).y:b.y+b.h)-b.y,b.h));
+    if(hh>1&&hh<b.h){ctx.strokeStyle=kc; ctx.lineWidth=Math.max(1,Math.min(2.5,2*cam.s)); ctx.beginPath(); ctx.moveTo(b.x+.5,b.y+hh); ctx.lineTo(b.x+b.w-.5,b.y+hh); ctx.stroke();}
+    else if(!lab){ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,Math.max(1,b.w-2),Math.max(1,Math.min(sw,b.h-2)));}
+    const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){rr(b.x+b.w-2*dr-4,b.y+4,2*dr,2*dr,dr*.35); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
     if(!lab){ctx.globalAlpha=1; return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); const st=(n.vis==='-'?'− ':'')+'«'+n.st+'» ';
-    ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+sw+5,hy,px*.72,kc); text(n.label,b.x+sw+5+off,hy,px,K.fg,'700');
-    if(BASE_FAR[id]){ctx.font=`700 ${px}px ${K.mono}`; const lw=ctx.measureText(n.label).width; text(' ◁ '+BASE_FAR[id].join(', '),b.x+sw+5+off+lw,hy,px*.85,K.muted);}
+    const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); const br=px*.5; badge(b.x+5+br,hy-px*.34,br,kc,LETTER[n.st]||'C');
+    const st=n.vis==='-'?'− ':''; ctx.font=`${px*.72}px ${K.mono}`; const off=2*br+9+ctx.measureText(st).width; text(st,b.x+2*br+9,hy,px*.72,K.priv);
+    ctx.font=`${n.st==='abstract'?'italic ':''}700 ${px}px ${K.mono}`; ctx.fillStyle=K.fg; ctx.fillText(n.label,b.x+off,hy);
+    if(BASE_FAR[id]){ctx.font=`700 ${px}px ${K.mono}`; const lw=ctx.measureText(n.label).width; text(' ◁ '+BASE_FAR[id].join(', '),b.x+off+lw,hy,px*.85,K.muted);}
     if(n.reqs.length&&cam.s>2) chip(n.reqs,b.x+b.w-2*dr-12,hy);
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(!visible(r)) return; const rb=scr(r); if(rb.y>H||rb.y+rb.h<0) return;
       const f=FORCED.has(rid), rpx=f?Math.max(9.5,Math.min(13,r.h*cam.s*.78)):Math.min(13,r.h*cam.s*.78);
       if(ACTIVE.has(rid)){ctx.fillStyle=K.as; ctx.fillRect(rb.x+1,rb.y,rb.w-2,Math.max(rb.h,rpx+4));}
-      const rh=HLROW.get(rid); if(rh&&!ACTIVE.has(rid)){const hh=Math.max(rb.h,rpx+4); ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+sw,rb.y,rb.w-sw-1,hh); ctx.globalAlpha=1; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+rb.w-5,rb.y+1,4,hh-2);}
-      text(r.label,rb.x+sw+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg,(ACTIVE.has(rid)||HLROW.has(rid))?'700':'');
-      if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); ctx.beginPath(); ctx.arc(rb.x+rb.w-rd-6,rb.y+rb.h/2,rd,0,7);
+      const rh=HLROW.get(rid); if(rh&&!ACTIVE.has(rid)){const hh=Math.max(rb.h,rpx+4); ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+1,rb.y,rb.w-2,hh); ctx.globalAlpha=1; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+rb.w-5,rb.y+1,4,hh-2);}
+      member(r.label,rb.x+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis,(ACTIVE.has(rid)||HLROW.has(rid))?'700':'');
+      if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); rr(rb.x+rb.w-2*rd-6,rb.y+rb.h/2-rd,2*rd,2*rd,rd*.35);
         if(r.reqs.length){ctx.fillStyle=K.ok; ctx.fill();} else {ctx.strokeStyle=K.line; ctx.lineWidth=1.2; ctx.stroke();}}
       if(r.reqs.length&&cam.s>2.6) chip(r.reqs,rb.x+rb.w-18,rb.y+rb.h/2+rpx*.36);});
     ctx.restore(); ctx.globalAlpha=1;});
   // interfaces, on their package's border
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='iface'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
-    const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:K.accent; ctx.lineWidth=SEL===id||ihl?3:1.6; ctx.stroke();
+    const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:SEL===id?K.accent:K.rule; ctx.lineWidth=SEL===id||ihl?3:1; ctx.stroke();
     const px=Math.min(15,Math.max(10,20*cam.s)); ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    text('«interface»',b.x+10,b.y+px*.8+8,px*.72,K.muted); text(n.label,b.x+10,b.y+px*1.9+8,px,K.fg,'700');
+    const ihy=b.y+px*1.35+8, ibr=px*.5; badge(b.x+10+ibr,ihy-px*.34,ibr,K.kc.interface,'I'); ctx.font=`italic 700 ${px}px ${K.mono}`; ctx.fillStyle=K.fg; ctx.fillText(n.label,b.x+14+2*ibr,ihy);
+    const ifk=(KIDS[id]||[]).find(r=>!N[r].hidden); if(ifk){const ly=(scr(N[ifk]).y+ihy+px*.3)/2; ctx.strokeStyle=K.kc.interface; ctx.lineWidth=Math.max(1,Math.min(2.5,2*cam.s)); ctx.beginPath(); ctx.moveTo(b.x+.5,ly); ctx.lineTo(b.x+b.w-.5,ly); ctx.stroke();}
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(r.hidden) return; const rb=scr(r); if(rb.h<6) return; const rpx=Math.max(9,Math.min(13,r.h*cam.s*.55));
-      const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.accent; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
-      const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
+      const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.line; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
+      const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.kc.interface; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
   drawLinks();
   drawPills();
@@ -375,15 +418,15 @@ function drawPills(){pills=[]; if(!SEL&&!REQSEL) return; const cx=W/2, cy=H/2, m
     text(t,x+20,y+15,11.5,K.fg,'600'); pills.push({x,y,w,h:22,id});});}
 function span(n){const p=n.kind==='row'?N[n.parent]:n; return [p.x,p.x+p.w];}
 function anchorY(n){const b=scr(n); return n.kind==='row'?b.y+b.h/2:b.y+Math.min(b.h/2,16);}
-function arrow(x,y,a,col){const s=8; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
-function openArrow(x,y,a,col){const s=9; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
-function triangle(x,y,a,col){const s=12; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
-function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
+function arrow(x,y,a,col){const s=8*TIP; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
+function openArrow(x,y,a,col){const s=9*TIP; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
+function triangle(x,y,a,col){const s=12*TIP; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
+function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.scale(TIP,TIP); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
 // a base above what inherits from it: a trunk in right angles, one triangle on the base
 function trunk(g,emph,st){const a=scr(g.A), b=scr(g.B); if(b.y+b.h>a.y-4) return null;
   const x1=a.x+a.w/2, y1=a.y, x2=b.x+b.w/2, y2=b.y+b.h, ym=y2+Math.min((y1-y2)/2,22*cam.s);
   if(Math.max(x1,x2)<-300||Math.min(x1,x2)>W+300||y1<-300||y2>H+300) return {pts:[]};
-  const col=st.muted?K.muted:K.fg; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  const col=st.muted?K.muted:K.rule; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   const tri=12; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1,ym); ctx.lineTo(x2,ym); ctx.lineTo(x2,y2+tri); ctx.stroke(); ctx.setLineDash([]);
   triangle(x2,y2,-Math.PI/2,col); ctx.globalAlpha=1; return {pts:[[x1,y1],[x1,ym],[x2,ym],[x2,y2]]};}
 /* ---------- orthogonal routes: straight segments at right angles, around the boxes in the way ---------- */
@@ -451,8 +494,8 @@ function poly(g,pts,emph,st){const P=pts.map(p=>[sx(p[0]),sy(p[1])]);
   if(g.lane){const gap=k=>{const l=g.lane[k]; return l?l.i*Math.max(2,Math.min(7,routeMargin*cam.s*1.7/Math.max(1,l.n))):0;};
     const dx=new Array(P.length).fill(0), dy=new Array(P.length).fill(0);
     g.lane.forEach((l,k)=>{if(!l) return; const o=gap(k); if(l.v){dx[k]=o; dx[k+1]=o;} else {dy[k]=o; dy[k+1]=o;}});
-    P.forEach((p,k)=>{p[0]+=dx[k]; p[1]+=dy[k];});} const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
-  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.3):.65); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.3; ctx.setLineDash(st.dash);
+    P.forEach((p,k)=>{p[0]+=dx[k]; p[1]+=dy[k];});} const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.rule;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.3):.65); ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   ctx.lineJoin='miter'; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]);
   for(let k=1;k<P.length;k++) ctx.lineTo(P[k][0],P[k][1]); ctx.stroke(); ctx.setLineDash([]);
   const L=P.length, endA=Math.atan2(P[L-1][1]-P[L-2][1],P[L-1][0]-P[L-2][0]), startA=Math.atan2(P[1][1]-P[0][1],P[1][0]-P[0][0]);
@@ -473,8 +516,8 @@ function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
   if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
   else if(b1>=a2){x1=a2; x2=b1; const d=Math.max(30,(x2-x1)/2); c1=[x1+d,y1]; c2=[x2-d,y2];}
   else {x1=a1; x2=b2; const d=Math.max(30,(x1-x2)/2); c1=[x1-d,y1]; c2=[x2+d,y2];}
-  const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
-  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.rule;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],x2,y2); ctx.stroke(); ctx.setLineDash([]);
   const endA=Math.atan2(y2-c2[1],x2-c2[0]), startA=Math.atan2(c1[1]-y1,c1[0]-x1);
   if(st.end==='tri') triangle(x2,y2,endA,col); else if(st.end==='open') openArrow(x2,y2,endA,col); else if(st.end==='arrow') arrow(x2,y2,endA,col);
