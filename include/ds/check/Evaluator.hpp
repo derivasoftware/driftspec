@@ -42,6 +42,11 @@ class Evaluator {
   /// A table (DS-268): a row per binding of its ranges that passes its where, a cell per column.
   void tabulate(const std::string& id, const model::Formula& formula);
   void report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at);
+  /// What a never's answer went through in each definition its claim applies (DS-438): the first case of the
+  /// definition that holds for the arguments the answer gives, as the bindings that case adds, "(depends: m = a::k)";
+  /// "" when no definition is applied, or the case that holds binds nothing beyond its parameters.
+  std::string through(const std::string& owner, const std::vector<model::Literal>& claim, const Variables& variables,
+                      const std::vector<const std::string*>& answer) const;
   /// Bindings as the message of a finding writes them: x = a, y = b.
   static std::string describe(const std::vector<std::pair<std::string, std::string>>& bindings);
 

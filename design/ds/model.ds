@@ -901,12 +901,14 @@ package driftspec@ds {
       + owns location: Location
     }
 
-    dataclass Column {                       // one column of a table: a field of the row, what is related to it, or a yes/no
+    dataclass Column {                       // one column of a table: a field of the row, what it is, what is related to it, or a yes/no
       @requirement REQ-00154-1
+      @requirement REQ-00250-1
       + name: std::string
       + form: std::string
       + variable: std::string
       + field: std::string
+      + property: std::string                // name, id or kind, as a rule reads it (DS-437)
       + owns many body: std::vector<Literal>
       + owns location: Location
     }

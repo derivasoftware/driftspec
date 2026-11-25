@@ -70,7 +70,7 @@ package driftspec@ds {
     class EngineFactory {
       @requirement REQ-00210-1
       + static packing() -> std::unique_ptr<IEngine>
-      + static layered(spacing: Spacing) -> std::unique_ptr<IEngine>
+      + static layered(spacing: Spacing, router: std::unique_ptr<IRouter>) -> std::unique_ptr<IEngine>   // orthogonal when handed none
     }
 
     sequence EngineFactory::packing {
@@ -89,8 +89,168 @@ package driftspec@ds {
     class LayeredEngine : IEngine {
       @requirement REQ-00210-1
       - owns spacing_: Spacing
-      + LayeredEngine(spacing: Spacing)
+      - owns router_: std::unique_ptr<IRouter>
+      + LayeredEngine(spacing: Spacing, router: std::unique_ptr<IRouter>)
       + place(graph: Graph) -> Placement
+    }
+
+    // ---- the layered engine's phases (DS-370): a framer per placement, the layerer, the orderer and the positioner
+    // per component, and a router for the edges ------------------------------------------------------------------
+
+    // lays out the frames of one graph: every layered frame its own kids, a component at a time, packed in rows towards
+    // a readable aspect; then every box gets its place on the page and the router what the layering left
+    class Framer {
+      @requirement REQ-00210-1
+      - refs many nodes_: std::vector<const Frame*>
+      - refs edges_: std::vector<Edge>
+      - S: Spacing
+      - maxWidth_: int
+      - number_: std::vector<std::size_t>
+      - nodeOf_: std::vector<int>
+      - count_: std::size_t
+      - rel_: std::vector<Rect>
+      - parent_: std::vector<int>
+      - children_: std::vector<std::vector<int>>
+      - roots_: std::vector<int>
+      - ways_: std::map<size_t, std::vector<Waypoint>>
+      - wayFrame_: std::map<size_t, int>
+      - bands_: std::map<int, Band>
+      - bandFrame_: std::map<int, int>
+      + Framer(graph: Graph, s: Spacing)
+      + run(router: IRouter) -> Placement
+      - nodeAt(number: std::size_t) -> int
+      - ancestorIn(node: int, frameParent: int) -> int
+      - frame(parent: int, available: int) -> void
+      - layered(c: Component, available: int) -> void
+    }
+
+    // assigns a component's layers: cycles broken in a walk over the written order, longest paths from the sources,
+    // a dummy in every layer a long edge crosses
+    class Layerer {
+      @requirement REQ-00210-1
+      - owns spacing_: Spacing
+      + Layerer(spacing: Spacing)
+      + of(c: Component, rel: std::vector<Rect>) -> Layering
+    }
+
+    // orders each layer to cross less: barycentre sweeps down and up, stable so the written order breaks ties
+    class Orderer {
+      @requirement REQ-00210-1
+      + static order(layering: Layering) -> void
+    }
+
+    // places a layered component: rows with lanes, nodes pulled under their neighbours, layers wrapped to the room
+    class Positioner {
+      @requirement REQ-00210-1
+      - owns spacing_: Spacing
+      + Positioner(spacing: Spacing)
+      + place(layering: Layering, available: int) -> void
+      + apply(layering: Layering, c: Component, rel: std::vector<Rect>) -> void
+    }
+
+    // how the edges of a layered drawing run: one way of routing, given the boxes and what the layering left
+    class IRouter {
+      @requirement REQ-00210-1
+      + ~IRouter()
+      + abstract route(routing: Routing) -> std::map<std::size_t, Route>
+    }
+
+    // routes orthogonal through the layers: anchors spread along the sides, long edges down their channels, every jog
+    // a lane of its own in the gap it turns in
+    class OrthogonalRouter : IRouter {
+      @requirement REQ-00210-1
+      - owns spacing_: Spacing
+      + OrthogonalRouter(spacing: Spacing)
+      + route(routing: Routing) -> std::map<std::size_t, Route>
+    }
+
+    // the one place that names the routers
+    class RouterFactory {
+      @requirement REQ-00210-1
+      + static orthogonal(spacing: Spacing) -> std::unique_ptr<IRouter>
+    }
+
+    sequence RouterFactory::orthogonal {
+      local router: OrthogonalRouter
+      return router
+    }
+
+    dataclass Layering {                     // one component layered: what the layerer works out and the orderer and the positioner read and add to
+      @requirement REQ-00210-1
+      + real: int
+      + local: std::map<int, int>
+      + widths: std::vector<int>
+      + heights: std::vector<int>
+      + layer: std::vector<int>
+      + depth: int
+      + succA: std::vector<std::vector<int>>
+      + predA: std::vector<std::vector<int>>
+      + chain: std::map<std::pair<int, int>, std::vector<int>>
+      + total: int
+      + rows: std::vector<std::vector<int>>
+      + rowY: std::vector<int>
+      + rowH: std::vector<int>
+      + gapBelow: std::vector<int>
+      + x: std::vector<int>
+      + minX: int
+      + lineOf: std::vector<int>
+      + lineTop: std::vector<int>
+      + lineHeight: std::vector<int>
+    }
+
+    dataclass Component {                    // the layered placement of one connected component of a frame's kids
+      @requirement REQ-00210-1
+      + source: int                           // a constant: the pseudo node above
+      + sink: int                             // a constant: the pseudo node below
+      + nodes: std::vector<int>
+      + owns many edges: std::vector<Projected>
+      + ways: std::map<std::size_t, std::vector<Waypoint>>
+      + bands: std::map<int, Band>
+      + w: int
+      + h: int
+    }
+
+    dataclass Projected {                    // an edge projected onto the kids of a frame: which kid is drawn above which
+      @requirement REQ-00210-1
+      + upper: int
+      + lower: int
+      + edge: std::size_t
+    }
+
+    dataclass Waypoint {                     // a point a long edge passes between two layers: a dummy's x and its layer's band
+      @requirement REQ-00210-1
+      + x: int
+      + top: int
+      + bottom: int
+      + gapBelow: int
+    }
+
+    dataclass Band {                         // the gap under a box's layer, where its jogs live
+      @requirement REQ-00210-1
+      + top: int
+      + bottom: int
+    }
+
+    dataclass Routing {                      // what a router is given: the boxes, the edges' ends, and what the layering left
+      @requirement REQ-00210-1
+      + owns many boxes: std::vector<Rect>
+      + ends: std::vector<std::pair<int, int>>
+      + ways: std::map<std::size_t, std::vector<Waypoint>>
+      + bands: std::map<int, Band>
+    }
+
+    dataclass Point {                        // a point of the layered engine, in whole units
+      @requirement REQ-00210-1
+      + x: int
+      + y: int
+    }
+
+    dataclass Rect {                         // a rectangle of the layered engine, in whole units
+      @requirement REQ-00210-1
+      + x: int
+      + y: int
+      + w: int
+      + h: int
     }
 
     dataclass Spacing {                      // the room the layered engine leaves, in pixels or in cells

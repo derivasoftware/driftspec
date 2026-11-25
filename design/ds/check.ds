@@ -149,6 +149,9 @@ package driftspec@ds {
         @requirement REQ-00154-1
       }
       - report(code: model::Code, owner: std::string, message: std::string, at: model::Location) -> void
+      - through(owner: std::string, claim: std::vector<model::Literal>, variables: Variables, answer: std::vector<const std::string*>) -> std::string {
+        @requirement REQ-00096-1
+      }
       - static describe(bindings: std::vector<std::pair<std::string, std::string>>) -> std::string
     }
 

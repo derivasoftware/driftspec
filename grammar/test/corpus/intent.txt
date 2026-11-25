@@ -384,6 +384,7 @@ diagram TB_Requirements {
   for requirement r in shop
   column requirement: r.id
   column says: r.title
+  column is: kind(r)
   column satisfied: x where x satisfies r
   column proved: v where v verifies r
 }
@@ -451,6 +452,10 @@ diagram TB_Requirements {
       (name)
       (column_field
         (name)
+        (name)))
+    (column
+      (name)
+      (property_term
         (name)))
     (column
       (name)

@@ -2531,6 +2531,23 @@ package driftspec@ds {
           tests:
             tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableWrittenWithRowsAndColumnsAnswersEachCell
         }
+        requirement REQ-00250-1 {
+          tags: language, diagrams, table
+          status: draft
+          title: A column of a table shall read what the entity of its row is as a rule reads it: name(x), id(x) and kind(x)
+          text:
+            column <name>: name(<variable>) | id(<variable>) | kind(<variable>). The cell is what
+            the entity bound to the variable is, as a literal of a rule reads it (REQ-00196-1):
+            its name, its full identity, or its kind as the language writes it.
+          rationale: DS-437, found by first-time users (DS-432): kind(r) in a column was an E-SYNTAX whose message named column while refusing the line. A table reads as a rule reads.
+          verification VER-00270-1 {
+            title: Integration tests confirm a column reads name(x), id(x) and kind(x) of the entity of its row, and the table binds with no syntax error
+            status: draft
+            method: test
+            tests:
+              tests/integration/ds/render/test_table_view.cpp::TestTableView.AColumnReadsWhatTheEntityOfTheRowIsAsARuleDoes
+          }
+        }
       }
       requirement REQ-00122-1 {
         tags: language, diagrams, artefacts
