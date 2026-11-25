@@ -58,7 +58,8 @@ std::string ViewerPage::page(const scene::SceneDocument& document, const std::st
   std::string drawn;
   if (!document.walkthroughs.empty() && !drawings.empty()) {
     const size_t end = code.rfind("})();");
-    if (end != std::string::npos) code.insert(end, walkTemplate() + "\n");
+    // the drawings the mode shows rest and light as everywhere else: the one script, ahead of the mode (DS-491)
+    if (end != std::string::npos) code.insert(end, drawingsTemplate() + "\n" + walkTemplate() + "\n");
     out_sink.beginRecord();
     for (const auto& d : drawings) out_sink.field(d.first).value(d.second);  // a std::map: in byte order
     out_sink.endRecord();

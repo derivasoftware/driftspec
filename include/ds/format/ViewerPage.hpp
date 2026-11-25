@@ -25,6 +25,8 @@ class ViewerPage : public IFormat<scene::SceneDocument> {
   /// The walkthroughs' mode of the viewer: viewer/walk.js, compiled into ds by CMake, put into a page only when its
   /// scene has a walkthrough (DS-470).
   static const std::string& walkTemplate();
+  /// viewer/drawings.js compiled in (DS-491): a drawing at rest and lit, carried beside the walkthroughs' mode.
+  static const std::string& drawingsTemplate();
 
  private:
   /// The viewer as one self-contained page with the scene inside, titled after the workspace.
