@@ -89,6 +89,10 @@ enum class Code : std::size_t {
   E_RULE_RESERVED,
   W_REQ_UNREALISED,           ///< an approved requirement that nothing satisfies (DS-429)
   W_CST_NO_VERIFICATION,      ///< an approved constraint that nothing verifies (DS-430)
+  W_WALK_UNDECLARED,          ///< a walkthrough's step names a diagram or an entity nothing declares (DS-469)
+  W_WALK_NOT_SHOWN,           ///< a step lights what the diagram it shows does not draw (DS-469)
+  W_WALK_AT,                  ///< a step's callout points at what the step does not light (DS-469)
+  W_WALK_EMPTY,               ///< a walkthrough with no step, or a step that shows nothing or says nothing (DS-469)
   W_OUTCOME_FAILURE_UNKNOWN,  ///< an outcome is the end of a failure named nowhere (DS-467)
   W_OUTCOME_FAILURE_TWICE     ///< two outcomes of one use case are the end of the same failure (DS-467)
 };

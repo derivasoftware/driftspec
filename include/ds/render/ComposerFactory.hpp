@@ -11,7 +11,7 @@ namespace ds {
 namespace render {
 
 /// The one place that names the composers (DS-400), one per kind of diagram and technology: what composes a `kind`
-/// ("boxes") drawn in `technology` ("svg", "text"), with that technology's metrics.
+/// ("boxes", "sequence") drawn in `technology` ("svg", "text"), with that technology's metrics.
 class ComposerFactory {
  public:
   static std::unique_ptr<IComposer> of(const std::string& kind, const std::string& technology, const Metrics& metrics);

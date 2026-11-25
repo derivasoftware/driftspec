@@ -676,6 +676,8 @@ package driftspec@ds {
 
     dataclass SceneDocument {                // the scene: its nodes in drawing order and the world each variant spans
       @requirement REQ-00069-2
+      @requirement REQ-00264-1
+      + many categories: std::vector<std::pair<std::string, std::string>>   // each kind's category, for the viewer to group by (DS-427)
       + many nodes: std::vector<Node>
       + owns world: layout::Box
       + owns leanWorld: layout::Box

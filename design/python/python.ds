@@ -935,6 +935,7 @@ package driftspec@driftspec {
       + relations_of(identity: str) -> list[Relation]
       + in_file(path: str) -> list[Entity]
       + parents_of(kind: str) -> list[str]
+      + category_of(kind: str) -> str        // what a kind is part of, as the metamodel says it (DS-427, REQ-00264-1)
       + in_a_box(kind: str) -> bool
       + laid_out(kind: str) -> bool
       + named_kinds() -> set[str]
@@ -1107,9 +1108,9 @@ package driftspec@driftspec {
       never depends(c, x), x in driftspec@driftspec@_native
     }
 
-    // The kinds the door names, in one place, until the metamodel gives each its category (DS-427): its tables,
-    // STRUCTURE, ARTEFACT, DRAWN (what a line written in it draws as), SYMBOL (a kind as an outline shows it) and HOVER
-    // (the fields hover says, in order), are class constants; a test holds every kind and field named to the metamodel.
+    // The editor's own words for the kinds (DS-422): SYMBOL (a kind as an outline shows it) and HOVER (the fields hover
+    // says, in order) are class constants. What a kind is part of is the metamodel's (DS-427, Model.category_of); a
+    // test holds every kind and field named to the metamodel.
     class Kinds {
       @requirement REQ-00087-1
       + static named() -> set[str]

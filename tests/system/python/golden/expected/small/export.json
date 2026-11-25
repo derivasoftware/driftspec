@@ -679,6 +679,7 @@
   "metamodel": {
     "kinds": [
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "what the package is",
@@ -711,6 +712,7 @@
         "top": true
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "- when private to its parent, + otherwise",
@@ -737,6 +739,7 @@
         "top": false
       },
       {
+        "category": "artefact",
         "fields": [
           {
             "meaning": "one sentence that names it",
@@ -810,6 +813,7 @@
         "top": false
       },
       {
+        "category": "artefact",
         "fields": [
           {
             "meaning": "one sentence that names it",
@@ -929,6 +933,7 @@
         "top": false
       },
       {
+        "category": "artefact",
         "fields": [
           {
             "meaning": "one sentence that names it",
@@ -1009,6 +1014,7 @@
         "top": false
       },
       {
+        "category": "artefact",
         "fields": [
           {
             "meaning": "one sentence that names it",
@@ -1102,6 +1108,7 @@
         "top": false
       },
       {
+        "category": "artefact",
         "fields": [
           {
             "meaning": "what is obtained, in a line",
@@ -1134,6 +1141,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "what the interface is to who uses it",
@@ -1174,6 +1182,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "the parameters, name: type",
@@ -1248,6 +1257,7 @@
         "top": false
       },
       {
+        "category": "behaviour",
         "fields": [
           {
             "meaning": "what it shows",
@@ -1266,6 +1276,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "- when private to its parent, + otherwise",
@@ -1329,6 +1340,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "- when private to its parent, + otherwise",
@@ -1354,6 +1366,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "the parameters, name: type",
@@ -1421,6 +1434,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "the parameters, name: type",
@@ -1494,6 +1508,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "its type",
@@ -1532,6 +1547,7 @@
         "top": false
       },
       {
+        "category": "structure",
         "fields": [
           {
             "meaning": "the operator",
@@ -1564,6 +1580,7 @@
         "top": false
       },
       {
+        "category": "behaviour",
         "fields": [
           {
             "meaning": "whose behaviour it is",
@@ -1597,6 +1614,7 @@
         "top": false
       },
       {
+        "category": "behaviour",
         "fields": [
           {
             "meaning": "who sends it",
@@ -1714,6 +1732,7 @@
         "top": false
       },
       {
+        "category": "behaviour",
         "fields": [
           {
             "meaning": "loop, alt, opt, attempt, branch for a side of an alt, handler of an attempt",
@@ -1754,6 +1773,7 @@
         "top": false
       },
       {
+        "category": "logic",
         "fields": [
           {
             "meaning": "the initial state",
@@ -1794,6 +1814,7 @@
         "top": false
       },
       {
+        "category": "view",
         "fields": [
           {
             "meaning": "class, sequence, state, table, requirement, interface, tour or walkthrough",
@@ -1929,6 +1950,7 @@
         "top": true
       },
       {
+        "category": "logic",
         "fields": [
           {
             "meaning": "what it states, in one sentence",
@@ -1995,6 +2017,7 @@
         "top": false
       },
       {
+        "category": "logic",
         "fields": [
           {
             "meaning": "what it names, in one sentence",
@@ -2029,6 +2052,7 @@
         "top": false
       },
       {
+        "category": "view",
         "fields": [
           {
             "meaning": "the diagram it shows, or DIAGRAM / scenario",

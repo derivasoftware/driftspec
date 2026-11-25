@@ -166,6 +166,30 @@ class DiagramCheck : public ACheck {
   const Resolver* resolver_ = nullptr;
 };
 
+/// What each walkthrough's steps show and light, against the design (DS-469): a name that resolves to nothing, an entity
+/// the shown diagram does not draw (by that diagram's own filter), a callout pointing at what the step does not light, a
+/// scenario the shown behaviour lacks, and a walkthrough or a step with nothing in it. Each finding's subject is the step.
+class WalkthroughCheck : public ACheck {
+ public:
+  /// Given what it reads once, when it is made (DS-425).
+  explicit WalkthroughCheck(const Context& context);
+  std::string name() const override;
+  std::vector<std::string> needs() const override;
+
+ private:
+  std::vector<model::Finding> check() override;
+  /// One step: the diagram it shows and the scenario of it, what it lights and where its callout points.
+  void checkStep(const model::Entity& step);
+  /// Whether `id`, or a box that holds it, is among what a diagram draws.
+  bool drawn(const std::string& id, const std::set<std::string>& shown) const;
+  void report(model::Code code, const model::Entity& step, const std::string& message);
+  const Context* context_ = nullptr;
+  const model::Model* model_ = nullptr;
+  const model::Metamodel* metamodel_ = nullptr;
+  std::vector<model::Finding> found_;
+  const Resolver* resolver_ = nullptr;
+};
+
 /// A scenario written twice for one behaviour (REQ-00065-1, DS-382).
 class ScenarioCheck : public ACheck {
  public:

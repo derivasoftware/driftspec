@@ -1741,6 +1741,34 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00242-1 {
+      tags: language, walkthrough, check
+      status: draft
+      @refines REQ-00241-1
+      title: The checker shall tell a walkthrough step that names nothing, lights what its diagram does not draw, points elsewhere than it lights, shows a missing scenario, or is empty
+      text:
+        A step whose show: names no diagram, or whose focus:, highlight: or at: names nothing declared, is
+        W-WALK-UNDECLARED. A step that lights an entity the shown diagram does not draw, by that diagram's own filter
+        (a box it takes, or a member of a box it takes), is W-WALK-NOT-SHOWN. A step whose at: names what it neither
+        focuses nor highlights is W-WALK-AT. A scenario the shown behaviour lacks is W-SCENARIO-UNDECLARED. A
+        walkthrough with no step, or a step with no show: or no text:, is W-WALK-EMPTY. Each is a warning: a walkthrough
+        documents the design and never breaks it; its subject is the step.
+      rationale:
+        Owner, 2026-11-25 (DS-447: the checks of the mock, accepted): a walkthrough names the design by identity, so a
+        rename or a removal is told where the walkthrough still says the old name, and it cannot drift as prose does.
+      verification VER-00264-1 {
+        status: draft
+        title: Integration tests confirm each walkthrough warning is told at its step and a step that names and lights only what its diagram draws is told nothing
+        method: test
+        tests:
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepThatNamesNothingIsTold
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepThatLightsWhatItsDiagramDoesNotDrawIsTold
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.ACalloutPointingAtWhatTheStepDoesNotLightIsTold
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AMissingScenarioAndAnEmptyWalkthroughAreTold
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepIsRelatedToWhatItShowsAndLights
+      }
+    }
+
     requirement REQ-00196-1 {
       tags: language, logic, rules, check
       status: approved

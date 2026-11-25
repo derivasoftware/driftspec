@@ -120,8 +120,8 @@ class Text {
   static std::string marker(const std::string& kind, int dx, int dy);
   /// An edge along its route, its marker at the end it enters.
   void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) const;
-  /// A sequence: lifelines as columns, messages as rows.
-  Grid sequenceGrid(const IrDocument& doc) const;
+  /// A sequence where its figure placed it: lifelines as columns, messages as rows.
+  Grid sequenceGrid(const Figure& figure) const;
   /// The boxes and edges of a figure, where it placed them.
   Grid classGrid(const Figure& figure) const;
   /// Whether a node of the document is a lifeline.

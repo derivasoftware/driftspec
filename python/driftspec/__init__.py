@@ -133,6 +133,10 @@ class Model:
         """The kinds a kind may be written in, as the metamodel declares them."""
         return next((list(k.get("parents", [])) for k in self.metamodel.get("kinds", []) if k.get("kind") == kind), [])
 
+    def category_of(self, kind: str) -> str:
+        """What a kind is part of, as the metamodel says it (DS-427): structure, artefact, behaviour, logic or view."""
+        return next((k.get("category", "") for k in self.metamodel.get("kinds", []) if k.get("kind") == kind), "")
+
     def in_a_box(self, kind: str) -> bool:
         """Whether a kind stands in a package or a module (a class, a function, an interface, a requirement),
         rather than inside another entity (a member, an outcome, an operation)."""
