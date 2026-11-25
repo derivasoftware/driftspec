@@ -307,7 +307,7 @@ Grid Text::sequenceGrid(const Figure& figure) const {
 }
 
 Grid Text::classGrid(const Figure& figure) const {
-  const IrDocument& doc = figure.document;
+  const IrDocument& doc = figure.document();
   const LayoutResult& lay = figure.layout;
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {

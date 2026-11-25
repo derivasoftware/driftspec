@@ -591,15 +591,18 @@ package driftspec@ds {
 
     // ---- what a drawing draws: a figure composed below it (DS-400) ------------------------------------------------
 
-    // a diagram composed: its document as it is drawn and where each node and route lands, in the metrics of the
-    // technology that draws it; a drawing draws a figure and places nothing. Where a node lands points into the
-    // figure's own document, so a figure is moved, never copied
+    // a diagram composed: the document it draws and where each node and route lands, in the metrics of the technology
+    // that draws it; a drawing draws a figure and places nothing. It owns a document composing made, and refers to one
+    // it draws as it is, which outlives it; where a node lands points into that document, so a figure is moved, never
+    // copied
     dataclass Figure {
       @requirement REQ-00007-1
-      + owns document: IrDocument            // what a closed box holds bundled into it
+      + owns owned: IrDocument               // the document composing made, when it made one: boxes bundle what a closed box holds
+      + refs source: IrDocument              // the document composed from, when it is drawn as it is; it outlives the figure
       + owns layout: LayoutResult
       + owns sequence: std::optional<SequenceLayout>   // a sequence's lanes, rows and frames, when the figure is one
       + Figure()
+      + document() -> IrDocument             // the one it was composed from, or the one composing made
     }
 
     // what composes one kind of diagram for one technology: a document in, its figure out, within a width

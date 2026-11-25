@@ -14,8 +14,8 @@ namespace render {
 
 Figure SequenceTextComposer::compose(const IrDocument& input, int) const {
   Figure figure;
-  figure.document = input;
-  const IrDocument& doc = figure.document;  // what the layout points into
+  figure.source = &input;  // drawn as it is: the layout points into it
+  const IrDocument& doc = input;
   std::vector<SeqLine> lines;
   std::map<std::string, size_t> index;
   std::vector<const IrNode*> nodeOf;  // each line's lifeline

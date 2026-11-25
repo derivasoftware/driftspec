@@ -368,7 +368,7 @@ std::string Svg::dataAttrs(const std::map<std::string, std::string>& refs) {
 }
 
 std::string Svg::sequenceSvg(const Figure& figure) const {
-  const IrDocument& doc = figure.document;
+  const IrDocument& doc = figure.document();
   const SequenceLayout& s = *figure.sequence;
   const Metrics& M = metrics_;
   const std::string& style = style_;
@@ -635,7 +635,7 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
 
 std::string Svg::draw(const Figure& figure) const {
   if (figure.sequence) return sequenceSvg(figure);
-  const IrDocument& doc = figure.document;
+  const IrDocument& doc = figure.document();
   const LayoutResult& lay = figure.layout;
   const Metrics& M = metrics_;
   int minX = std::numeric_limits<int>::max(), minY = minX, maxX = std::numeric_limits<int>::min(), maxY = maxX;

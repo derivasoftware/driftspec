@@ -56,7 +56,7 @@ TEST(TestSequenceSvgComposer, TheLanesRowsAndFramesAreComposedInPixels) {
   ASSERT_TRUE(figure.sequence.has_value());
   const ds::render::SequenceLayout& s = *figure.sequence;
   ASSERT_EQ(s.lanes.size(), 2u);
-  EXPECT_EQ(s.lanes[0].node, &figure.document.nodes[0]);  // it points into its own document
+  EXPECT_EQ(s.lanes[0].node, &figure.document().nodes[0]);  // it points into the document composed from
   EXPECT_LT(s.lanes[0].cx, s.lanes[1].cx);
   EXPECT_EQ(s.laneOf.at("b"), 1u);
   ASSERT_EQ(s.messages.size(), 2u);

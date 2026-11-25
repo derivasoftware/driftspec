@@ -105,7 +105,7 @@ void LayoutDescription::placed(const render::IrDocument& document, const std::st
     return;
   }
   const render::Figure figure = render::ComposerFactory::of("boxes", "text", metrics_)->compose(document, width_);
-  const render::IrDocument& parsed = figure.document;
+  const render::IrDocument& parsed = figure.document();
   const render::LayoutResult& lay = figure.layout;
   out_sink.field("nodes").beginList();
   for (const auto& p : lay.placed) {

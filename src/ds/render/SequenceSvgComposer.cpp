@@ -14,8 +14,8 @@ namespace render {
 
 Figure SequenceSvgComposer::compose(const IrDocument& input, int) const {
   Figure figure;
-  figure.document = input;
-  const IrDocument& doc = figure.document;  // what the layout points into
+  figure.source = &input;  // drawn as it is: the layout points into it
+  const IrDocument& doc = input;
   const Metrics& M = metrics_;
   const int HEAD_H = 38, ROW_H = 30, SELF_H = 42, MARGIN = 20, SELF_W = 32;
   const int FRAME_LEAD = 30, FRAME_GAP = 8, DIVIDER_LEAD = 26, FRAME_INSET = 16;
