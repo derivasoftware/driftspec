@@ -76,10 +76,11 @@ TEST_F(TestRuleEvaluation, ARuleIsBrokenByEveryBindingThatBreaksIt) {
        "    }\n"
        "  }\n"
        "}\n");
-  // never: the binding and the answer that breaks it
-  EXPECT_EQ(messages("E-RULE-BROKEN"),
-            (std::vector<std::string>{"p@core::blind is broken for c = p@core::Model: x = p@render::Canvas",
-                                      "p@core::owned is broken for c = p@core::Clean"}));  // holds: the binding with no answer
+  // never: the binding and the answer that breaks it, and the member the definition went through (DS-438)
+  EXPECT_EQ(
+      messages("E-RULE-BROKEN"),
+      (std::vector<std::string>{"p@core::blind is broken for c = p@core::Model: x = p@render::Canvas (depends: m = p@core::Model::canvas)",
+                                "p@core::owned is broken for c = p@core::Clean"}));  // holds: the binding with no answer
 }
 
 TEST_F(TestRuleEvaluation, EveryBreachIsKeptWithItsBindingsItsAnswerAndWhereItLands) {
@@ -162,8 +163,9 @@ TEST_F(TestRuleEvaluation, ADefinitionAnswersWhicheverOfItsArgumentsIsBound) {
        "  }\n"
        "}\n");
   EXPECT_EQ(messages("E-RULE-BROKEN"),
-            (std::vector<std::string>{"p@core::any is broken: a = p, b = p@render::Canvas",  // the first witness in order
-                                      "p@core::reached is broken for c = p@render::Canvas: x = p"}));
+            (std::vector<std::string>{
+                "p@core::any is broken: a = p, b = p@render::Canvas (depends: m = p@core::Model::canvas)",  // the first witness in order
+                "p@core::reached is broken for c = p@render::Canvas: x = p (depends: m = p@core::Model::canvas)"}));
 }
 
 // DS-338: a definition that applies another of its stratum is fixed after it, whatever their names say of the order:
