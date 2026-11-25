@@ -170,7 +170,9 @@ cmake -S . -B build && cmake --build build -j
 ctest --test-dir build
 ```
 
-After editing the grammar, regenerate the parser with `tree-sitter generate` in `grammar/`.
+After editing the grammar, regenerate the parser with `tree-sitter generate` in `grammar/`, and run its corpus with
+`tree-sitter test` there. The tree-sitter CLI 0.26.12 reproduces the committed `src/parser.c` byte for byte, apart from
+the version it copies from `tree-sitter.json`.
 
 ## Contributing
 
