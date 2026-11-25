@@ -6,11 +6,12 @@
 #include "ds/emit/JsonSink.hpp"
 #include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
+#include "ds/emit/TextSink.hpp"
 
 namespace {
 
-/// The one place that names the sinks (DS-397, DS-398): a door is handed the sink of its technology as an ISink,
-/// indented or compact, and a technology ds has no sink of fails with NotImplemented.
+/// The one place that names the sinks (DS-397, DS-398, DS-399): a door is handed the sink of its technology as an
+/// ISink, JSON indented or compact or text, and a technology ds has no sink of fails with NotImplemented.
 TEST(TestSinkFactory, TheJsonSinkIsHandedOutAsASink) {
   const auto sink = ds::emit::SinkFactory::json(false);
   ASSERT_NE(sink, nullptr);
@@ -25,14 +26,21 @@ TEST(TestSinkFactory, APrettySinkIndentsByTwoSpaces) {
   EXPECT_EQ(sink->result(), "{\n  \"a\": 1\n}");
 }
 
+TEST(TestSinkFactory, TheTextSinkIsHandedOutAsASink) {
+  const auto sink = ds::emit::SinkFactory::text();
+  ASSERT_NE(sink, nullptr);
+  EXPECT_NE(dynamic_cast<const ds::emit::TextSink*>(sink.get()), nullptr);
+  sink->beginRecord().field("a").integer(1).endRecord().table({"x", "y"}).row({"1", "2"}).endTable().paragraph("said");
+  EXPECT_EQ(sink->result(), "1  2\nsaid\n");
+}
+
 TEST(TestSinkFactory, EveryTechnologyNamedIsTheSinkOfItsName) {
-  EXPECT_EQ(ds::emit::SinkFactory::names(), std::vector<std::string>{"json"});
+  EXPECT_EQ(ds::emit::SinkFactory::names(), (std::vector<std::string>{"json", "text"}));
   for (const auto& technology : ds::emit::SinkFactory::names()) {
     for (bool pretty : {false, true}) {
       const auto sink = ds::emit::SinkFactory::of(technology, pretty);
-      const auto made = ds::emit::SinkFactory::json(pretty);
-      sink->beginRecord().field("a").integer(1).endRecord();
-      made->beginRecord().field("a").integer(1).endRecord();
+      const auto made = technology == "json" ? ds::emit::SinkFactory::json(pretty) : ds::emit::SinkFactory::text();
+      for (ds::emit::ISink* s : {sink.get(), made.get()}) s->beginRecord().field("a").integer(1).endRecord().paragraph("p");
       EXPECT_EQ(sink->result(), made->result()) << technology;
     }
   }
@@ -45,7 +53,7 @@ TEST(TestSinkFactory, ATechnologyWithNoSinkFailsNotImplementedNamingItAndWhatThe
   } catch (const ds::emit::NotImplemented& e) {
     EXPECT_EQ(e.technology(), "yaml");
     EXPECT_EQ(e.document(), "");
-    EXPECT_EQ(std::string(e.what()), "nothing is written in yaml; there is: json");
+    EXPECT_EQ(std::string(e.what()), "nothing is written in yaml; there is: json text");
   }
 }
 
@@ -54,6 +62,12 @@ TEST(TestNotImplemented, ItNamesTheDocumentTheTechnologyAndWhatThereIs) {
   EXPECT_EQ(failure.document(), "diagram");
   EXPECT_EQ(failure.technology(), "pdf");
   EXPECT_EQ(std::string(failure.what()), "the diagram is not written in pdf; there is: svg text");
+}
+
+TEST(TestNotImplemented, WithNothingThereItSaysOnlyWhatIsNotWritten) {
+  // a sink handed a document it accepted nothing of knows no technology that writes it (DS-399)
+  EXPECT_EQ(std::string(ds::emit::NotImplemented("scene", "text", {}).what()), "the scene is not written in text");
+  EXPECT_EQ(std::string(ds::emit::NotImplemented("", "pdf", {}).what()), "nothing is written in pdf");
 }
 
 }  // namespace

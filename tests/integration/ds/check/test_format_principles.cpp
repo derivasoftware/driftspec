@@ -70,14 +70,14 @@ TEST_F(TestFormatPrinciples, TheDesignOfDsKeepsTheRulesOfFormat) {
 
 TEST_F(TestFormatPrinciples, ADescriptionThatNamesTheJsonSinkIsTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/format.ds", "    class SceneDescription : IDescription {", "      + dump(out_sink: emit::JsonSink) -> void\n"}});
+      broken({{"ds/format.ds", "    class SceneDescription : ADescription {", "      + dump(out_sink: emit::JsonSink) -> void\n"}});
   EXPECT_TRUE(has(rules, noTechnology));
 }
 
 TEST_F(TestFormatPrinciples, ADescriptionThatMakesItsOwnSinkIsTold) {
   // the factory of the sinks is no sink, so only format's rule tells it: a description is lent its sink
   const std::vector<std::string> rules =
-      broken({{"ds/format.ds", "    class AnswersDescription : IDescription {", "      - owns factory_: emit::SinkFactory\n"}});
+      broken({{"ds/format.ds", "    class AnswersDescription : ADescription {", "      - owns factory_: emit::SinkFactory\n"}});
   EXPECT_TRUE(has(rules, noTechnology));
   EXPECT_FALSE(has(rules, "driftspec@ds@emit::sinks-are-reached-through-their-interface"));
 }
@@ -114,7 +114,7 @@ TEST_F(TestFormatPrinciples, AFunctionInFormatIsTold) {
 
 TEST_F(TestFormatPrinciples, ADescriptionThatUsesAnotherIsTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/format.ds", "    class CellsDescription : IDescription {", "      - owns layout_: LayoutDescription\n"}});
+      broken({{"ds/format.ds", "    class CellsDescription : ADescription {", "      - owns layout_: LayoutDescription\n"}});
   EXPECT_TRUE(has(rules, siblings));
   EXPECT_TRUE(has(rules, descriptionsByFactory));
 }
