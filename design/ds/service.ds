@@ -60,12 +60,14 @@ package driftspec@ds {
     tags: service, use-cases, render
     verification VER-00322-1 {
       status: draft
-      title: Integration tests confirm see-design draws every diagram of the golden workspaces in svg and text and describes its IR byte for byte as ds render wrote them, writes the viewer's page, and says a diagram that is missing or did not read whole
+      title: Integration tests confirm see-design draws every diagram of the golden workspaces in svg and text and describes its IR byte for byte as ds render wrote them, writes the viewer's page the command line and the engine both write, with a walkthrough's cards only when there is one, and says a diagram that is missing or did not read whole
       method: test
       tests:
         tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignDrawsEveryDiagramAsDsRenderWroteIt
         tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignWritesTheViewersPageFramedOnADiagram
         tests/integration/ds/service/test_use_cases.cpp::TestUseCases.SeeDesignAskedWholeSaysADiagramThatDidNotReadWhole
+        tests/integration/ds/app/test_render_page.cpp::TestRenderPage.TheCommandLinesPageIsTheEnginesWithTheWalkthroughsCardsOnlyWhenThereAreWalkthroughs
+        tests/integration/ds/app/test_render_page.cpp::TestRenderPage.ThePageFramedOnADiagramIsTheEnginesFramedOnWhatItShows
     }
   }
 
