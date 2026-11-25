@@ -4,10 +4,12 @@
 #include <map>
 #include <string>
 
+#include "ds/layout/EngineFactory.hpp"
 #include "ds/layout/Frame.hpp"
 #include "ds/layout/Graph.hpp"
 #include "ds/layout/LayeredEngine.hpp"
 #include "ds/layout/Placement.hpp"
+#include "ds/layout/RouterFactory.hpp"
 #include "ds/layout/Spacing.hpp"
 
 namespace {
@@ -28,10 +30,12 @@ std::map<std::string, ds::layout::Box> byId(const ds::layout::Frame& root, const
 }
 
 using ds::layout::Box;
+using ds::layout::EngineFactory;
 using ds::layout::Frame;
 using ds::layout::Graph;
 using ds::layout::LayeredEngine;
 using ds::layout::Placement;
+using ds::layout::RouterFactory;
 using ds::layout::Spacing;
 
 /// The engine that layers boxes along their edges (DS-392): bases above what inherits, every box in its container,
@@ -48,7 +52,7 @@ class TestLayeredEngine : public ::testing::Test {
   static Placement place(const Frame& root, const Graph& edges) {
     Graph graph = edges;
     graph.root = &root;
-    return LayeredEngine(Spacing{}).place(graph);
+    return EngineFactory::layered(Spacing{})->place(graph);
   }
 };
 
@@ -97,7 +101,7 @@ TEST_F(TestLayeredEngine, EveryPlaceIsAWholeNumberAndAnEmptyGraphPlacesNothing) 
     EXPECT_DOUBLE_EQ(b.x, static_cast<int>(b.x));
     EXPECT_DOUBLE_EQ(b.y, static_cast<int>(b.y));
   }
-  EXPECT_TRUE(LayeredEngine(Spacing{}).place(Graph{}).boxes.empty());
+  EXPECT_TRUE(LayeredEngine(Spacing{}, RouterFactory::orthogonal(Spacing{})).place(Graph{}).boxes.empty());
 }
 
 }  // namespace
