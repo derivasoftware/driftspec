@@ -103,13 +103,13 @@ void Text::box(Grid& g, const Placed& p) const {
   g.frame(r, true, changeColor);
   int y = r.y + M.PAD_Y;
   if (!n.stereotype.empty()) g.text(r.x + M.PAD_X, y++, "\xC2\xAB" + n.stereotype + "\xC2\xBB", kMuted);
-  const std::string badge = IrNode::badgeOf(n.classifier, n.abstract);  // the same letter as the SVG
-  if (n.kind == "state") {                                              // a state carries no badge (DS-442)
+  const std::string badge = IrNode::badgeOf(n.classifier, n.abstract.value_or(false));  // the same letter as the SVG
+  if (n.kind == "state") {                                                              // a state carries no badge (DS-442)
   } else if (change != n.refs.end()) {
     const std::string mark = pen.changeMarkOf(change->second).mark;
     g.text(r.x + M.PAD_X, y, mark, changeColor);
   } else {
-    g.text(r.x + M.PAD_X, y, badge, pen.badgeColour(n.classifier, n.abstract));
+    g.text(r.x + M.PAD_X, y, badge, pen.badgeColour(n.classifier, n.abstract.value_or(false)));
   }
   g.text(r.x + M.PAD_X + (n.kind == "state" ? 0 : M.BADGE_W), y, n.label, change == n.refs.end() ? kName : changeColor);
   ++y;
@@ -453,7 +453,7 @@ Grid Text::tableGrid(const IrDocument& doc) const {
   const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kAgainst = pen.against;
-  const IrTable& t = doc.table;
+  const IrTable& t = *doc.table;  // drawn as a table only when it has one
   const auto shown = [](const IrCell& cell) {
     return cell.kind == "against" ? "! " + cell.text : cell.kind == "none" ? "\xC2\xB7" : cell.text;
   };
@@ -522,7 +522,7 @@ Grid Text::partsGrid(const IrDocument& doc, int maxWidth) const {
 Text::Text(const theme::Theme& theme) : pen_(theme) {}
 
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableGrid(doc).dump(color);
+  if (doc.table && !doc.table->columns.empty()) return tableGrid(doc).dump(color);
   if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
   return draw(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)), color);
@@ -531,10 +531,10 @@ std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const 
 std::string Text::draw(const Figure& figure, bool color) const { return classGrid(figure).dump(color); }
 
 void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
-  const Grid g = !doc.table.columns.empty() ? tableGrid(doc)
-                 : !doc.parts.empty()       ? partsGrid(doc, maxWidth)
-                 : isSequence(doc)          ? sequenceGrid(doc)
-                                            : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
+  const Grid g = doc.table && !doc.table->columns.empty() ? tableGrid(doc)
+                 : !doc.parts.empty()                     ? partsGrid(doc, maxWidth)
+                 : isSequence(doc)                        ? sequenceGrid(doc)
+                                                          : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
   out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
   out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
 }

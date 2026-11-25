@@ -1,7 +1,5 @@
 #include "ds/render/SequenceProjector.hpp"
 
-#include <nlohmann/json.hpp>
-
 #include "ds/axis/Cut.hpp"
 #include "ds/query/Filter.hpp"
 #include "ds/query/Walk.hpp"
@@ -13,7 +11,7 @@ namespace render {
 
 using text::splitTrimmed;
 
-nlohmann::json SequenceProjector::project(const model::Entity& diagram) const {
+IrDocument SequenceProjector::project(const model::Entity& diagram) const {
   const int depth = query::SequenceFilter::levelsOf(diagram);
   // the behaviours selected, by subject id, by sequence id, or a namespace: the query's filter (DS-127)
   std::vector<const model::Entity*> selected;
@@ -26,7 +24,7 @@ nlohmann::json SequenceProjector::project(const model::Entity& diagram) const {
   // the lifelines stand on the cut the diagram writes, and the calls followed are the ones it says (DS-231)
   const axis::Cut cut(model_, metamodel_, diagram);
   SequenceBuilder b(model_, cut);
-  nlohmann::json out;
+  IrDocument out;
   std::set<std::string> subjects;  // the lifelines of the boxes and use cases whose scenarios are drawn
   for (const model::Entity* seq : selected) {
     const std::string subjectId = model::Identity(seq->id).subject().text();
@@ -48,14 +46,12 @@ nlohmann::json SequenceProjector::project(const model::Entity& diagram) const {
                                                : b.lifeline(cls ? cls->id : subjectId, selfLabel, "participant", cls ? cls->id : "");
     if (written) subjects.insert(self);
     if (method) {
-      b.edges.push_back(
-          {{"from", caller},
-           {"to", self},
-           {"kind", "message"},
-           {"order", b.order++},
-           {"label", (around.empty() || around == cls->id ? "" : cls->name + "::") + subject->name + "(" + subject->field("params") + ")"},
-           {"title", subject->id},
-           {"refs", {{"location", subject->location.file + ":" + std::to_string(subject->location.line)}}}});
+      IrEdge call = IrEdge::between(caller, self, "message");
+      call.order = b.order++;
+      call.label = (around.empty() || around == cls->id ? "" : cls->name + "::") + subject->name + "(" + subject->field("params") + ")";
+      call.title = subject->id;
+      call.refs["location"] = subject->location.file + ":" + std::to_string(subject->location.line);
+      b.edges.push_back(call);
     }
     std::set<std::string> stack;
     // a behaviour asked for by its subject is drawn whole; a scenario of it, as its path
@@ -68,23 +64,24 @@ nlohmann::json SequenceProjector::project(const model::Entity& diagram) const {
         const model::Entity* m = model_.find(taken.message);
         if (m->field("return") == "true" && !m->field("result").empty()) given = m->field("result");
       }
-      b.edges.push_back({{"from", self}, {"to", caller}, {"kind", "message"}, {"order", b.order++}, {"label", given}, {"dashed", true}});
+      IrEdge back = IrEdge::between(self, caller, "message");
+      back.order = b.order++;
+      back.label = given;
+      back.dashed = true;
+      b.edges.push_back(back);
     }
   }
   // a scenario written between boxes may never send from its own subject: that lifeline is drawn when a message
   // touches it (DS-232)
   std::set<std::string> touched;
-  for (const auto& e : b.edges) {
-    touched.insert(e["from"].get<std::string>());
-    touched.insert(e["to"].get<std::string>());
+  for (const IrEdge& e : b.edges) {
+    touched.insert(e.from);
+    touched.insert(e.to);
   }
-  nlohmann::json kept = nlohmann::json::array();
-  for (const auto& n : b.nodes)
-    if (!subjects.count(n["id"].get<std::string>()) || touched.count(n["id"].get<std::string>())) kept.push_back(n);
-  b.nodes = kept;
-  if (b.edges.empty()) out["notice"] = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
-  out["nodes"] = b.nodes;
-  out["edges"] = b.edges;
+  for (const IrNode& n : b.nodes)
+    if (!subjects.count(n.id) || touched.count(n.id)) out.nodes.push_back(n);
+  if (b.edges.empty()) out.notice = "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.";
+  out.edges = b.edges;
   return out;
 }
 

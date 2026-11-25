@@ -100,13 +100,16 @@ package driftspec@ds {
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.ADescriptionThatUsesAnotherIsTold
         tests/integration/ds/check/test_format_principles.cpp::TestFormatPrinciples.AWriterThatReadsTheModelIsTold
     }
-    verification VER-00226-1 {
-      status: approved
-      title: Integration tests confirm a diagram asked of a workspace in a format ds does not write fails NotImplemented, naming the document and the technology, in C++ and as driftspec.NotImplemented in Python, and the engine's render draws as it always has
+    verification VER-00226-2 {
+      status: draft
+      title: Integration tests confirm a diagram asked of a workspace or of the engine in a format ds does not write fails NotImplemented, naming the document and the technology, in C++ and as driftspec.NotImplemented in Python, and is never drawn as text instead
+      text: Revision 2 (DS-453): the engine's render, and driftspec.render on it, fail as the workspace does.
       method: test
       tests:
         tests/integration/ds/api/test_workspace_of_a_design.cpp::TestWorkspace.ADiagramAskedInAFormatDsDoesNotWriteFailsNotImplemented
+        tests/integration/ds/api/test_api_hola.cpp::TestApiOverHola.ADiagramAskedInAFormatItHasNoWriterForFailsNotImplemented
         tests/integration/python/test_workspace.py::TestNotImplemented::test_a_diagram_asked_in_a_format_the_engine_does_not_write_raises_not_implemented
+        tests/integration/python/test_driftspec.py::TestDrawing::test_a_format_a_diagram_has_no_writer_for_raises_not_implemented
     }
   }
 
@@ -218,6 +221,21 @@ package driftspec@ds {
       + describe(out_sink: emit::ISink) -> void fails NotImplemented
     }
 
+    // a diagram's render-IR (DS-418): the document IrExport made, written once, every record's keys in byte order, so it
+    // streams into any sink with nothing kept back; a key is written when it says something
+    class IrDescription : IDescription {
+      @requirement REQ-00106-3
+      - refs document_: render::IrDocument
+      + IrDescription(document: render::IrDocument)
+      + describe(out_sink: emit::ISink) -> void fails NotImplemented
+      - static node(node: render::IrNode, out_sink: emit::ISink) -> void
+      - static edge(edge: render::IrEdge, out_sink: emit::ISink) -> void
+      - static table(table: render::IrTable, out_sink: emit::ISink) -> void
+      - static text(name: std::string_view, value: std::string, out_sink: emit::ISink) -> void      // only when it holds something
+      - static refs(refs: std::map<std::string, std::string>, out_sink: emit::ISink) -> void        // in their map's order, only when any
+      - static texts(name: std::string_view, values: std::vector<std::string>, out_sink: emit::ISink) -> void
+    }
+
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
     class LayoutDescription : IDescription {
       @requirement REQ-00106-3
@@ -247,6 +265,7 @@ package driftspec@ds {
       + static scene(document: scene::SceneDocument) -> std::unique_ptr<IDescription>
       + static report(report: check::Report) -> std::unique_ptr<IDescription>
       + static answers(answers: std::vector<query::Answer>) -> std::unique_ptr<IDescription>
+      + static ir(document: render::IrDocument) -> std::unique_ptr<IDescription>   // a diagram's render-IR (DS-418)
       + static layout(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
       + static cells(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<IDescription>
     }
@@ -362,6 +381,11 @@ package driftspec@ds {
 
     sequence DescriptionFactory::answers {
       local description: AnswersDescription
+      return description
+    }
+
+    sequence DescriptionFactory::ir {
+      local description: IrDescription
       return description
     }
 

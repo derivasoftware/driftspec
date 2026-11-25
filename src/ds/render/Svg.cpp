@@ -205,7 +205,7 @@ std::string Svg::emitNode(const Placed& p, const std::string& px) const {
     for (char c : n.stereotype) st += std::isalnum(static_cast<unsigned char>(c)) ? c : '-';
     classes += " pr-stereotype-" + st;
   }
-  if (n.abstract) classes += " pr-abstract";
+  if (n.abstract.value_or(false)) classes += " pr-abstract";
   const auto change = n.refs.find("change");
   if (change != n.refs.end()) classes += " pr-change-" + change->second;
   std::ostringstream out;
@@ -254,7 +254,7 @@ std::string Svg::emitNode(const Placed& p, const std::string& px) const {
       out << "<text class=\"pr-header\" x=\"" << r.x + r.w / 2 << "\" y=\"" << ty << "\" text-anchor=\"middle\">"
           << text::escapeXml(n.label) << "</text>";
     } else {
-      const std::string letter = IrNode::badgeOf(n.classifier, n.abstract);
+      const std::string letter = IrNode::badgeOf(n.classifier, n.abstract.value_or(false));
       out << "<circle class=\"pr-badge\" cx=\"" << r.x + M.PAD_X + 7 << "\" cy=\"" << ty - 4 << "\" r=\"7\"/>";
       out << "<text class=\"pr-badge-text\" x=\"" << r.x + M.PAD_X + 7 << "\" y=\"" << ty - 0.5 << "\" text-anchor=\"middle\">"
           << text::escapeXml(letter) << "</text>";
@@ -613,7 +613,7 @@ std::string Svg::sequenceSvg(const IrDocument& doc) const {
 /// A drawing that is a table (DS-251): the headings across and down, and each cell drawn by its kind.
 std::string Svg::tableSvg(const IrDocument& doc) const {
   const std::string& style = style_;
-  const IrTable& t = doc.table;
+  const IrTable& t = *doc.table;  // drawn as a table only when it has one
   const int charW = 8, padX = 14, rowH = 34, headH = 38, lineH = 17;
   const std::size_t kWrap = 40;  // a cell is as wide as this many characters; what is longer goes on more lines (DS-268)
   const auto lines = [&](const std::string& text) {
@@ -734,7 +734,7 @@ Svg::Svg(const theme::Theme& theme)
       sequenceStyle_(theme::ThemeWriterFactory::of().at("sequence")->write(theme)) {}
 
 std::string Svg::render(const IrDocument& doc, int maxWidth) const {
-  if (!doc.table.columns.empty()) return tableSvg(doc);
+  if (doc.table && !doc.table->columns.empty()) return tableSvg(doc);
   if (!doc.parts.empty()) {
     std::vector<std::pair<std::string, std::string>> drawings;
     for (const auto& name : doc.parts) drawings.push_back({name, render(doc.part(name), maxWidth)});

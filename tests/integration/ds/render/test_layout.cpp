@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -39,7 +40,7 @@ class TestLayout : public ::testing::Test {
   }
 
   IrDocument document(const std::string& diagram) {
-    return IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false)).bundled();
+    return IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram)).bundled();
   }
 
   static bool overlap(const Rect& a, const Rect& b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
@@ -143,7 +144,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
                              "  }\n}\n"
                              "diagram CL_Chain {\n  kind: class\n  include: p@*\n}\n"));
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-    const IrDocument doc = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Chain", false)).bundled();
+    const IrDocument doc = IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:CL_Chain")).bundled();
     const LayoutResult lay = ds::render::Layout(ds::render::Metrics::svg(kTheme.measures(ds::theme::Sink::svg))).place(doc);
     int bottomOfB = -1, topOfC = -1;
     for (const auto& p : lay.placed) {
@@ -160,7 +161,7 @@ TEST(TestLayoutLanes, AStraightLongEdgeReservesNoLaneRow) {
 }
 
 TEST_F(TestLayout, ParallelRelationsAreBundledWithTheirLabelsStacked) {
-  const IrDocument raw = IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_Templates", false));
+  const IrDocument raw = IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:CL_Templates"));
   const IrDocument doc = raw.bundled();
   EXPECT_LT(doc.edges.size(), raw.edges.size());
   bool stacked = false;
@@ -210,7 +211,8 @@ class TestSequenceSvg : public ::testing::Test {
   }
 
   std::string svg(const std::string& diagram) {
-    return ds::render::Svg(kTheme).render(IrDocument::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false)));
+    return ds::render::Svg(kTheme).render(
+        IrDocument::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram)));
   }
 };
 

@@ -1,12 +1,13 @@
 #ifndef DRIFTSPEC_RENDER_IREXPORT_HPP
 #define DRIFTSPEC_RENDER_IREXPORT_HPP
 
-#include <nlohmann/json_fwd.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
+#include "ds/render/Ir.hpp"
 
 namespace ds {
 namespace render {
@@ -23,14 +24,15 @@ class IrExport {
   /// The ids of the diagrams the model declares.
   std::vector<std::string> diagrams() const;
 
-  /// The render-IR document of `diagramId` ("diagram:CL_Model"), pretty-printed when asked.
-  std::string render(const std::string& diagramId, bool pretty) const;
+  /// The render-IR document of `diagramId` ("diagram:CL_Model"), headed, as a value (DS-418): none when the model
+  /// declares no such diagram. format::IrDescription writes it into whatever sink its door lends.
+  std::optional<IrDocument> document(const std::string& diagramId) const;
 
  private:
-  /// What heads every render-IR document, and the one place it is written (DS-443): the contract's version, the
-  /// diagram's kind, so a drawing can tell how to draw it without guessing from its nodes (a box diagram that says no
-  /// kind is a class diagram), and its title.
-  static nlohmann::json documentHead(const model::Entity& diagram);
+  /// What heads every render-IR document, and the one place it is filled (DS-443, DS-418): the diagram's kind, so a
+  /// drawing can tell how to draw it without guessing from its nodes (a box diagram that says no kind is a class
+  /// diagram), and its title. The contract's version is the description's to write.
+  static void documentHead(const model::Entity& diagram, IrDocument& out_document);
 
   const model::Model& model_;
   const model::Metamodel& metamodel_;

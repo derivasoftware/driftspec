@@ -169,9 +169,12 @@ package driftspec@ds {
       local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
       -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
       -> diagramId(diagram) -> id
-      -> ir.render(id, pretty) -> document
+      -> ir.document(id) -> made
       -> emit::SinkFactory::json(false) -> sink
       attempt {
+        -> format::DescriptionFactory::ir(made) -> irDescription   // the IR, compact, for the writer -f names (DS-418)
+        -> irDescription.describe(sink)
+        -> sink.result() -> document
         alt its layout / layout {
           -> format::DescriptionFactory::layout(document, theme, width) -> description
           -> description.describe(sink)
@@ -214,7 +217,7 @@ package driftspec@ds {
       local model: model::Model
       local ir: render::IrExport
       -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
-      -> ir.render(name, pretty) / no-diagram -> document
+      -> ir.document(name) / no-diagram -> document
       return 1
     }
 

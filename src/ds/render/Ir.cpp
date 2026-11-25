@@ -26,6 +26,14 @@ std::string text(const nlohmann::json& j, const char* key) {
 
 }  // namespace
 
+IrEdge IrEdge::between(const std::string& from, const std::string& to, const std::string& kind) {
+  IrEdge edge;
+  edge.from = from;
+  edge.to = to;
+  edge.kind = kind;
+  return edge;
+}
+
 IrDocument IrDocument::parse(const std::string& json) {
   const nlohmann::json j = nlohmann::json::parse(json);
   IrDocument doc;
@@ -35,13 +43,14 @@ IrDocument IrDocument::parse(const std::string& json) {
   for (const auto& part : j.value("parts", nlohmann::json::array())) doc.parts.push_back(part.get<std::string>());
   if (j.contains("table")) {
     const auto& t = j["table"];
-    doc.table.corner = text(t, "corner");
-    for (const auto& column : t.value("columns", nlohmann::json::array())) doc.table.columns.push_back(column.get<std::string>());
+    doc.table.emplace();
+    doc.table->corner = text(t, "corner");
+    for (const auto& column : t.value("columns", nlohmann::json::array())) doc.table->columns.push_back(column.get<std::string>());
     for (const auto& r : t.value("rows", nlohmann::json::array())) {
       IrRow row{text(r, "label"), text(r, "title"), {}};
       for (const auto& c : r.value("cells", nlohmann::json::array()))
         row.cells.push_back({text(c, "text"), text(c, "kind"), text(c, "title")});
-      doc.table.rows.push_back(row);
+      doc.table->rows.push_back(row);
     }
   }
   for (const auto& n : j.value("nodes", nlohmann::json::array())) {
@@ -54,7 +63,7 @@ IrDocument IrDocument::parse(const std::string& json) {
     node.parent = text(n, "parent");
     node.title = text(n, "title");
     node.href = text(n, "href");
-    node.abstract = n.value("abstract", false);
+    if (n.contains("abstract")) node.abstract = n["abstract"].get<bool>();
     node.part = text(n, "part");
     node.refs = refsOf(n);
     for (const auto& section : n.value("sections", nlohmann::json::array())) {

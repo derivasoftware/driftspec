@@ -2,6 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -127,7 +128,7 @@ TEST_F(TestPackages, LevelByPlacementThroughTheLevels) {
 }
 
 TEST_F(TestPackages, NestedPackagesAreContainersOfTheDrawing) {
-  const auto doc = nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:CL_App", false));
+  const auto doc = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:CL_App"));
   std::map<std::string, nlohmann::json> by;
   for (const auto& n : doc["nodes"]) by[n["id"]] = n;
   ASSERT_TRUE(by.count("app@core"));

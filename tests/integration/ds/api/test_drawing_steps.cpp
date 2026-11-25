@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
 #include "ds/bind/Binder.hpp"
@@ -61,7 +62,7 @@ class TestDrawingSteps : public ::testing::Test {
     ds::parse::Parser parser;
     for (const auto& f : files) binder.bind(parser.parseText(f.first, f.second));
     ds::check::CheckerFactory::make(model, metamodel, selection)->run(binder.notes());
-    return ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false);
+    return ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram);
   }
 
   /// DriftSpec's design with a table of its rules, written as rows and columns: whether each holds.
@@ -92,7 +93,7 @@ TEST_F(TestDrawingSteps, TheApiDrawsADiagramAsTheWorkspaceLoadedWholeDoes) {
   const ds::api::Files files = filesOf("examples/shop");
   const ds::api::Workspace whole = ds::api::Workspace::madeFor(metamodel, files);
   for (const std::string diagram : {"CL_Shop", "HLD_ShopSales", "SEQ_Buy", "TOUR_Buy"})
-    for (const std::string format : {"svg", "ir", "text"})
+    for (const auto& format : formats)  // all five: cells and layout as the workspace draws them, not as text (DS-453)
       EXPECT_EQ(ds::api::Api(metamodel).render(files, diagram, format, 0), whole.render(diagram, format, 0)) << diagram << " " << format;
 }
 

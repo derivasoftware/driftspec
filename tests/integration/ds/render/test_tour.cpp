@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -41,7 +42,7 @@ class TestTour : public ::testing::Test {
   }
 
   std::string ir(const ds::model::Model& model, const std::string& name) const {
-    return ds::render::IrExport(model, metamodel).render("diagram:" + name, false);
+    return ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + name);
   }
 
   /// The boxes of the part that draws who takes part.
