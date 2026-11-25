@@ -61,14 +61,48 @@ variables:
       export CCACHE_BASEDIR="$CI_PROJECT_DIR" CCACHE_NOHASHDIR=1
       export CFLAGS="${CFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/=" CXXFLAGS="${CXXFLAGS:-} -ffile-prefix-map=$CI_PROJECT_DIR/="
       export CMAKE_C_COMPILER_LAUNCHER="$CCACHE_HOME/ccache" CMAKE_CXX_COMPILER_LAUNCHER="$CCACHE_HOME/ccache"
-      "$CCACHE_HOME/ccache" --zero-stats > /dev/null
+      # this job's own counters (DS-482): the cache is shared by every job running at once, so
+      # zeroing and reading its global counters mixed their numbers; a stats log holds only ours
+      export CCACHE_STATSLOG="$CI_PROJECT_DIR/ccache-stats.log"
+      rm -f "$CCACHE_STATSLOG"
   after_script:
-    - CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" "$HOME/.cache/ccache-4.10.2/ccache" --show-stats || true
+    - |
+      CCACHE="$HOME/.cache/ccache-4.10.2/ccache"
+      export CCACHE_DIR="$HOME/.cache/ccache/$CI_PROJECT_NAME" CCACHE_MAXSIZE=12G
+      echo "ccache: this job's calls"
+      CCACHE_STATSLOG="$CI_PROJECT_DIR/ccache-stats.log" "$CCACHE" --show-log-stats -v || true
+      echo "ccache: the shared cache"
+      "$CCACHE" --show-stats | grep -E "Cache size|Cleanups" || true
     # the disk the cache leaves on the runners' host, to grow it with data (DS-449)
     - df -h "$HOME" | tail -1 || true
+    # the host the runner shares (DS-482): its cores, memory and load, to size the runner's
+    # concurrent jobs and CMAKE_BUILD_PARALLEL_LEVEL with data
+    - echo "host: $(nproc) cores, load $(cut -d' ' -f1-3 /proc/loadavg)"; free -g | head -2 || true
 
 cpp-evidence:
   extends: [.ccache]
+  variables:
+    # the reach runs this many test binaries side by side (DDEV-1553); it took
+    # CMAKE_BUILD_PARALLEL_LEVEL, 2, and spent 375-460 s of the job's ~12.5 min (DS-482)
+    ARGOS_EVIDENCE_JOBS: "4"
+    # Why the evidence build never hits the cache while cpp-test does (DS-482): ccache writes,
+    # for every object, what it hashed and why it missed. A sample is kept as an artefact, to
+    # compare two jobs' inputs. Removed once the miss is understood.
+    CCACHE_DEBUG: "1"
+    CCACHE_DEBUGDIR: $CI_PROJECT_DIR/ccache-debug
+  after_script:
+    - !reference [.ccache, after_script]
+    - |
+      mkdir -p ccache-sample
+      find ccache-debug -name '*.ccache-log' 2>/dev/null | sort | head -25 | while read -r log; do
+        base="${log%.ccache-log}"
+        cp "$log" "$base".ccache-input-text ccache-sample/ 2>/dev/null || cp "$log" ccache-sample/
+      done
+      grep -hE "^\[.*\] (Result|Hash|Failed|Unsupported|Disabling|Uncacheable)" ccache-sample/*.ccache-log 2>/dev/null | cut -d' ' -f3- | sort | uniq -c | sort -rn | head -20 || true
+  artifacts:
+    when: always
+    paths: [.argos/evidence/reach.jsonl, ccache-sample/]
+    expire_in: 1 day
 
 # The tests run the Release engine with the JSON sink's checks on (DS-461): fields in byte order, one document, no
 # result taken with nothing written. A Release build leaves them off by default, so a broken contract passed CI while a
