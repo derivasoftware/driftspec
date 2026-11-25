@@ -282,7 +282,7 @@ package driftspec@ds {
       rationale:
         Owner, 2026-11-25 (DS-400, DS-464): figures are composed below and sinks only draw; sequences get one placement
         engine in the layout, like the structural one.
-      verification VER-00237-1 {
+      verification VER-00340-1 {
         status: draft
         title: Integration tests confirm the design of ds keeps it, and is told when a drawing holds what places
         method: test
