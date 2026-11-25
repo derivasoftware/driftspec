@@ -7,7 +7,7 @@
 namespace ds {
 namespace layout {
 
-Positioner::Positioner(const Spacing& spacing) : spacing_(spacing) {}
+Positioner::Positioner(const Spacing& spacing, bool lanes) : spacing_(spacing), lanes_(lanes) {}
 
 void Positioner::place(Layering& L, int available) const {
   const Spacing& S = spacing_;
@@ -23,7 +23,7 @@ void Positioner::place(Layering& L, int available) const {
   // The gap below a layer holds one lane per edge crossing it (succA counts the chains), so
   // every horizontal jog has a row of its own (S.lane apart) instead of piling on the middle.
   std::vector<int> rowY(depth + 1), rowH(depth + 1, 0), gapBelow(depth + 1, S.gapY);
-  for (int l = 0; l < depth; ++l) {
+  for (int l = 0; l < depth && lanes_; ++l) {
     int crossing = 0;
     for (int v : rows[l]) crossing += static_cast<int>(succA[v].size());
     gapBelow[l] = std::max(S.gapY, S.lane * (crossing + 1) + S.lanePad);
@@ -145,7 +145,7 @@ void Positioner::place(Layering& L, int available) const {
   // a segment that leaves or enters a real node (its ends are spread along the side), or joins two channels that
   // are not aligned. A long edge running straight down its channel takes no row, so the drawing is no longer as
   // tall as the sum of its edges' lengths
-  for (int l = 0; l < depth; ++l) {
+  for (int l = 0; l < depth && lanes_; ++l) {  // a router without lanes keeps every gap at gapY (DS-443)
     int turning = 0;
     for (int v : rows[l])
       for (int w : succA[v])

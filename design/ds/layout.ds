@@ -201,6 +201,7 @@ package driftspec@ds {
       - wayFrame_: std::map<size_t, int>
       - bands_: std::map<int, Band>
       - bandFrame_: std::map<int, int>
+      - lanes_: bool                         // whether the router run needs lanes in the gaps (DS-443)
       + Framer(graph: Graph, s: Spacing)
       + run(router: IRouter) -> Placement
       - nodeAt(number: std::size_t) -> int
@@ -227,8 +228,10 @@ package driftspec@ds {
     // places a layered component: rows with lanes, nodes pulled under their neighbours, layers wrapped to the room
     class Positioner {
       @requirement REQ-00210-1
+      @requirement REQ-00251-1               // without lanes every gap keeps gapY (DS-443)
       - owns spacing_: Spacing
-      + Positioner(spacing: Spacing)
+      - lanes_: bool
+      + Positioner(spacing: Spacing, lanes: bool)
       + place(layering: Layering, available: int) -> void
       + apply(layering: Layering, c: Component, rel: std::vector<Rect>) -> void
     }
@@ -238,6 +241,7 @@ package driftspec@ds {
       @requirement REQ-00210-1
       + ~IRouter()
       + abstract route(routing: Routing) -> std::map<std::size_t, Route>
+      + abstract lanes() -> bool             // whether its routes need a lane for every jog between two layers (DS-443)
     }
 
     // routes orthogonal through the layers: anchors spread along the sides, long edges down their channels, every jog
@@ -247,12 +251,31 @@ package driftspec@ds {
       - owns spacing_: Spacing
       + OrthogonalRouter(spacing: Spacing)
       + route(routing: Routing) -> std::map<std::size_t, Route>
+      + lanes() -> bool
+    }
+
+    // routes as smooth curves, a state diagram's (DS-443): through the layering's waypoints, borders facing the next
+    // point, edges between the same boxes bowed apart, a loop beside the right side, each label on its curve off the
+    // boxes; it needs no lanes
+    class CurvedRouter : IRouter {
+      @requirement REQ-00251-1
+      - owns spacing_: Spacing
+      + CurvedRouter(spacing: Spacing)
+      + route(routing: Routing) -> std::map<std::size_t, Route>
+      + lanes() -> bool
     }
 
     // the one place that names the routers
     class RouterFactory {
       @requirement REQ-00210-1
       + static orthogonal(spacing: Spacing) -> std::unique_ptr<IRouter>
+      + static curved(spacing: Spacing) -> std::unique_ptr<IRouter>
+      + static of(kind: std::string, spacing: Spacing) -> std::unique_ptr<IRouter>   // a state diagram's curved, any other's orthogonal (DS-443)
+    }
+
+    sequence RouterFactory::curved {
+      local router: CurvedRouter
+      return router
     }
 
     sequence RouterFactory::orthogonal {
@@ -389,9 +412,12 @@ package driftspec@ds {
       + none: std::size_t                     // a constant: the end of an edge that is no box of the graph
     }
 
-    dataclass Route {                        // how an edge runs: the corners of its polyline, in order
+    dataclass Route {                        // how an edge runs: the corners of its polyline, in order, or the points a curve passes
       @requirement REQ-00210-1
+      @requirement REQ-00251-1
       + points: std::vector<std::pair<double, double>>
+      + shape: Shape                         // polyline or curve (DS-443)
+      + label: std::optional<std::pair<double, double>>   // where its label goes, when the router chose
     }
 
     dataclass Box {                          // where a box lands: its top left corner, its width and its height

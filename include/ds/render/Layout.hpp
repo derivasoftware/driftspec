@@ -2,6 +2,7 @@
 #define DRIFTSPEC_RENDER_LAYOUT_HPP
 
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -81,6 +82,8 @@ struct Placed {
 /// The polyline of an edge, orthogonal, from the IR `from` to the IR `to`.
 struct Route {
   std::vector<Point> points;
+  bool curve = false;          ///< a smooth curve through the points, not a polyline (DS-443)
+  std::optional<Point> label;  ///< where its label goes, when the router chose it
 };
 
 struct LayoutResult {
@@ -102,7 +105,9 @@ class Layout {
   /// fit wraps onto further lines and components pack to that width, so the
   /// drawing adapts to the screen instead of asking the reader to pan.
   /// Deterministic: same document, metrics and width, same coordinates.
-  LayoutResult place(const IrDocument& doc, int maxWidth = 0) const;
+  /// With `asItsKind` the edges run as the document's kind is drawn, the router RouterFactory gives that kind: a
+  /// state diagram's as curves (DS-443). Otherwise orthogonal, as a terminal draws every kind.
+  LayoutResult place(const IrDocument& doc, int maxWidth = 0, bool asItsKind = false) const;
 
  private:
   Metrics m_;

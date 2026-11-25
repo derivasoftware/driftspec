@@ -36,6 +36,32 @@ package driftspec@ds {
   module model {
     @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 
+    requirement REQ-00240-1 {
+      tags: findings, model
+      status: draft
+      @refines SREQ-00002-1
+      title: A finding about an entity shall name it by identity as its subject, and a finding about a file or a word shall name none
+      text:
+        Each finding carries a subject: the identity of the entity it is about, so a door attaches it to that entity by
+        identity and not by where it is written or by how its message begins. A finding between two entities takes the
+        one where it is written; a rule's finding, a breach included, takes the rule, whose breach carries the entities
+        it binds. A finding about a file or a word (it does not parse, it is not UTF-8, an annotation no one knows)
+        names none. The message is unchanged. The report and the export write the subject only when there is one.
+      rationale:
+        Owner, 2026-11-25 (DS-426, from DS-421): the live viewer attached a rule's problems by place and by message
+        prefix; a subject lets every door do it by identity. The rule pipeline says it first; the other checks follow
+        with the service layer (DS-406).
+      verification VER-00262-1 {
+        status: draft
+        title: Integration tests confirm a rule's findings, a breach included, name the rule, a finding about a file names none, and the report and the export write the subject only when there is one
+        method: test
+        tests:
+          tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubject.ARulesFindingsNameTheRuleABreachIncluded
+          tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubject.AFindingAboutAFileNamesNoneAndTheKeyIsLeftOut
+          tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubject.TheExportWritesTheSubjectAsTheReportDoes
+      }
+    }
+
     requirement REQ-00001-1 {
       status: approved
       @refines SREQ-00001-1
@@ -560,7 +586,7 @@ package driftspec@ds {
       + severityOf(severity: Severity) -> SeveritySpec {            // one slot, by its place in Severity (DS-379)
         @requirement REQ-00191-1
       }
-      + finding(code: Code, message: std::string, location: Location) -> Finding {   // the one maker of a finding (DS-379)
+      + finding(code: Code, message: std::string, location: Location, subject: std::string) -> Finding {   // the one maker of a finding (DS-379)
         @requirement REQ-00190-1
       }
       + annotations() -> std::vector<AnnotationSpec>                // the rows the manual lists: the known, any other word, the colon after an operation
@@ -940,10 +966,12 @@ package driftspec@ds {
 
     dataclass Finding {                      // one diagnostic of the engine, made by Metamodel::finding (DS-379)
       @requirement REQ-00001-1
+      @requirement REQ-00240-1
       + code: std::string
       + severity: Severity
       + message: std::string
       + owns location: Location
+      + subject: std::string                 // the entity it is about, by identity; "" for a file or a word (DS-426)
     }
 
     dataclass Indexed {                      // what the model keeps so a question by identity needs no pass over it (DS-171)

@@ -257,9 +257,10 @@ package driftspec@ds {
       + Solver(facts: Facts)
       + solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>
       + static compares(form: model::LiteralForm) -> bool
-      - solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, bindings: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> void
+      // one working binding, bound, continued and undone: nothing copied per answer (DS-401)
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
       - ready(literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> bool
-      - answers(owner: std::string, literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> std::vector<std::vector<const std::string*>>
+      - answers<Next>(owner: std::string, literal: model::Literal, variables: Variables, work: std::vector<const std::string*>, next: Next) -> bool
       - value(owner: std::string, term: model::Term, variables: Variables, bindings: std::vector<const std::string*>) -> std::string
       - unify(owner: std::string, term: model::Term, variables: Variables, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
       - text(text: std::string) -> std::string

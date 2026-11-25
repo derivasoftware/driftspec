@@ -1,6 +1,7 @@
 {
   "edges": [],
   "ir": 1,
+  "kind": "sequence",
   "nodes": [],
   "notice": "No behaviour selected: include names a subject (ds::Checker::run), a behaviour or a namespace.",
   "title": "SEQ_Loose"

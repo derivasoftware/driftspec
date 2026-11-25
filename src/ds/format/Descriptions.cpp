@@ -13,7 +13,9 @@ void ReportDescription::findings(const std::vector<model::Finding>& findings, em
   for (const auto& f : findings) {
     out_sink.beginRecord().field("code").value(f.code).field("location").beginRecord();
     out_sink.field("column").integer(f.location.column).field("file").value(f.location.file).field("line").integer(f.location.line);
-    out_sink.endRecord().field("message").value(f.message).field("severity").value(report_.severityOf(f.severity).name).endRecord();
+    out_sink.endRecord().field("message").value(f.message).field("severity").value(report_.severityOf(f.severity).name);
+    if (!f.subject.empty()) out_sink.field("subject").value(f.subject);  // what it is about, when it says (DS-426)
+    out_sink.endRecord();
   }
   out_sink.endList();
 }

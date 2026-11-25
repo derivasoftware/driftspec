@@ -107,6 +107,7 @@ struct Finding {
   Severity severity;  ///< what the catalogue says of the code; the metamodel's severity table says what it means
   std::string message;
   Location location;
+  std::string subject = {};  ///< the identity of the entity it is about (DS-426); "" for a file or a word, or not yet said
 };
 
 /// One term of a literal: a variable (a bare name), an entity (a qualified name) or a value (a number

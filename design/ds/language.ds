@@ -2445,6 +2445,26 @@ package driftspec@ds {
             tests/integration/ds/render/test_state_view.cpp::TestStateView.TheMachineStartsAtADotAndEndsAtABullseyeForEachFinalStateAndItsStatesAreCapsules
         }
       }
+      requirement REQ-00251-1 {
+        tags: language, diagrams, state
+        status: draft
+        title: A state diagram shall draw its transitions as smooth curves, a transition back to the same state as a loop beside it
+        text:
+          Every render-IR document says the kind of its diagram, and the drawing routes by it: a state diagram's
+          transitions are curves through the points the layering leaves, leaving and entering each state where its
+          border faces the next point; two between the same states bow apart; a loop goes out beside the right side of
+          its state and back, one outside the other; each label lies on its curve, moved off any state it would fall
+          in. The gaps between layers need no lanes. Every other kind keeps its orthogonal routes, and the terminal
+          draws every kind orthogonally.
+        rationale: DS-443, the Owner, 2026-11-24, on the same side-by-side mock as DS-442. What a document is is said, not guessed from its nodes (code-62, 2026-11-25).
+        verification VER-00271-1 {
+          title: Integration tests confirm a state diagram says its kind and is routed in curves with every route labelled where its router put it, while a diagram of any other kind or a drawing not routed by its kind stays orthogonal
+          status: draft
+          method: test
+          tests:
+            tests/integration/ds/render/test_state_view.cpp::TestStateView.TheTransitionsAreCurvesAndALoopSitsBesideItsStateWhileOtherDiagramsStayOrthogonal
+        }
+      }
       requirement REQ-00146-1 {
         tags: language, diagrams, state
         status: approved

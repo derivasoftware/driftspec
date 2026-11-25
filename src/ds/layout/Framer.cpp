@@ -52,6 +52,7 @@ Framer::Framer(const Graph& graph, const Spacing& s) : edges_(graph.edges), S(s)
 }
 
 Placement Framer::run(const IRouter& router) {
+  lanes_ = router.lanes();
   frame(-1, maxWidth_);
   Placement out;
   std::vector<Rect> abs(nodes_.size());
@@ -219,7 +220,7 @@ void Framer::frame(int parent, int available) {
 void Framer::layered(Component& c, int available) {
   Layering L = Layerer(S).of(c, rel_);
   Orderer::order(L);
-  const Positioner positioner(S);
+  const Positioner positioner(S, lanes_);
   positioner.place(L, available);
   positioner.apply(L, c, rel_);
 }
