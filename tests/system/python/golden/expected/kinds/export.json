@@ -4380,7 +4380,6 @@
       },
       {
         "from": [
-          "attribute",
           "function",
           "method",
           "operation",
