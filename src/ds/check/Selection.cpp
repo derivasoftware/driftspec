@@ -1,5 +1,7 @@
 #include "ds/check/Selection.hpp"
 
+#include <algorithm>
+
 namespace ds {
 namespace check {
 
@@ -22,6 +24,16 @@ Selection Selection::with(Step step) const {
 }
 
 bool Selection::has(Step step) const { return steps_.count(step) != 0; }
+
+Selection Selection::joined(const Selection& other) const {
+  Selection out = *this;
+  out.steps_.insert(other.steps_.begin(), other.steps_.end());
+  return out;
+}
+
+bool Selection::covers(const Selection& other) const {
+  return std::includes(steps_.begin(), steps_.end(), other.steps_.begin(), other.steps_.end());
+}
 
 }  // namespace check
 }  // namespace ds

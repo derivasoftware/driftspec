@@ -454,7 +454,9 @@ package driftspec@ds {
       + static every() -> Selection                   // what the findings, the export, a query and the viewer read
       + static of(steps: std::vector<Step>) -> Selection   // the steps named, and no other
       + with(step: Step) -> Selection                 // the same steps and one more
+      + joined(other: Selection) -> Selection         // the steps of both: what a workspace ran for every use case (DS-408)
       + has(step: Step) -> bool
+      + covers(other: Selection) -> bool              // every step of other is among these
     }
 
     // the steps a selection names and every step they need: a step chosen never runs without what it reads

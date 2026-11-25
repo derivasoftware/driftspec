@@ -12,7 +12,7 @@ namespace {
 class TestWorkspace : public ::testing::Test {
  protected:
   const ds::model::Metamodel metamodel;
-  ds::api::Workspace ws{metamodel, {{"one.ds", "package p {\n  module m {\n    class A { }\n  }\n}\n"}}};
+  ds::api::Workspace ws = ds::api::Workspace::madeFor(metamodel, {{"one.ds", "package p {\n  module m {\n    class A { }\n  }\n}\n"}});
 };
 
 TEST_F(TestWorkspace, ItFindsWhatItsTextDeclaresAndNothingElse) {
@@ -22,7 +22,7 @@ TEST_F(TestWorkspace, ItFindsWhatItsTextDeclaresAndNothingElse) {
 }
 
 TEST_F(TestWorkspace, WithNoTextItAnswersNothing) {
-  const ds::api::Workspace empty{metamodel, {}};
+  const ds::api::Workspace empty = ds::api::Workspace::madeFor(metamodel, {});
   EXPECT_EQ(empty.find("p"), "null");
   EXPECT_TRUE(nlohmann::json::parse(empty.members("p@")).empty());
 }

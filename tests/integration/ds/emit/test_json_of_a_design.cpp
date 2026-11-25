@@ -45,7 +45,7 @@ class TestJsonOfADesign : public ::testing::Test {
       Loaded loaded{dir, {}, nullptr};
       ds::parse::Parser parser;
       for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_SOURCE_DIR) + "/" + dir)) loaded.files[f.path] = f.text;
-      loaded.workspace = std::make_unique<ds::api::Workspace>(metamodel(), loaded.files);
+      loaded.workspace = std::make_unique<ds::api::Workspace>(ds::api::Workspace::madeFor(metamodel(), loaded.files));
       workspaces().push_back(std::move(loaded));
     }
   }
@@ -165,7 +165,7 @@ TEST_F(TestJsonOfADesign, AWriteThatFailsHalfWayWritesNothingOfTheDocument) {
   // megabytes of it, and the sink refuses the path there. The door gives nothing of the document: it raises.
   ds::api::Files files = workspaces().front().files;
   files["z\xe9.ds"] = "package zz {\n}\n";
-  const ds::api::Workspace ws(metamodel(), files);
+  const ds::api::Workspace ws = ds::api::Workspace::madeFor(metamodel(), files);
   EXPECT_THROW((void)ws.exportModel(), std::runtime_error);
   EXPECT_THROW((void)ws.find("zz"), std::runtime_error);
   asNlohmannWrites(ws.find(workspaces().front().workspace->model().entities().begin()->first), false, "a sound entity");
