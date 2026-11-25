@@ -51,7 +51,7 @@ package driftspec@ds {
     // findings (ds check), the whole model (ds export, and a workspace kept for many questions), the answers of
     // a query, the viewer (its page or its scene) or one diagram drawn (svg, text, cells, the IR or its layout).
     enum Output {
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       @constraint CST-00001-1
       Findings, Model, Answers, Viewer, Drawing
     }
@@ -69,10 +69,10 @@ package driftspec@ds {
     }
 
     rule only-the-api-chooses-the-steps {
-      title: no class or function outside the api and the check names the selection of the steps a load runs or makes them, so the Api alone chooses which steps of the check run for what each command gives
-      @requirement REQ-00085-1
+      title: no class or function outside the api, the service and the check names the selection of the steps a load runs or makes them, so what a load is for, its use case or the Api, chooses which steps of the check run
+      @requirement REQ-00085-2
       for module b in driftspec@ds
-      where b != driftspec@ds@api, b != driftspec@ds@check
+      where b != driftspec@ds@api, b != driftspec@ds@service, b != driftspec@ds@check
       never chooses-steps(x), x in b
     }
 
@@ -251,17 +251,17 @@ package driftspec@ds {
 
     class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
       @interface engine                      // the class the binary interface is linked against
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       - refs metamodel_: model::Metamodel
       + Api(metamodel: model::Metamodel)
       + check(files: Files) -> std::string
       + load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model {
         @requirement REQ-00167-1
-        @requirement REQ-00085-1
+        @requirement REQ-00085-2
       }
       // the one place that chooses the steps of the check a load runs, for what it is to give (DS-376)
       + static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection {
-        @requirement REQ-00085-1
+        @requirement REQ-00085-2
         @constraint CST-00001-1
       }
       + report(model: model::Model, pretty: bool) -> std::string   // reads the severity table of its metamodel (DS-379); its description in a JSON sink (DS-398)
@@ -421,18 +421,23 @@ package driftspec@ds {
 // ---- the engine's binary interface: what a caller in the same process links against --------------
 package driftspec@ds {
   // what the engine promises at its edge: the package's, where its interfaces are; module api realises them
-  requirement REQ-00085-1 {
-    status: approved
+  requirement REQ-00085-2 {
+    status: draft
     @refines SREQ-00015-1
     title: The engine shall take a workspace as text, the buffers an editor holds included, and give back the JSON of the command line
     text:
       A workspace is a map from each file's path to its text, saved or not. check gives
       the findings and the counts as ds check --json does, export the model as ds export
-      does, render a diagram drawn as text or svg or its render-IR, page the viewer framed
+      does, render a diagram drawn as text, svg, cells, layout or its render-IR, page the viewer framed
       on the identities given, and expectedAt what the grammar takes at a place of a text.
+      Which steps of the check a load runs is chosen by what the load is for: the use case it
+      serves, by its needs (DS-407), and the Api for what no use case serves yet.
     rationale:
       Owner, 2026-11-06 (DS-84): a Python face to depend on, and a language server; text in
-      and JSON out keeps one contract for every caller.
+      and JSON out keeps one contract for every caller. Revision 2 (DS-407, following the
+      Owner's DS-406, 2026-11-24): every use case says the steps it reads (IUseCase::needs), so
+      the service chooses them too; the Api keeps choosing for the doors not on use cases yet. The
+      same revision says render draws cells and layout too (DS-453).
     tags: api, python
     // revision 3 (DS-376): a drawing runs only the steps of the check it reads, chosen by the Api alone, and draws
     // byte for byte as after the whole check
@@ -474,7 +479,7 @@ package driftspec@ds {
     rationale:
       DS-203 (epic DS-201, the playground): a page that edits a workspace and draws it as it is
       typed needs the whole picture after each keystroke in milliseconds, with no server; one call
-      keeps one contract between the engine and the page, as REQ-00085-1 does for a caller in process.
+      keeps one contract between the engine and the page, as REQ-00085-2 does for a caller in process.
     tags: api, browser
     verification VER-00129-1 {
       status: approved
@@ -512,7 +517,7 @@ package driftspec@ds {
     kind: library
     transport: in process, linked
     encoding: json text
-    @requirement REQ-00085-1
+    @requirement REQ-00085-2
 
     // a pair ds does not write reaches the caller as the failure it is (DS-398)
     operation check(files: api::Files) -> std::string fails NotImplemented : UC-00001-1

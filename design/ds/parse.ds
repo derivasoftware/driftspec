@@ -164,7 +164,7 @@ package driftspec@ds {
       + parseFile(path: std::string) -> ParsedFile
       + parseDirectory(directory: std::string) -> std::vector<ParsedFile>
       + expectedAt(text: std::string, line: int, column: int) -> std::vector<std::string> {
-        @requirement REQ-00085-1                 // what the grammar takes at a place: what an editor completes with
+        @requirement REQ-00085-2                 // what the grammar takes at a place: what an editor completes with
       }
     }
 
@@ -179,7 +179,7 @@ package driftspec@ds {
 
     class Lookahead {                        // what the grammar takes in one parse state: an error's hint and an editor's completion (DS-374)
       @requirement REQ-00080-1
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       - keywords_: std::vector<std::string>
       - annotation_: bool
       - field_: bool

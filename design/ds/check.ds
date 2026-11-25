@@ -432,14 +432,14 @@ package driftspec@ds {
     class StepFactory {
       @requirement REQ-00197-1
       @requirement REQ-00012-1
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       + static of(context: Context, selection: Selection) -> std::map<std::string, std::unique_ptr<IStep>>   // each made with the context (DS-425)
     }
 
     // Each step of the check, by what it does (DS-376): what a selection is made of. StepFactory::of pairs each with the
     // step it makes, so the names the steps are keyed by stay theirs.
     enum Step {
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       @constraint CST-00001-1
       Linker, Behaviour, Derivation, Failures, Contracts, Structure, Dependencies, Rules, Levels, States, Order
     }
@@ -448,7 +448,7 @@ package driftspec@ds {
     // StepFactory::of, which makes them and every step they need. The checker runs what it is given and knows nothing
     // of it; a drawing that runs fewer steps reads the same model where it looks.
     class Selection {
-      @requirement REQ-00085-1
+      @requirement REQ-00085-2
       @constraint CST-00001-1
       - owns steps_: std::set<Step>
       + static every() -> Selection                   // what the findings, the export, a query and the viewer read
