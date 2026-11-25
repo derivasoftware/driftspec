@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "description": "The DriftSpec grammar for tree-sitter: grammar.js is CommonJS, as tree-sitter generate reads it, whatever the repository root says (DS-450).",
+  "type": "commonjs"
+}

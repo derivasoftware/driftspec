@@ -21,6 +21,11 @@ pre-commit run --all-files                   # formatting: clang-format, cmake-f
 
 A change is ready when all three pass.
 
+A change to the grammar regenerates the parser in place: `cd grammar && tree-sitter generate && tree-sitter test`, with
+the tree-sitter CLI 0.26.12. `grammar/package.json` keeps `grammar.js` CommonJS, as tree-sitter reads it, although the
+repository's own `package.json` is an ES module (DS-450). Commit `src/parser.c`, `src/grammar.json` and
+`src/node-types.json` with the grammar.
+
 ## How the code is kept
 
 - **The design comes first.** DriftSpec's own design is written in DriftSpec, in
