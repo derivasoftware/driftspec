@@ -2,8 +2,10 @@
 
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <nlohmann/json.hpp>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -195,6 +197,33 @@ TEST_F(TestJsonSink, CheckedItRefusesADocumentThatIsNoJson) {
   EXPECT_TRUE(refused([](ds::emit::ISink& s) { s.null().null(); }));                         // two documents in one
   EXPECT_TRUE(refused([](ds::emit::ISink&) {}));                                             // nothing written
   EXPECT_FALSE(refused([](ds::emit::ISink& s) { s.beginRecord().field("a").null().endRecord(); }));
+}
+
+/// DS_JSON_CHECK says whether a sink its builder does not say of is checked, whatever the build (DS-461): CI's Release
+/// tests run with it set to 1, so the contract holds there too; 0 turns the check off. A sink that says is as it says.
+TEST_F(TestJsonSink, DsJsonCheckSaysWhetherASinkIsCheckedWhateverTheBuild) {
+  const auto refusesNothingWritten = [](std::optional<bool> checked) {
+    ds::emit::JsonSink sink = checked ? ds::emit::JsonSink(false, *checked) : ds::emit::JsonSink(false);
+    try {
+      (void)sink.result();
+    } catch (const std::logic_error&) {
+      return true;
+    }
+    return false;
+  };
+  const char* before = std::getenv("DS_JSON_CHECK");
+  const std::string kept = before ? before : "";
+  setenv("DS_JSON_CHECK", "1", 1);
+  EXPECT_TRUE(refusesNothingWritten(std::nullopt));
+  EXPECT_FALSE(refusesNothingWritten(false));  // said by its builder
+  setenv("DS_JSON_CHECK", "0", 1);
+  EXPECT_FALSE(refusesNothingWritten(std::nullopt));
+  EXPECT_TRUE(refusesNothingWritten(true));
+  if (before) {
+    setenv("DS_JSON_CHECK", kept.c_str(), 1);
+  } else {
+    unsetenv("DS_JSON_CHECK");
+  }
 }
 
 TEST_F(TestJsonSink, TheDocumentIsKeptWholeUntilItIsTakenSoAFailureWritesNothing) {

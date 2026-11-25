@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -29,7 +30,7 @@ class TestTableView : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/states")) binder.bind(f);
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-    json = ds::render::IrExport(model, metamodel).render("diagram:TB_Order", false);
+    json = ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:TB_Order");
     ir = nlohmann::json::parse(json);
   }
 
@@ -110,7 +111,7 @@ TEST_F(TestTableView, ATableThatNamesNoMachineSaysSo) {
                                "package p {\n  module m {\n    class Thing { }\n  }\n}\n"
                                "diagram MX { kind: table\n include: p@m::Thing }\n"));
   ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
-  const auto none = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:MX", false));
+  const auto none = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(other, metamodel), "diagram:MX"));
   EXPECT_FALSE(none.contains("table"));
   EXPECT_NE(none["notice"].get<std::string>().find("No state machine selected"), std::string::npos);
 }
@@ -130,7 +131,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
       "  column proved: v where v verifies r\n  column kept: holds c satisfies r\n}\n"
       "diagram TD {\n  kind: table\n  for requirement r in p\n  where r.status = \"draft\"\n  column requirement: r.id\n}\n"));
   ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
-  const auto t = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:TB", false))["table"];
+  const auto t = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(other, metamodel), "diagram:TB"))["table"];
   EXPECT_EQ(t["corner"], "requirement");
   EXPECT_EQ(t["columns"], (std::vector<std::string>{"says", "proved", "kept"}));
   ASSERT_EQ(t["rows"].size(), 2u);
@@ -142,7 +143,7 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
   EXPECT_EQ(t["rows"][1]["cells"][2]["text"], "no");
   EXPECT_EQ(t["rows"][1]["cells"][2]["kind"], "against");
   // a filter reads a field of the row: only the drafts
-  const auto drafts = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:TD", false))["table"];
+  const auto drafts = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(other, metamodel), "diagram:TD"))["table"];
   ASSERT_EQ(drafts["rows"].size(), 1u);
   EXPECT_EQ(drafts["rows"][0]["label"], "REQ-00002-1");
 }
@@ -158,7 +159,7 @@ TEST_F(TestTableView, AColumnReadsWhatTheEntityOfTheRowIsAsARuleDoes) {
       "diagram TK {\n  kind: table\n  for class c in p\n  column entity: name(c)\n  column is: kind(c)\n  column identity: id(c)\n}\n"));
   ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
   for (const auto& f : other.findings()) EXPECT_NE(f.code, "E-SYNTAX") << f.message;
-  const auto t = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:TK", false))["table"];
+  const auto t = nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(other, metamodel), "diagram:TK"))["table"];
   EXPECT_EQ(t["corner"], "entity");
   EXPECT_EQ(t["columns"], (std::vector<std::string>{"is", "identity"}));
   ASSERT_EQ(t["rows"].size(), 1u);

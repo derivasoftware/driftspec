@@ -60,8 +60,9 @@ class Api {
   /// The severity table of the language (DS-379), as JSON: each severity's name, whether a finding of it fails, whether
   /// it is kept apart as coverage, and what an editor shows it as; in the order of Severity (DS-386).
   std::string severities() const;
-  /// A diagram of the workspace drawn as text (box characters) or svg, wrapped to a width (0: none);
-  /// empty when there is no such diagram.
+  /// A diagram of the workspace in the format named, as Workspace::render draws it: svg, text (box characters),
+  /// cells, layout or its render-IR, wrapped to a width (0: none); empty when there is no such diagram. Any other
+  /// format throws emit::NotImplemented, never a text drawing instead (DS-453).
   std::string render(const Files& files, const std::string& diagram, const std::string& format, int width) const;
   /// The viewer as one page, framed on the identities given (a diagram's, an entity's).
   std::string page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const;

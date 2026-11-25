@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <string>
@@ -267,11 +268,14 @@ struct Render {
       std::cerr << "which diagram? ds query " << input << " diagrams lists them\n";
       return 2;
     }
-    const std::string doc = ds::render::IrExport(model, metamodel).render(diagramId(diagram), false);
-    if (doc.empty()) {
+    const std::optional<ds::render::IrDocument> document = ds::render::IrExport(model, metamodel).document(diagramId(diagram));
+    if (!document) {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
+    const auto sink = ds::emit::SinkFactory::json(false);  // the IR travels compact to the writer -f names (DS-418)
+    ds::format::DescriptionFactory::ir(*document)->describe(*sink);
+    const std::string doc = sink->result();
     return emit(output, draw({doc}, true, theme) + (format == "ir" ? "\n" : ""));
   }
 

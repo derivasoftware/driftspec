@@ -38,7 +38,7 @@ package driftspec@ds {
 
     requirement REQ-00240-1 {
       tags: findings, model
-      status: draft
+      status: approved
       @refines SREQ-00002-1
       title: A finding about an entity shall name it by identity as its subject, and a finding about a file or a word shall name none
       text:
@@ -52,7 +52,7 @@ package driftspec@ds {
         prefix; a subject lets every door do it by identity. The rule pipeline says it first; the other checks follow
         with the service layer (DS-406).
       verification VER-00262-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm a rule's findings, a breach included, name the rule, a finding about a file names none, and the report and the export write the subject only when there is one
         method: test
         tests:

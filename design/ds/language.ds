@@ -101,12 +101,13 @@ package driftspec@ds {
           passed, stopped counting as approved and so switched
           W-REQ-NO-VERIFICATION off; kind: clas fell back to a class diagram and
           level: package was ignored in silence.
-        verification VER-00131-1 {
+        verification VER-00131-2 {
           status: approved
           title: Integration tests confirm a closed field with a value it does not take is reported and one it takes is not, and the diag corpus marks a component kind
           method: test
           tests:
             tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.AClosedFieldWithAValueItDoesNotTakeIsReportedAndOneItTakesIsNot
+            tests/integration/ds/check/test_conformance.cpp::TestMetamodelConformance.EachNameOfAClosedListIsTakenOrSaid
         }
       }
     }
@@ -2447,7 +2448,7 @@ package driftspec@ds {
       }
       requirement REQ-00251-1 {
         tags: language, diagrams, state
-        status: draft
+        status: approved
         title: A state diagram shall draw its transitions as smooth curves, a transition back to the same state as a loop beside it
         text:
           Every render-IR document says the kind of its diagram, and the drawing routes by it: a state diagram's
@@ -2459,7 +2460,7 @@ package driftspec@ds {
         rationale: DS-443, the Owner, 2026-11-24, on the same side-by-side mock as DS-442. What a document is is said, not guessed from its nodes (code-62, 2026-11-25).
         verification VER-00271-1 {
           title: Integration tests confirm a state diagram says its kind and is routed in curves with every route labelled where its router put it, while a diagram of any other kind or a drawing not routed by its kind stays orthogonal
-          status: draft
+          status: approved
           method: test
           tests:
             tests/integration/ds/render/test_state_view.cpp::TestStateView.TheTransitionsAreCurvesAndALoopSitsBesideItsStateWhileOtherDiagramsStayOrthogonal

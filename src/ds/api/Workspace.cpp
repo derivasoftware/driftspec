@@ -1,5 +1,7 @@
 #include "ds/api/Workspace.hpp"
 
+#include <optional>
+
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/emit/NotImplemented.hpp"
@@ -196,9 +198,12 @@ std::string Workspace::render(const std::string& diagram, const std::string& for
   const auto writers = format::FormatFactory::diagram(theme_);
   const auto chosen = writers.find(format);
   if (!described && chosen == writers.end()) throw emit::NotImplemented("diagram", format, {"cells", "ir", "layout", "svg", "text"});
-  const render::IrText ir{render::IrExport(model_, metamodel_).render(model::Identity::ofDiagram(diagram).text(), false)};
-  if (ir.json.empty()) return ir.json;
-  const auto sink = emit::SinkFactory::json(false);
+  const std::optional<render::IrDocument> document =
+      render::IrExport(model_, metamodel_).document(model::Identity::ofDiagram(diagram).text());
+  if (!document) return "";
+  const auto sink = emit::SinkFactory::json(false);  // the IR travels compact to the writers that draw it (DS-418)
+  format::DescriptionFactory::ir(*document)->describe(*sink);
+  const render::IrText ir{sink->result()};
   if (described) {
     const auto description =
         format == "layout" ? format::DescriptionFactory::layout(ir, theme_, width) : format::DescriptionFactory::cells(ir, theme_, width);

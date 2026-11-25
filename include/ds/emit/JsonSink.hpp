@@ -39,7 +39,8 @@ class JsonSink final : public ISink {
   std::string result() override;
 
  private:
-  /// Whether a sink is checked when its builder does not say: in every build without NDEBUG.
+  /// Whether a sink is checked when its builder does not say: as DS_JSON_CHECK says (1 checks, 0 does not), whatever
+  /// the build (DS-461); without it, in every build without NDEBUG.
   static bool checkedByDefault();
   /// What goes before a value: in a list, the separator; in a record, nothing (its field wrote it).
   void beforeValue();

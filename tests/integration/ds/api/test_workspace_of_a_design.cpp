@@ -88,8 +88,6 @@ TEST_F(TestWorkspace, ADiagramAskedInAFormatDsDoesNotWriteFailsNotImplemented) {
     EXPECT_EQ(e.technology(), "yaml");
     EXPECT_EQ(std::string(e.what()), "the diagram is not written in yaml; there is: cells ir layout svg text");
   }
-  // the engine's render draws svg, the IR, or text for any other name, as it always has: it asks no pair there is none of
-  EXPECT_EQ(ds::api::Api(metamodel).render({{"shop.ds", kShop}}, "CL_Any", "yaml", 0), "");
 }
 
 TEST_F(TestWorkspace, TwoLoadedAtOnceEachKeepItsOwnModel) {

@@ -386,7 +386,9 @@ def check(source: Source) -> Report:
 
 
 def render(source: Source, diagram: str, format: str = "text", width: int = 0) -> str:
-    """A diagram drawn as text or svg, wrapped to a width (0: none); "" when there is no such diagram."""
+    """A diagram drawn (svg, text, cells, ir, layout), wrapped to a width (0: none); "" when there is no such diagram.
+
+    A format that is none of them raises NotImplemented, naming the document and the technology (DS-453)."""
     files = read(source)
     try:
         return _native.render(files, diagram, format, width)

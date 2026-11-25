@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -28,7 +29,7 @@ class TestStateView : public ::testing::Test {
     ds::bind::Binder binder(model, metamodel);
     for (const auto& f : parser.parseDirectory(std::string(DRIFTSPEC_CORPUS_DIR) + "/" + corpus)) binder.bind(f);
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
-    return nlohmann::json::parse(ds::render::IrExport(model, metamodel).render("diagram:" + diagram, false));
+    return nlohmann::json::parse(ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram));
   }
 
   static const nlohmann::json* edge(const nlohmann::json& ir, const std::string& from, const std::string& to) {

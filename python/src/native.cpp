@@ -481,7 +481,7 @@ PyMethodDef kMethods[] = {
     {"check", check, METH_VARARGS, "check(files: dict[str, str | bytes]) -> str: the findings and counts, as ds check --json"},
     {"export", exportModel, METH_VARARGS, "export(files: dict[str, str | bytes]) -> str: the model, as ds export"},
     {"expected_at", expectedAt, METH_VARARGS, "expected_at(text, line, column) -> str: what the grammar takes there, as JSON"},
-    {"render", render, METH_VARARGS, "render(files, diagram, format, width) -> str: a diagram drawn as text or svg; '' when none"},
+    {"render", render, METH_VARARGS, "render(files, diagram, format, width) -> str: drawn in svg, text, cells, layout or ir; '' when none"},
     {"page", page, METH_VARARGS, "page(files, title, focus) -> str: the viewer, framed on the identities given"},
     {nullptr, nullptr, 0, nullptr}};
 

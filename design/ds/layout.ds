@@ -69,7 +69,7 @@ package driftspec@ds {
 
     requirement REQ-00212-1 {
       tags: architecture, layout
-      status: draft
+      status: approved
       @refines REQ-00210-1
       title: The layout shall depend on nothing of render or the scene
       text:
@@ -79,7 +79,7 @@ package driftspec@ds {
       rationale:
         Owner, 2026-11-24 (DS-368, DS-392): layout knows no model, no render and no scene.
       verification VER-00232-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps it, and is told when a class of the layout depends on render or on the scene
         method: test
         tests:
@@ -90,7 +90,7 @@ package driftspec@ds {
 
     requirement REQ-00213-1 {
       tags: architecture, layout
-      status: draft
+      status: approved
       @refines REQ-00210-1
       title: Whoever places shall reach an engine only through IEngine and a router only through IRouter, from the factories that name them
       text:
@@ -100,7 +100,7 @@ package driftspec@ds {
       rationale:
         Owner, 2026-11-24 (DS-368, DS-392): whoever places talks to the engine only through the interface.
       verification VER-00233-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds keeps it, and is told when the scene or render depends on an engine, a router or a phase of the layered engine
         method: test
         tests:

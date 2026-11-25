@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
@@ -75,7 +76,7 @@ TEST_F(TestFailures, AHandlerKeepsTheFailureItHandles) {
 }
 
 TEST_F(TestFailures, TheSequenceDiagramDrawsTheFailureAndTheHandlers) {
-  const std::string ir = ds::render::IrExport(model, metamodel).render("diagram:SEQ_Load", false);
+  const std::string ir = ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:SEQ_Load");
   EXPECT_NE(ir.find("fail LoadError"), std::string::npos);
   EXPECT_NE(ir.find("on IoError"), std::string::npos);
   EXPECT_NE(ir.find("on Busy"), std::string::npos);

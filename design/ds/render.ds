@@ -8,6 +8,11 @@ package driftspec@ds {
 
 
   module render {
+    @requirement REQ-00006-1                 // a diagram turned into the render-IR of its kind
+    @requirement REQ-00007-1                 // the IR drawn as SVG and as terminal text
+    @requirement REQ-00214-1                 // every operation of render is a member of a class (DS-372)
+    @requirement REQ-00215-1                 // a projector is reached through IProjector, the tour's parts too (DS-372)
+    @requirement REQ-00216-1                 // the drawings read the IR alone (DS-372)
 
     requirement REQ-00006-1 {
       status: approved
@@ -102,12 +107,20 @@ package driftspec@ds {
       + title: std::string
       + href: std::string
       + part: std::string                   // the part of the drawing it belongs to, in a drawing made of several
-      + abstract: bool
+      + abstract: std::optional<bool>        // said of a class or an interface, either way; of anything else not said (DS-418)
       + refs: std::map<std::string, std::string>
       + sections: std::vector<std::vector<std::string>>
       + sectionKinds: std::vector<std::string>
       + span: std::pair<int, int>
       + dividers: std::vector<std::pair<int, std::string>>
+      // whether a section of a box holds members, written as signatures; any other holds what a closed box
+      // offers, all of one kind (DS-244)
+      + static holdsMembers(sectionKind: std::string) -> bool {
+        @requirement REQ-00064-5
+      }
+      + static badgeOf(classifier: std::string, abstract: bool) -> std::string {   // the same letter in every drawing (DS-118)
+        @requirement REQ-00006-1
+      }
     }
 
     dataclass IrEdge {
@@ -122,16 +135,7 @@ package driftspec@ds {
       + dashed: bool
       + order: int
       + refs: std::map<std::string, std::string>
-    }
-
-    function badgeOf(classifier: std::string, abstract: bool) -> std::string {
-      @requirement REQ-00006-1
-    }
-
-    // whether a section of a box holds members, written as signatures; any other holds what a closed box
-    // offers, all of one kind (DS-244)
-    function holdsMembers(sectionKind: std::string) -> bool {
-      @requirement REQ-00064-5
+      + static between(from: std::string, to: std::string, kind: std::string) -> IrEdge   // an edge saying nothing else yet (DS-418)
     }
 
     // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
@@ -170,7 +174,7 @@ package driftspec@ds {
       + kind: std::string                    // the diagram's kind, how it is drawn (DS-443)
       + title: std::string
       + notice: std::string
-      + owns table: IrTable                 // when it has columns, the document is drawn as this table
+      + table: std::optional<IrTable>        // when written and with columns, the document is drawn as this table (DS-418)
       + owns many nodes: std::vector<IrNode>
       + owns many edges: std::vector<IrEdge>
       // a drawing made of several, each drawn as itself and placed beside the last: a tour (DS-245)
@@ -204,8 +208,124 @@ package driftspec@ds {
       return out
     }
 
+    // ---- render's architecture (DS-372): what holds it together, each decision a rule that fires when it is broken ----
+
+    requirement REQ-00214-1 {
+      tags: architecture, render
+      status: draft
+      @refines REQ-00007-1
+      title: Every operation of render shall be a member of the class whose responsibility it is
+      text:
+        The export chooses and writes, each projector draws its kind, the layout places, Svg and Text draw and the
+        grid holds the cells: every operation is one of theirs. A function of the module would be a responsibility
+        no class names.
+      rationale:
+        Owner, 2026-11-24 (DS-368, DS-371): every operation is a member of the class whose responsibility it is.
+      verification VER-00234-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a function of render is written
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AFunctionOfRenderIsTold
+      }
+    }
+
+    requirement REQ-00215-1 {
+      tags: architecture, render
+      status: draft
+      @refines REQ-00006-1
+      title: A projector shall be reached only through IProjector, from ProjectorFactory, by every class of render, the projectors themselves included
+      text:
+        The export asks ProjectorFactory for the projector of a diagram's kind, and the tour asks it for the
+        projectors of its two parts. No class of render holds a concrete projector, so a kind of diagram is added or
+        changed without the export or another projector knowing.
+      rationale:
+        Owner, 2026-11-24 (DS-368, DS-369): one projector per diagram kind behind one interface, each independent of
+        the others.
+      verification VER-00235-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when the tour or the export holds a projector
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AProjectorHeldByAnotherClassOfRenderIsTold
+      }
+    }
+
+    requirement REQ-00216-1 {
+      tags: architecture, render
+      status: draft
+      @refines REQ-00007-1
+      title: The drawings shall read the render-IR alone, knowing nothing of the model, the query or the axis
+      text:
+        What projects a diagram (the export, the projectors and what they are built of) reads the model through the
+        query and lifts it onto the cut; everything else in render (the layout, Svg, Text, the grid and the IR itself)
+        draws a document, whoever wrote it. A drawing that knew the model would draw what the IR does not say, and
+        another tool's IR would draw differently.
+      rationale:
+        Owner, 2026-11-24 (DS-368): the drawings read only the IR.
+      verification VER-00236-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a drawing knows the model, the query or the axis
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ADrawingThatKnowsTheModelIsTold
+      }
+    }
+
+    // what projects a diagram: the export, the projectors and what they are built of (DS-372)
+    definition projects(c) {
+      title: c is the export, a projector, the one that names them, or what a projector is built of
+      if c = driftspec@ds@render::IrExport
+      if c = driftspec@ds@render::IProjector
+      if c = driftspec@ds@render::ProjectorFactory
+      if c inherits driftspec@ds@render::IProjector
+      if c = driftspec@ds@render::SequenceBuilder
+    }
+
+    rule render-operations-belong-to-classes {
+      title: no function is written in render's module, so every operation of render is a member of a class
+      @requirement REQ-00214-1
+      for function f in driftspec@ds@render
+      never f in driftspec@ds@render
+    }
+
+    rule projectors-reach-each-other-through-iprojector {
+      title: no class of render but the factory depends on a projector, so a projector, the tour's parts included, is reached through IProjector
+      @requirement REQ-00215-1
+      for class c in driftspec@ds@render, class x in driftspec@ds@render
+      where x inherits driftspec@ds@render::IProjector, c != x, c != driftspec@ds@render::ProjectorFactory
+      never depends(c, x)
+    }
+
+    rule the-drawings-read-only-the-ir {
+      title: no class of render that draws depends on the model, so the drawings read the IR alone
+      @requirement REQ-00216-1
+      for class c in driftspec@ds@render
+      where not projects(c)
+      never depends(c, x), x in driftspec@ds@model
+    }
+
+    rule the-drawings-ask-no-query {
+      title: no class of render that draws depends on the query, so what a drawing shows is what its IR says
+      @requirement REQ-00216-1
+      for class c in driftspec@ds@render
+      where not projects(c)
+      never depends(c, x), x in driftspec@ds@query
+    }
+
+    rule the-drawings-know-no-cut {
+      title: no class of render that draws depends on the axis, so a cut is the projection's and the drawing sees what it lifted
+      @requirement REQ-00216-1
+      for class c in driftspec@ds@render
+      where not projects(c)
+      never depends(c, x), x in driftspec@ds@axis
+    }
+
     // the projection (DS-369): the projector of a diagram's kind draws its body, from what the query's filter of the
-    // diagram takes; this one chooses the projector, heads the document and writes it
+    // diagram takes; this one chooses the projector and heads the document, a value format::IrDescription writes (DS-418)
     class IrExport {
       @requirement REQ-00198-1
       @requirement REQ-00251-1               // every document says its diagram's kind (DS-443)
@@ -214,10 +334,10 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel     // the language of the model: the kinds it draws by name (DS-351)
       + IrExport(model: model::Model, metamodel: model::Metamodel)
       + diagrams() -> std::vector<std::string>
-      + render(diagramId: std::string, pretty: bool) -> std::string {
+      + document(diagramId: std::string) -> std::optional<IrDocument> {
         @requirement REQ-00057-1
       }
-      - static documentHead(diagram: model::Entity) -> nlohmann::json   // what heads every document: ir, the diagram's kind, title (DS-443)
+      - static documentHead(diagram: model::Entity, out_document: IrDocument) -> void   // the diagram's kind and title, filled in one place (DS-443)
     }
 
     sequence IrExport::diagrams {
@@ -226,17 +346,17 @@ package driftspec@ds {
       return out
     }
 
-    // The kind written in the diagram picks the projector; whatever it draws is headed and written here, pretty-printed
-    // when asked. What comes back is the JSON dumped, so a name for it, not a checked value.
-    sequence IrExport::render {
+    // The kind written in the diagram picks the projector; whatever it draws is headed here, and handed on as a value
+    // for its door to describe into the sink it chose (DS-418).
+    sequence IrExport::document {
       local projector: IProjector
       self -> model_.find(diagramId) -> diagram
       opt there is no such diagram / no-diagram {
-        return ""
+        return none
       }
       -> ProjectorFactory::of(kind, model_, metamodel_) -> made
-      -> projector.project(diagram) -> body
-      -> documentHead(diagram) -> head
+      -> projector.project(diagram) -> ir
+      -> documentHead(diagram, ir) -> headed
       return ir
     }
 
@@ -244,7 +364,7 @@ package driftspec@ds {
     class IProjector {
       @requirement REQ-00006-1
       + ~IProjector()
-      + abstract project(diagram: model::Entity) -> nlohmann::json
+      + abstract project(diagram: model::Entity) -> IrDocument   // the body, as a document IrDescription writes (DS-418)
     }
 
     // the one place that names the projectors, by the kind of diagram they draw: a class diagram for any other kind
@@ -284,10 +404,10 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + ClassProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00057-1
       }
-      - closeBoxes(doc: nlohmann::json, cut: axis::Cut) -> nlohmann::json {
+      - closeBoxes(doc: IrDocument, cut: axis::Cut) -> IrDocument {
         @requirement REQ-00064-5
         @requirement REQ-00126-1
         @requirement REQ-00137-1
@@ -337,7 +457,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + SequenceProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00049-3
         @requirement REQ-00056-1
         @requirement REQ-00129-1
@@ -357,8 +477,8 @@ package driftspec@ds {
     // follows the calls
     class SequenceBuilder {
       @requirement REQ-00049-3
-      + nodes: nlohmann::json                  // the lifelines, in the order they are met
-      + edges: nlohmann::json                  // the messages, each with its order
+      + owns many nodes: std::vector<IrNode>   // the lifelines, in the order they are met
+      + owns many edges: std::vector<IrEdge>   // the messages, each with its order
       + order: int                             // the order the next message takes
       - refs model_: model::Model
       - refs cut_: axis::Cut                   // the cut the lifelines stand on, and the calls it follows (DS-231)
@@ -380,7 +500,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + TourProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00139-1
       }
     }
@@ -404,7 +524,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + StateProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00062-1
         @requirement REQ-00144-1
         @requirement REQ-00146-1
@@ -416,7 +536,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + TableProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00006-1
       }
     }
@@ -426,7 +546,7 @@ package driftspec@ds {
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel
       + RequirementProjector(model: model::Model, metamodel: model::Metamodel)
-      + project(diagram: model::Entity) -> nlohmann::json {
+      + project(diagram: model::Entity) -> IrDocument {
         @requirement REQ-00050-1
         @requirement REQ-00131-1
       }
@@ -524,6 +644,35 @@ package driftspec@ds {
       - sequenceStyle_: std::string            // what a sequence adds to it
       + Svg(theme: theme::Theme)
       + render(doc: IrDocument, maxWidth: int) -> std::string   // also over a layout already made: one identity per member
+      - kMarkerByKind: std::map<std::string, std::string>   // the marker an edge of each kind ends in
+      - kSeqScript: char                     // the script a sequence carries, so it folds and links wherever it is shown
+      - static idPrefix(title: std::string) -> std::string           // FNV-1a of the title in base 36: several drawings share a page
+      - static markers(px: std::string) -> std::string               // the arrowheads and diamonds, defined once per drawing
+      - static splitParams(text: std::string) -> std::vector<std::string>   // on top-level commas
+      - static typed(type: std::string) -> std::string
+      - static memberMarkup(line: std::string) -> std::pair<std::string, std::string>   // a member's line as coloured tspans
+      - static num(v: int) -> std::string                            // and a double: whole pixels
+      - emitNode(p: Placed, px: std::string) -> std::string          // a box, a container or a note where it was placed
+      - static emitEdge(e: IrEdge, route: Route, px: std::string) -> EdgeMarkup
+      - static dataAttrs(refs: std::map<std::string, std::string>) -> std::string
+      - sequenceSvg(doc: IrDocument) -> std::string                  // a sequence, drawn without the layout
+      - tableSvg(doc: IrDocument) -> std::string                     // a table, drawn cell by cell (DS-251)
+      - static besideEachOther(drawings: std::vector<std::pair<std::string, std::string>>, maxWidth: int) -> std::string   // the parts of a drawing (DS-245)
+    }
+
+    // an edge drawn in SVG: its path, and its label written apart so every label goes above every path
+    - dataclass EdgeMarkup {
+      @requirement REQ-00007-1
+      + path: std::string
+      + label: std::string
+    }
+
+    // a lifeline of a sequence drawn in SVG: its node, the x of its centre and the width of its head
+    - dataclass Lane {
+      @requirement REQ-00007-1
+      + refs node: IrNode
+      + cx: int
+      + headW: int
     }
 
     class Text {                             // the terminal drawing, box characters and optional colour
@@ -534,6 +683,17 @@ package driftspec@ds {
       + Text(theme: theme::Theme)
       + render(doc: IrDocument, color: bool, maxWidth: int) -> std::string   // also over a layout already made
       + cells(doc: IrDocument, maxWidth: int, out_sink: emit::ISink) -> void   // as one value where the sink lent stands (DS-397)
+      - member(g: Grid, x: int, y: int, line: std::string) -> void       // a member's line: visibility and types coloured
+      - box(g: Grid, p: Placed) -> void                                 // its frame, its header and its sections
+      - container(g: Grid, p: Placed) -> void                           // its frame and its label
+      - static marker(kind: std::string, dx: int, dy: int) -> std::string   // the glyph of an edge entering its target moving in (dx, dy)
+      - edge(g: Grid, e: IrEdge, route: Route, byId: std::map<std::string, const Placed*>) -> void
+      - sequenceGrid(doc: IrDocument) -> Grid                           // lifelines as columns, messages as rows
+      - classGrid(doc: IrDocument, lay: LayoutResult) -> Grid           // the boxes and edges over the layout
+      - static isSequence(doc: IrDocument) -> bool                      // a node of it is a lifeline
+      - static contentWidth(maxWidth: int) -> int                       // the grid keeps a one-cell margin on each side
+      - tableGrid(doc: IrDocument) -> Grid                              // a row of headings, a rule, a row for each row (DS-251)
+      - partsGrid(doc: IrDocument, maxWidth: int) -> Grid               // the parts one under the other (DS-245)
     }
 
     // What a change a diff marks is drawn as in a terminal (DS-419): its mark and its colour.
@@ -573,31 +733,66 @@ package driftspec@ds {
 
     // ---- what the drawings keep to their source files ----
 
-    - function sequenceSvg(doc: IrDocument, M: Metrics, style: std::string, sequenceStyle: std::string) -> std::string     // a sequence document, drawn without the layout
-    - function tableSvg(doc: IrDocument, style: std::string) -> std::string        // a table document, drawn cell by cell
 
-    - class Grid {                           // the character grid Text fills, cell by cell
+    // the character grid Text fills, cell by cell (DS-371): each cell a glyph, its colour and what an edge drew there
+    - class Grid {
       @requirement REQ-00007-1
-      + dump(color: bool) -> std::string
+      - minX_: int
+      - minY_: int
+      - w_: int
+      - h_: int
+      - cells_: std::vector<Cell>
+      - palette_: std::vector<std::string>   // the colours the cells name, "" first: the default
+      - long_: std::vector<std::string>      // the glyphs longer than one code point
+      - kMaxCells: std::size_t               // the most it holds, some 128 million characters (DS-350)
+      + Grid(minX: int, minY: int, w: int, h: int)
+      + at(x: int, y: int) -> Cell              // none outside the grid
+      + put(x: int, y: int, glyph: std::string, color: std::string) -> void
+      + text(x: int, y: int, s: std::string, color: std::string) -> void   // one code point per cell
+      + line(x: int, y: int, horizontal: bool, dashed: bool, color: std::string) -> void   // joins with what another edge drew
       + encode(rgb: std::map<std::string, std::uint32_t>) -> std::string
       + columns() -> int
       + rows() -> int
+      + paste(other: Grid, row: int) -> void    // another grid copied onto this one, its first row at row
+      + dump(color: bool) -> std::string
+      + frame(r: Rect, rounded: bool, color: std::string) -> void
+      + clear(r: Rect) -> void                  // what a box covers is not drawn through
+      - static sized(w: int, h: int) -> std::size_t   // a drawing too large to hold as text is refused (DS-350)
+      - paint(color: std::string) -> std::uint8_t     // the colour's index in the palette, added the first time
+      - setGlyph(c: Cell, glyph: std::string) -> void
+      - glyphOf(c: Cell) -> std::string_view
     }
 
-    - function sequenceGrid(doc: IrDocument, pen: TextPen) -> Grid
-    - function classGrid(doc: IrDocument, lay: LayoutResult, pen: TextPen) -> Grid
-    - function tableGrid(doc: IrDocument, pen: TextPen) -> Grid
+    // one character of the drawing, in 7 bytes (DS-350): its UTF-8 bytes inline, the index of its colour in the grid's
+    // palette and what an edge drew there; a longer glyph is kept in the grid's list and found by its index
+    - dataclass Cell {
+      @requirement REQ-00007-1
+      + kLong: std::uint8_t                   // the size that says glyph holds the index of a long glyph
+      + glyph: std::array<char, 4>
+      + size: std::uint8_t
+      + colour: std::uint8_t
+      + line: std::uint8_t                    // 1 horizontal, 2 vertical, 3 both
+    }
+
+    // a lifeline of a sequence drawn as text: its id, its label, the column of its centre and its width
+    - dataclass SeqLine {
+      @requirement REQ-00007-1
+      + id: std::string
+      + label: std::string
+      + centre: int
+      + width: int
+    }
 
     // metrics is the pixel table, made from the theme's measures with the Svg. The drawing over the
     // layout is the second render, an overload: neither can be told, so the drawing of a
     // class document comes back as a name.
     sequence Svg::render {
       opt the document is a table / table-document {
-        -> tableSvg(doc, style_) -> drawing
+        -> tableSvg(doc) -> drawing
         return drawing
       }
       opt a node of the document is a lifeline / sequence-document {
-        -> sequenceSvg(doc, metrics_, style_, sequenceStyle_) -> drawing
+        -> sequenceSvg(doc) -> drawing
         return drawing
       }
       self -> doc.bundled() -> bundled
@@ -610,12 +805,12 @@ package driftspec@ds {
     // margin. The drawing over the layout is the second render, an overload.
     sequence Text::render {
       opt the document is a table / table-document {
-        -> tableGrid(doc, pen_) -> grid
+        -> tableGrid(doc) -> grid
         self -> grid.dump(color) -> drawing
         return drawing
       }
       opt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc, pen_) -> grid
+        -> sequenceGrid(doc) -> grid
         self -> grid.dump(color) -> drawing
         return drawing
       }
@@ -629,11 +824,11 @@ package driftspec@ds {
     sequence Text::cells {
       self -> doc.bundled() -> bundled
       alt a node of the document is a lifeline / sequence-document {
-        -> sequenceGrid(doc, pen_) -> grid         // bundled all the same, and not used
+        -> sequenceGrid(doc) -> grid         // bundled all the same, and not used
       } else {
         local layout: Layout
         self -> layout.place(bundled, width, false) -> lay
-        -> classGrid(bundled, lay, pen_) -> grid
+        -> classGrid(bundled, lay) -> grid
       }
       self -> grid.encode(pen_.cellColours) -> encoded
       self -> grid.columns() -> columns

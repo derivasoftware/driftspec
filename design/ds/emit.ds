@@ -13,7 +13,7 @@ package driftspec@ds {
     // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
     requirement REQ-00202-2 {
       tags: architecture, emit, format
-      status: draft
+      status: approved
       @refines REQ-00106-3
       title: A sink of emit shall be made only by emit's SinkFactory, by the name of its technology, for the doors that ask for an output, and every other module shall reach it through its interface
       text:
@@ -44,7 +44,7 @@ package driftspec@ds {
 
     requirement REQ-00203-2 {
       tags: architecture, emit
-      status: draft
+      status: approved
       @refines REQ-00106-3
       title: The emit module shall depend on no other module of the engine
       text:
@@ -120,7 +120,7 @@ package driftspec@ds {
       + boolean(value: bool) -> ISink
       + null() -> ISink
       + result() -> std::string
-      - static checkedByDefault() -> bool
+      - static checkedByDefault() -> bool                 // as DS_JSON_CHECK says, whatever the build (DS-461); else without NDEBUG
       - beforeValue() -> void
       - open(kind: char) -> void
       - close(kind: char) -> void

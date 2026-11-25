@@ -193,7 +193,7 @@ package driftspec@ds {
       - owns theme_: theme::Theme                       // the style its drawings are measured and drawn in (DS-393)
       + SeeDesign(metamodel: model::Metamodel)
       + viewer(model: model::Model) -> scene::SceneDocument
-      + diagram(model: model::Model, name: std::string) -> render::IrText
+      + diagram(model: model::Model, name: std::string) -> std::optional<render::IrDocument>   // the IR as a value; none when no such diagram (DS-418)
       + name() -> std::string
       + needs(bound: model::Model, request: Request) -> check::Selection
       + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented

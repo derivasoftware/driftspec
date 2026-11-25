@@ -41,8 +41,8 @@ Outcome CheckDesign::run(const model::Model& model, const Request&, emit::ISink&
 
 scene::SceneDocument SeeDesign::viewer(const model::Model& model) const { return scene::Scene(model, metamodel_).build(); }
 
-render::IrText SeeDesign::diagram(const model::Model& model, const std::string& name) const {
-  return {render::IrExport(model, metamodel_).render(model::Identity::ofDiagram(name).text(), false)};
+std::optional<render::IrDocument> SeeDesign::diagram(const model::Model& model, const std::string& name) const {
+  return render::IrExport(model, metamodel_).document(model::Identity::ofDiagram(name).text());
 }
 
 check::Selection SeeDesign::needs(const model::Model& bound, const Request& request) const {
@@ -62,8 +62,12 @@ Outcome SeeDesign::run(const model::Model& model, const Request& request, emit::
   }
   if (format != "layout" && format != "cells")  // the IR and the drawings are writers, not descriptions, until DS-399
     throw emit::NotImplemented("diagram", format, {"json", "layout", "cells"});
-  const render::IrText ir = diagram(model, request.get("diagram"));
-  if (ir.json.empty()) return {"no-diagram"};
+  const std::optional<render::IrDocument> document = diagram(model, request.get("diagram"));
+  if (!document) return {"no-diagram"};
+  // the layout and the cells read the IR as text until DS-458: it is described into the sink lent, taken, and the
+  // sink, empty again, is the drawing's (DS-418)
+  format::DescriptionFactory::ir(*document)->describe(sink);
+  const render::IrText ir{sink.result()};
   const int width = number(request, "width", "0");
   const auto description =
       format == "layout" ? format::DescriptionFactory::layout(ir, theme_, width) : format::DescriptionFactory::cells(ir, theme_, width);
