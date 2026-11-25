@@ -10,7 +10,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/ViewerPage.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -108,15 +108,16 @@ TEST_F(TestSceneOfTheTaxonomy, AHeaderThatNamesABaseInAnotherModuleIsWideEnoughF
 
 TEST_F(TestSceneOfTheTaxonomy, TheViewerLightsRelationsUpAndDocksItsPanels) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
   // only inheritance is a family of lines; the rest of the relations light up in their colour
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
-  const std::string code = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed
+  const std::string code = ds::format::common::Packing::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed
   EXPECT_NE(code.find("const FAMILY={inherits:'inheritance',realises:'inheritance'}"), std::string::npos);
   for (const char* colour : {"--r-owns", "--r-agg", "--r-uses", "--r-calls"}) EXPECT_NE(page.find(colour), std::string::npos) << colour;
   // the card docks on the right, the tour plays along the bottom, and on a phone the tour hides the card
   const auto from = page.find("const STYLE='") + std::string("const STYLE='").size();
-  const std::string style = ds::format::common::unpack(page.substr(from, page.find('\'', from) - from));  // the styles travel packed
+  const std::string style =
+      ds::format::common::Packing::unpack(page.substr(from, page.find('\'', from) - from));  // the styles travel packed
   EXPECT_NE(style.find("body.carded .stage{right:380px}"), std::string::npos);
   EXPECT_NE(style.find(".tour{position:fixed;left:0;right:0;bottom:0"), std::string::npos);
   EXPECT_NE(style.find("body.carded.touring .card{display:none}"), std::string::npos);

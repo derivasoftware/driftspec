@@ -6,7 +6,7 @@
 #include "ds/bind/Binder.hpp"
 #include "ds/check/Checker.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -41,7 +41,9 @@ class TestScenePageOfACalledBehaviour : public ::testing::Test {
     binder.bind(parser.parseText("p.ds", design(callers, steps)));
     ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
     ds::emit::JsonSink sink(false, true);
-    return ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}, sink).size();
+    const ds::scene::SceneDocument scene = ds::scene::Scene(model, metamodel).build();
+    ds::format::DescriptionFactory::scene(scene)->describe(sink);  // the scene's description, as the page carries it (DS-398)
+    return sink.result().size();
   }
 };
 

@@ -7,7 +7,7 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/scene/Layers.hpp"
@@ -74,7 +74,11 @@ TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
 TEST_F(TestLayers, TheSceneBuildsTheSameDocumentEveryTime) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::scene::Scene scene(model, metamodel);
-  EXPECT_EQ(ds::format::SceneJson().write(scene.build(), {}, sink), ds::format::SceneJson().write(scene.build(), {}, sink));
+  const auto described = [&sink](const ds::scene::SceneDocument& d) {  // the scene's description in the sink (DS-398)
+    ds::format::DescriptionFactory::scene(d)->describe(sink);
+    return sink.result();
+  };
+  EXPECT_EQ(described(scene.build()), described(scene.build()));
 }
 
 }  // namespace

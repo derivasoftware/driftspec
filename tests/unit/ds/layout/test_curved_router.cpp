@@ -57,4 +57,21 @@ TEST(TestCurvedRouter, ALongEdgePassesThroughItsWaypointsInTheOrderItRuns) {
   EXPECT_DOUBLE_EQ(up[2].second, 110);
 }
 
+/// A label's whole text clears the boxes, not only the point it is set at (DS-454): where halfway along falls just
+/// under a box, the text, which rises a line above its point, would sit on the box's border, so it is moved off.
+TEST(TestCurvedRouter, ALabelsTextClearsTheBoxesNotOnlyItsPoint) {
+  ds::layout::Routing r;
+  // the edge runs from the first box down to the second; halfway, at y 120, lies 6 under a third box
+  r.boxes = {{0, 0, 100, 40}, {0, 200, 100, 40}, {20, 60, 60, 54}};
+  r.ends = {{0, 1}};
+  const auto routes = ds::layout::CurvedRouter(ds::layout::Spacing{}).route(r);
+  ASSERT_TRUE(routes.at(0).label.has_value());
+  const auto [x, y] = *routes.at(0).label;
+  for (const auto& b : r.boxes) {
+    const bool across = x > b.x && x < b.x + b.w;
+    const bool within = y - 16 < b.y + b.h && y > b.y;
+    EXPECT_FALSE(across && within) << "the label at " << x << "," << y << " crosses the box at " << b.y;
+  }
+}
+
 }  // namespace

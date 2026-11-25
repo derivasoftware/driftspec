@@ -2,11 +2,11 @@
 
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
+#include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
-#include "ds/format/DiagramFormats.hpp"
-#include "ds/format/SceneFormats.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/FormatFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/parse/Parser.hpp"
@@ -129,25 +129,38 @@ std::string Workspace::walk(const std::string& sequence, const std::string& path
   return sink->result();
 }
 
-std::string Workspace::ask(const std::string& question, const std::string& subject) const {
+std::string Workspace::answers(const std::vector<query::Answer>& answers) {
   const auto sink = emit::SinkFactory::json(false);
-  return format::AnswersJson().write(query::Query(model_, metamodel_).ask(question, subject), {}, *sink);
+  format::DescriptionFactory::answers(answers)->describe(*sink);
+  return sink->result();
 }
 
-std::string Workspace::shows(const std::string& diagram) const {
-  const auto sink = emit::SinkFactory::json(false);
-  return format::AnswersJson().write(query::Query(model_, metamodel_).shows(diagram), {}, *sink);
+// the questions asked through the query's interface, as the browser asks them (DS-405); shows is one of them
+std::string Workspace::ask(const std::string& question, const std::string& subject) const {
+  return answers(query::QueryFactory::of(model_, metamodel_)->ask(question, subject));
 }
+
+std::string Workspace::shows(const std::string& diagram) const { return ask("shows", diagram); }
 
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
-  const std::string ir = render::IrExport(model_, metamodel_).render(model::Identity::ofDiagram(diagram).text(), false);
-  if (ir.empty()) return ir;
+  // a diagram is its IR: its layout and its cells are described in JSON, a line after (DS-398); the IR and the drawings
+  // are written by their writers; a name that is none of them is a pair ds does not write, said before anything is drawn
+  const bool described = format == "layout" || format == "cells";
+  const auto writers = format::FormatFactory::diagram(theme_);
+  const auto chosen = writers.find(format);
+  if (!described && chosen == writers.end()) throw emit::NotImplemented("diagram", format, {"cells", "ir", "layout", "svg", "text"});
+  const render::IrText ir{render::IrExport(model_, metamodel_).render(model::Identity::ofDiagram(diagram).text(), false)};
+  if (ir.json.empty()) return ir.json;
+  const auto sink = emit::SinkFactory::json(false);
+  if (described) {
+    const auto description =
+        format == "layout" ? format::DescriptionFactory::layout(ir, theme_, width) : format::DescriptionFactory::cells(ir, theme_, width);
+    description->describe(*sink);
+    return sink->result() + "\n";
+  }
   format::FormatOptions options;
   options.width = width;
-  const auto formats = format::diagramFormats(theme_);
-  const auto chosen = formats.find(format);
-  const auto sink = emit::SinkFactory::json(false);  // what layout and cells write
-  return (chosen != formats.end() ? chosen->second : formats.at("text"))->write({ir}, options, *sink);
+  return chosen->second->write(ir, options, *sink);
 }
 
 std::string Workspace::page(const std::string& title, const std::vector<std::string>& focus) const {
@@ -155,7 +168,7 @@ std::string Workspace::page(const std::string& title, const std::vector<std::str
   options.title = title;
   options.focus = focus;
   const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-  return format::SceneHtml().write(scene::Scene(model_, metamodel_).build(), options, *sink);
+  return format::FormatFactory::scene().at("html")->write(scene::Scene(model_, metamodel_).build(), options, *sink);
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }
