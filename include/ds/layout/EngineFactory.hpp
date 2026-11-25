@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "ds/layout/IEngine.hpp"
+#include "ds/layout/IRouter.hpp"
 #include "ds/layout/Spacing.hpp"
 
 namespace ds {
@@ -14,8 +15,9 @@ class EngineFactory {
  public:
   /// The engine that packs nested boxes in shelves, fixed places and trees: the scene's.
   static std::unique_ptr<IEngine> packing();
-  /// The engine that layers boxes along their edges and routes them orthogonally, leaving `spacing`: render's.
-  static std::unique_ptr<IEngine> layered(const Spacing& spacing);
+  /// The engine that layers boxes along their edges, leaving `spacing`, its edges run by `router`: orthogonally when
+  /// it is handed none. Render's.
+  static std::unique_ptr<IEngine> layered(const Spacing& spacing, std::unique_ptr<IRouter> router = nullptr);
 };
 
 }  // namespace layout
