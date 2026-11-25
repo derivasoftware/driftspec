@@ -6,6 +6,7 @@
 #include <string>
 
 #include "ds/emit/Sink.hpp"
+#include "ds/render/Figure.hpp"
 #include "ds/render/Ir.hpp"
 #include "ds/render/Layout.hpp"
 #include "ds/theme/Theme.hpp"
@@ -98,7 +99,8 @@ class Text {
   /// With `color`, ANSI colours follow the SVG palette roles (name, type, visibility).
   /// `maxWidth` in columns (0 = unbounded): the drawing wraps to it.
   std::string render(const IrDocument& doc, bool color, int maxWidth = 0) const;
-  std::string render(const IrDocument& doc, const LayoutResult& layout, bool color) const;
+  /// A figure composed for a terminal (DS-400): drawn as it is placed, nothing placed here.
+  std::string draw(const Figure& figure, bool color) const;
 
   /// The same drawing as a cell grid for hosts that paint cells themselves
   /// (a Claude Code mod's Raster, a TUI): JSON {columns, rows, cells, text}
@@ -120,8 +122,8 @@ class Text {
   void edge(Grid& g, const IrEdge& e, Route route, const std::map<std::string, const Placed*>& byId) const;
   /// A sequence: lifelines as columns, messages as rows.
   Grid sequenceGrid(const IrDocument& doc) const;
-  /// The boxes and edges of a document over its layout.
-  Grid classGrid(const IrDocument& doc, const LayoutResult& lay) const;
+  /// The boxes and edges of a figure, where it placed them.
+  Grid classGrid(const Figure& figure) const;
   /// Whether a node of the document is a lifeline.
   static bool isSequence(const IrDocument& doc);
   /// The grid keeps a one-cell margin on each side: the layout gets the rest.

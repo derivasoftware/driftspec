@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "ds/render/ComposerFactory.hpp"
+
 namespace ds {
 namespace format {
 
@@ -58,8 +60,9 @@ void LayoutDescription::placed(const render::IrDocument& document, const std::st
     out_sink.endList().endRecord();
     return;
   }
-  const render::IrDocument parsed = document.bundled();
-  const render::LayoutResult lay = render::Layout(metrics_).place(parsed, width_);
+  const render::Figure figure = render::ComposerFactory::of("boxes", "text", metrics_)->compose(document, width_);
+  const render::IrDocument& parsed = figure.document;
+  const render::LayoutResult& lay = figure.layout;
   out_sink.field("nodes").beginList();
   for (const auto& p : lay.placed) {
     out_sink.beginRecord().field("h").integer(p.rect.h).field("id").value(p.node->id).field("kind").value(p.node->kind);

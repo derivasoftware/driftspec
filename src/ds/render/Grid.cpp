@@ -68,7 +68,7 @@ void Grid::paste(const Grid& other, int row) {
       Cell& to = cells_[static_cast<size_t>(row + y) * w_ + x];
       to = from;
       to.colour = colours[from.colour];
-      if (from.size == Cell::kLong) setGlyph(to, std::string(other.glyphOf(from)));
+      if (from.size == Cell::kLong) setGlyph(to, other.glyphOf(from));
     }
 }
 

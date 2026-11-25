@@ -10,6 +10,7 @@
 #include <string_view>
 #include <vector>
 
+#include "ds/render/ComposerFactory.hpp"
 #include "ds/render/Grid.hpp"
 #include "ds/render/SeqLine.hpp"
 #include "ds/text/Text.hpp"
@@ -399,8 +400,9 @@ Grid Text::sequenceGrid(const IrDocument& doc) const {
   return g;
 }
 
-Grid Text::classGrid(const IrDocument& doc, const LayoutResult& lay) const {
-  const TextPen& pen = pen_;
+Grid Text::classGrid(const Figure& figure) const {
+  const IrDocument& doc = figure.document;
+  const LayoutResult& lay = figure.layout;
   int minX = 0, minY = 0, maxX = 1, maxY = 1;
   for (const auto& p : lay.placed) {
     minX = std::min(minX, p.rect.x - 1);
@@ -503,8 +505,8 @@ Grid Text::partsGrid(const IrDocument& doc, int maxWidth) const {
   int w = 1, h = 0;
   for (const auto& name : doc.parts) {
     const IrDocument part = doc.part(name);
-    const IrDocument bundled = part.bundled();
-    grids.push_back(isSequence(part) ? sequenceGrid(part) : classGrid(bundled, Layout(M).place(bundled, contentWidth(maxWidth))));
+    grids.push_back(isSequence(part) ? sequenceGrid(part)
+                                     : classGrid(ComposerFactory::of("boxes", "text", M)->compose(part, contentWidth(maxWidth))));
     w = std::max(w, grids.back().columns());
     h += grids.back().rows() + (h ? 1 : 0);
   }
@@ -523,21 +525,16 @@ std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const 
   if (!doc.table.columns.empty()) return tableGrid(doc).dump(color);
   if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
   if (isSequence(doc)) return sequenceGrid(doc).dump(color);
-  const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)), color);
+  return draw(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)), color);
 }
 
-std::string Text::render(const IrDocument& doc, const LayoutResult& lay, bool color) const {
-  if (isSequence(doc)) return sequenceGrid(doc).dump(color);
-  return classGrid(doc, lay).dump(color);
-}
+std::string Text::draw(const Figure& figure, bool color) const { return classGrid(figure).dump(color); }
 
 void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
-  const IrDocument bundled = doc.bundled();
   const Grid g = !doc.table.columns.empty() ? tableGrid(doc)
                  : !doc.parts.empty()       ? partsGrid(doc, maxWidth)
                  : isSequence(doc)          ? sequenceGrid(doc)
-                                            : classGrid(bundled, Layout(pen_.M).place(bundled, contentWidth(maxWidth)));
+                                            : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));
   out_sink.beginRecord().field("cells").value(g.encode(pen_.cellColours)).field("columns").integer(g.columns());
   out_sink.field("rows").integer(g.rows()).field("text").value(g.dump(false)).endRecord();
 }
