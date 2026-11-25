@@ -3,10 +3,8 @@
 
 #include <string>
 
-#include "ds/api/Workspace.hpp"
 #include "ds/emit/Sink.hpp"
 #include "ds/model/Metamodel.hpp"
-#include "ds/model/Model.hpp"
 
 namespace ds {
 namespace api {
@@ -24,13 +22,9 @@ class Browser {
   std::string answer(const std::string& request) const;
 
  private:
-  /// The answer to a request, written into the sink it is lent: a page of the manual, or the workspace's
-  /// artefacts, diagrams, identities, locations and report, each record's fields in byte order.
+  /// The answer to a request, written into the sink it is lent by the use case play-design (DS-460): a page of the
+  /// manual, or the workspace's artefacts, diagrams, identities, locations and report.
   void respond(const std::string& request, emit::ISink& out_sink) const;
-  /// The artefacts as rows: what each one refines, what keeps it, what proves it.
-  void artefacts(const model::Model& model, emit::ISink& out_sink) const;
-  /// The diagrams in the order they are written, each drawn as svg with what it takes.
-  void diagrams(const Workspace& workspace, int width, emit::ISink& out_sink) const;
 
   const model::Metamodel& metamodel_;
 };

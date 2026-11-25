@@ -263,6 +263,115 @@ Outcome EditDesign::run(const model::Model&, const Request& request, emit::ISink
 
 // ---- the factory -----------------------------------------------------------------------------------------------
 
+// ---- UC-00008-1 ------------------------------------------------------------------------------------------------
+
+// the manual's page asks for no design; the design is read whole, as the playground has always been given it
+check::Selection PlayDesign::needs(const model::Model&, const Request& request) const {
+  return request.getOr("part", "design") == "manual" ? check::Selection::of({}) : check::Selection::every();
+}
+
+void PlayDesign::manual(const std::string& topic, emit::ISink& sink) const {
+  const model::Manual book(metamodel_);  // made from the metamodel the playground's engine holds (DS-342)
+  sink.beginRecord().field("manual").beginRecord();
+  if (topic.empty()) {
+    sink.field("guides").beginList();
+    for (const auto& guide : book.guides()) sink.value(guide.first);
+    sink.endList();
+  }
+  sink.field("text").value(book.page(topic)).field("topic").value(topic);
+  if (topic.empty()) {
+    sink.field("topics").beginList();
+    for (const auto& t : book.topics()) sink.value(t);
+    sink.endList();
+  }
+  sink.endRecord().endRecord();
+}
+
+void PlayDesign::artefacts(const model::Model& model, emit::ISink& sink) const {
+  sink.beginList();
+  for (const auto& p : model.entities()) {
+    const model::Entity& e = p.second;
+    if (e.expected) continue;
+    if (e.kind != model::Kind::Requirement && e.kind != model::Kind::Constraint && e.kind != model::Kind::UseCase) continue;
+    std::string level;
+    if (e.kind == model::Kind::Requirement)
+      level =
+          e.scope.empty() || model::Scope(e.scope).isSystem() ? "system" : model::Identity(model::Scope(e.scope).box().text()).lastName();
+    std::string parent;
+    for (const auto& r : model.index().from(e.id))
+      if (r.kind == "refines" || (e.kind == model::Kind::UseCase && r.kind == "satisfies")) parent = r.to;
+    const std::vector<model::Relation> reaching = model.index().to(e.id);
+    sink.beginRecord().field("id").value(e.id).field("keptBy").beginList();
+    for (const auto& r : reaching)
+      if (r.kind == "satisfies" || r.kind == "constrained-by" || r.kind == "realises") sink.value(r.from);
+    sink.endList().field("kind").value(metamodel_.nameOf(e.kind)).field("level").value(level).field("parent").value(parent);
+    sink.field("provedBy").beginList();
+    for (const auto& r : reaching)
+      if (r.kind == "verifies") sink.value(r.from);
+    sink.endList().field("status").value(e.field("status")).field("title").value(e.field("title")).endRecord();
+  }
+  sink.endList();
+}
+
+void PlayDesign::diagrams(const model::Model& model, int width, emit::ISink& sink) const {
+  std::vector<const model::Entity*> drawn;
+  for (const auto& p : model.entities())
+    if (p.second.kind == model::Kind::Diagram) drawn.push_back(&p.second);
+  std::stable_sort(drawn.begin(), drawn.end(), [](const model::Entity* a, const model::Entity* b) {
+    return a->location.file != b->location.file ? a->location.file < b->location.file : a->location.line < b->location.line;
+  });
+  const auto questions = query::QueryFactory::of(model, metamodel_);  // what each diagram takes
+  sink.beginList();
+  for (const model::Entity* e : drawn) {
+    const std::string id = model::Identity(e->id).diagramName();
+    const auto kind = e->fields.find("kind");
+    const auto include = e->fields.find("include");
+    std::string svg, error;
+    bool failed = false;
+    try {
+      svg = render::Drawings::svg(model, metamodel_, theme_, id, width);  // as render draws it (DS-470, DS-474)
+    } catch (const std::exception& ex) {
+      error = ex.what();
+      failed = true;
+    }
+    sink.beginRecord();
+    if (failed) sink.field("error").value(error);
+    sink.field("file").value(e->location.file).field("id").value(id);
+    sink.field("include").value(include == e->fields.end() ? "" : include->second);
+    sink.field("kind").value(kind == e->fields.end() ? "class" : kind->second).field("line").integer(e->location.line);
+    sink.field("shows").beginList();  // what it takes: a call leads to the diagram of what it calls
+    for (const auto& a : questions->ask("shows", id)) sink.value(a.id);
+    sink.endList().field("svg").value(svg).endRecord();
+  }
+  sink.endList();
+}
+
+// what the playground receives for an edit (DS-460): the manual's page, or the design as one document
+Outcome PlayDesign::run(const model::Model& model, const Request& request, emit::ISink& sink) const {
+  if (request.getOr("part", "design") == "manual") {
+    manual(request.getOr("topic", ""), sink);
+    return {"default"};
+  }
+  sink.beginRecord().field("artefacts");
+  artefacts(model, sink);
+  sink.field("diagrams");
+  diagrams(model, request.number("width", "0"), sink);
+  sink.field("entities").beginList();
+  for (const auto& p : model.entities())
+    if (!p.second.expected) sink.value(p.first);
+  sink.endList().field("locations").beginRecord();  // where each identity is written: where a click on a drawing leads
+  for (const auto& p : model.entities()) {
+    const auto& at = p.second.location;
+    if (p.second.expected || at.file.empty()) continue;
+    sink.field(p.first).beginList().value(at.file).integer(at.line).integer(at.endLine > 0 ? at.endLine : at.line).endList();
+  }
+  sink.endRecord().field("report");
+  const check::Report report = check::Report::of(model, metamodel_);
+  format::DescriptionFactory::report(report)->describe(sink);  // as ds check --json writes it, one field of the answer
+  sink.endRecord();
+  return {"default"};
+}
+
 std::unique_ptr<IUseCase> UseCaseFactory::of(const std::string& name) const {
   if (name == "check-design") return std::make_unique<CheckDesign>(metamodel_);
   if (name == "see-design") return std::make_unique<SeeDesign>(metamodel_);
@@ -270,11 +379,12 @@ std::unique_ptr<IUseCase> UseCaseFactory::of(const std::string& name) const {
   if (name == "hand-model") return std::make_unique<HandModel>(metamodel_);
   if (name == "learn-language") return std::make_unique<LearnLanguage>(metamodel_);
   if (name == "edit-design") return std::make_unique<EditDesign>();
+  if (name == "play-design") return std::make_unique<PlayDesign>(metamodel_);
   throw emit::NotImplemented("", name, names());
 }
 
 std::vector<std::string> UseCaseFactory::names() {
-  return {"check-design", "see-design", "ask-model", "hand-model", "learn-language", "edit-design"};
+  return {"check-design", "see-design", "ask-model", "hand-model", "learn-language", "edit-design", "play-design"};
 }
 
 }  // namespace service

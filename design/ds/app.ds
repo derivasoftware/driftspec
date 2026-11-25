@@ -136,13 +136,13 @@ package driftspec@ds {
         The command line and the api are doors: they translate a request into a use case and its outcome into their
         own convention, and draw nothing. No class of either holds or names the model, asks a workspace for it,
         exports a diagram's render-IR, asks the query or names a writer of format (its factory, its interface, a
-        writer or their options). Two exemptions are written into the rule. For good: api's Workspace, Api and
-        Bound, the loading machinery, whose job is to hold the model and load it (bound, checked, the steps it
-        needs). For now: api's Browser, the playground's door, which reads the model for its artefacts and asks
-        what each diagram shows; DS-460 (the playground answers through a use case of its own) removes it.
+        writer or their options). One exemption is written into the rule: api's Workspace, Api and Bound, the
+        loading machinery, whose job is to hold the model and load it (bound, checked, the steps it needs). api's
+        Browser, the playground's door, answers through the use case play-design (DS-460) and is held to it.
       rationale:
         DS-410 (Owner, 2026-11-24; decision 4): doors know no model. Owner, 2026-11-25 (via code-62, DS-474): the
-        exemptions, Workspace, Api and Bound for good, Browser until DS-460, so the gap shows in the design.
+        exemptions, Workspace, Api and Bound for good, Browser until DS-460, so the gap shows in the design. DS-460
+        (code-f3, 2026-11-26): play-design closes it.
       tags: architecture, cli, api, app
       verification VER-00325-1 {
         status: draft
@@ -152,7 +152,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheDesignOfDsKeepsTheRulesOfTheDoors
           tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.ADoorThatHoldsOrAsksForTheModelIsTold
           tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.ADoorThatExportsTheIrAsksTheQueryOrNamesAWriterIsTold
-          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheExemptionsCoverTheLoadingMachineryAndTheBrowserAlone
+          tests/integration/ds/check/test_door_principles.cpp::TestDoorPrinciples.TheExemptionsCoverTheLoadingMachineryAlone
       }
     }
 
@@ -193,18 +193,17 @@ package driftspec@ds {
       if x is class, x in driftspec@ds@format, x inherits i, name(i) = "IFormat"
     }
 
-    // the exemptions (the Owner, 2026-11-25): the loading machinery for good, whose job is to hold the model and load
-    // it; the playground's door until DS-460 gives it a use case of its own
+    // the exemptions (the Owner, 2026-11-25): the loading machinery, whose job is to hold the model and load it; the
+    // playground's door answers through play-design since DS-460 and is held to the rule like every door
     definition holds-the-model(c) {
-      title: c is api's loading machinery, Workspace, Api or Bound, or, until DS-460, api's Browser
+      title: c is api's loading machinery, Workspace, Api or Bound
       if c = driftspec@ds@api::Workspace
       if c = driftspec@ds@api::Api
       if c = driftspec@ds@api::Bound
-      if c = driftspec@ds@api::Browser   // until DS-460: the playground answers through a use case of its own
     }
 
     rule doors-know-no-model {
-      title: no class of the command line or the api but the loading machinery (and, until DS-460, the browser) depends on the model, the IR's export, the query or format's writers, so a door draws nothing and reaches the engine through a use case
+      title: no class of the command line or the api but the loading machinery depends on the model, the IR's export, the query or format's writers, so a door draws nothing and reaches the engine through a use case
       @requirement REQ-00303-1
       for class c in driftspec@ds
       where a-door(c), not holds-the-model(c)

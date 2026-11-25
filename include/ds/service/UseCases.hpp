@@ -118,6 +118,30 @@ class EditDesign : public IUseCase {
   Outcome run(const model::Model& model, const Request& request, emit::ISink& sink) const override;
 };
 
+/// UC-00008-1, play a design in the browser (DS-460): what the playground receives for each edit, one document. Asked
+/// for the design (part "design", the default), the files' artefacts as rows, their diagrams in the order written, each
+/// drawn as render draws it in svg with what it takes, the identities declared and where each is written, and the report
+/// as ds check --json writes it; asked for the manual (part "manual"), a page of it or, for "", its guides and topics,
+/// in the playground's own record. Every record's fields in byte order.
+class PlayDesign : public IUseCase {
+ public:
+  explicit PlayDesign(const model::Metamodel& metamodel) : metamodel_(metamodel) {}
+  std::string name() const override { return "play-design"; }
+  check::Selection needs(const model::Model& bound, const Request& request) const override;
+  Outcome run(const model::Model& model, const Request& request, emit::ISink& sink) const override;
+
+ private:
+  /// A page of the manual, or with "" its guides and topics, as the playground reads it (DS-272).
+  void manual(const std::string& topic, emit::ISink& sink) const;
+  /// The artefacts as rows: what each one refines, what keeps it, what proves it; each kind named by the metamodel.
+  void artefacts(const model::Model& model, emit::ISink& sink) const;
+  /// The diagrams in the order they are written, file then line, each drawn as svg with what it takes.
+  void diagrams(const model::Model& model, int width, emit::ISink& sink) const;
+
+  const model::Metamodel& metamodel_;
+  const theme::Theme theme_;  ///< the style its drawings are drawn in, made once with it (DS-393)
+};
+
 /// The one place that names the use cases (DS-407): made over the metamodel the use cases are written in and handed,
 /// by reference, to what asks for them by name (a door, the workspace, DS-408): its dependencies are aggregated where
 /// it is made, as the Owner's pattern has it.

@@ -13,7 +13,7 @@ package driftspec@ds {
     title: The engine shall serve each use case of DriftSpec behind one interface, made by one factory, describing its document into the sink its door lends and ending in an outcome its use case declares
     text:
       A use case of design/usecases.ds is one class: check-design, see-design, ask-model, hand-model,
-      learn-language and edit-design. Each realises a small interface whose operation realises its UC, and all
+      learn-language, edit-design and play-design (the playground's, DS-460). Each realises a small interface whose operation realises its UC, and all
       are IUseCase: name(), needs(bound model, request), the check steps it reads, and run(model, request,
       lent sink) -> Outcome, which fails BadRequest for a request that is not its own and NotImplemented for what
       the sink's technology cannot write. A use case describes its document into the sink it is lent, through
@@ -99,6 +99,14 @@ package driftspec@ds {
     kind: library
     transport: in process, linked
     operation run(model: model::Model, request: service::Request, sink: emit::ISink) -> service::Outcome fails BadRequest, emit::NotImplemented : UC-00005-1 {
+      @requirement REQ-00261-1
+    }
+  }
+
+  interface play-design {
+    kind: library
+    transport: in process, linked
+    operation run(model: model::Model, request: service::Request, sink: emit::ISink) -> service::Outcome fails BadRequest, emit::NotImplemented : UC-00008-1 {
       @requirement REQ-00261-1
     }
   }
@@ -381,6 +389,37 @@ package driftspec@ds {
       + name() -> std::string
       + needs(bound: model::Model, request: Request) -> check::Selection
       + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented
+    }
+
+    // UC-00008-1: what the playground receives for an edit (DS-460): the design as one document, or a page of the manual
+    // in the playground's own record; each record's fields in byte order
+    class PlayDesign : IUseCase {
+      @interface play-design
+      @requirement REQ-00261-1
+      - refs metamodel_: model::Metamodel
+      - theme_: theme::Theme
+      + PlayDesign(metamodel: model::Metamodel)
+      + name() -> std::string
+      + needs(bound: model::Model, request: Request) -> check::Selection
+      + run(model: model::Model, request: Request, sink: emit::ISink) -> Outcome fails BadRequest, emit::NotImplemented
+      - manual(topic: std::string, sink: emit::ISink) -> void
+      - artefacts(model: model::Model, sink: emit::ISink) -> void
+      - diagrams(model: model::Model, width: int, sink: emit::ISink) -> void
+    }
+
+    sequence PlayDesign::manual {
+      local book: model::Manual   // made from the metamodel the playground's engine holds (DS-342)
+      -> book.guides() -> guides
+      -> book.page(topic) -> text
+      -> book.topics() -> topics
+    }
+
+    sequence PlayDesign::diagrams {
+      -> query::QueryFactory::of(model, metamodel_) -> questions   // what each diagram takes
+      loop each diagram, in the order written {
+        -> render::Drawings::svg(model, metamodel_, theme_, diagram, width) -> drawing   // as render draws it (DS-474)
+        -> questions.ask(shows, diagram) -> shown
+      }
     }
 
     class LearnLanguage : IUseCase {                    // UC-00006-1: learn the language; it reads no design
