@@ -82,16 +82,31 @@ package driftspec@ds {
       @interface workspace                   // the class the in-process interface is linked against
       @requirement REQ-00107-2
       @constraint CST-00009-1
+      @requirement REQ-00262-1
+      - owns useCases_: service::UseCaseFactory   // the use cases it serves, aggregated: one reference to the metamodel (DS-408)
       - refs metamodel_: model::Metamodel     // the language, handed to each reader of the model it asks (DS-351)
       - owns theme_: theme::Theme             // the style its drawings are written in, made once with it (DS-393)
       - output_: Output                       // what it is loaded to give, kept for each reload (DS-420)
       - diagram_: std::string
+      - given_: bool                          // made for an output: every reload checks what it reads
       - owns many parsed_: std::map<std::string, parse::ParsedFile>  // each file as last parsed: a reload parses only what changed
+      - owns selection_: check::Selection     // the steps its model is checked with: all its use cases asked (DS-408)
+      - stale_: bool
+      - loads_: std::size_t
       - owns model_: model::Model
       // loaded in the language it is given (DS-341), for every question unless it is loaded to draw one diagram (DS-376)
-      + Workspace(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string)
+      // made for an output, the doors' until DS-409: checked at once with what that output reads
+      + static madeFor(metamodel: model::Metamodel, files: Files, output: Output, diagram: std::string) -> Workspace
+      // long-lived (DS-408): made over the use cases it serves; it loads what each one it runs needs
+      + Workspace(useCases: service::UseCaseFactory)
       + reload(files: Files) -> void          // loaded again in place, for what it was loaded to give (DS-420)
-      - loaded(files: Files) -> model::Model
+      + run(name: std::string, request: service::Request, sink: emit::ISink) -> service::Outcome fails BadRequest, emit::NotImplemented {
+        @requirement REQ-00262-1
+      }
+      + selection() -> check::Selection
+      + loads() -> std::size_t
+      - parse(files: Files) -> void
+      - files() -> std::vector<parse::ParsedFile>
       + model() -> model::Model
       + exportModel() -> std::string
       + report() -> std::string
@@ -163,13 +178,27 @@ package driftspec@ds {
         tests/integration/python/test_workspace.py::TestReload::test_a_file_that_stops_parsing_and_parses_again_reloads_both_ways
     }
 
-    // A reload: each file whose text it holds kept as parsed, the rest parsed, and the whole bound and checked again.
-    sequence Workspace::loaded {
-      local parser: parse::Parser
+    // A reload: each file whose text it holds kept as parsed, the rest parsed; one made for an output is bound and
+    // checked again at once, with what that output reads (DS-420); a long-lived one when a use case next asks (DS-408).
+    sequence Workspace::reload {
       local api: Api
-      -> parser.parseText(path, text) -> parsed
-      -> api.load(files, output, diagram) -> model
-      return model
+      -> parse(files)
+      -> files() -> parsed
+      -> api.bound(parsed) -> bound
+      -> Api::stepsFor(output_, model, diagram_) -> selection
+      -> api.checked(bound, selection) -> model
+    }
+
+    // A use case run: bound once per reload, checked with every step asked so far, then the use case describes (DS-408)
+    sequence Workspace::run {
+      local api: Api
+      local use: service::IUseCase
+      -> useCases_.of(name) -> use
+      -> api.bound(parsed) -> bound
+      -> use.needs(model, request) -> needs
+      -> api.checked(bound, selection) -> model
+      -> use.run(model, request, sink) -> outcome
+      return outcome
     }
 
     // One hop asked of the model's index, written as the export writes it: the caller gets a copy.
@@ -249,6 +278,14 @@ package driftspec@ds {
       return drawing
     }
 
+    // a workspace bound and not yet checked (DS-408): what a use case reads of it says which steps run
+    dataclass Bound {
+      @requirement REQ-00262-1
+      + model: model::Model
+      + notes: bind::Notes
+      + broken: std::set<std::string>
+    }
+
     class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-2
@@ -258,6 +295,13 @@ package driftspec@ds {
       + load(files: std::vector<parse::ParsedFile>, output: Output, diagram: std::string) -> model::Model {
         @requirement REQ-00167-1
         @requirement REQ-00085-2
+      }
+      // a load's two halves (DS-408): bound, so a use case can say what it reads, then checked with that
+      + bound(files: std::vector<parse::ParsedFile>) -> Bound {
+        @requirement REQ-00262-1
+      }
+      + checked(bound: Bound, selection: check::Selection) -> model::Model {
+        @requirement REQ-00262-1
       }
       // the one place that chooses the steps of the check a load runs, for what it is to give (DS-376)
       + static stepsFor(output: Output, bound: model::Model, diagram: std::string) -> check::Selection {
@@ -489,6 +533,32 @@ package driftspec@ds {
         tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheExampleIsCleanAndEachOfItsDiagramsIsDrawnInTheOrderItIsWritten
         tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.TheArtefactsOfTheExampleComeAsRowsNestedByWhatTheyRefine
         tests/integration/ds/api/test_browser_hola.cpp::TestBrowserOverHola.AClassOfTheExampleIsFoundWhereItIsWritten
+    }
+  }
+
+  requirement REQ-00262-1 {
+    status: draft
+    @refines REQ-00107-2
+    title: The workspace shall live as long as its caller, made over the use cases it serves, reload its files in place and run each use case by name, checking only what the use cases it ran need
+    text:
+      A Workspace is made by aggregating the UseCaseFactory, and through it the metamodel. reload(files)
+      takes the files in place, parsing again only a file whose text changed, and is never made anew.
+      run(name, request, sink) binds the files once per reload, asks the use case which steps it
+      reads of the bound model, checks with every step asked so far and runs it. A model checked
+      cannot take more steps (a step brings the ones it needs, which would run again), so a use case
+      that needs more binds the files again, never parsing them again. A one-shot run checks exactly
+      what its use case needs; a workspace made for an output, the doors' until DS-409, checks at
+      once what that output reads, as before.
+    rationale: Owner, 2026-11-24 (DS-406, DS-408: a long-lived workspace, built by aggregating its dependencies, reset in place); code-62, 2026-11-25 (D1 the load in two halves, D2 the union of the steps on a reload, D3 the factory aggregated, D4 the doors' surface kept until DS-409).
+    tags: api, service
+    verification VER-00282-1 {
+      status: draft
+      title: Integration tests confirm the workspace runs each use case as its door writes it, loads a one-shot drawing with only its steps, binds once more for a use case that needs more, and checks a workspace made for an output at once
+      method: test
+      tests:
+        tests/integration/ds/api/test_workspace_use_cases.cpp::TestWorkspaceUseCases.EachUseCaseRunThroughTheWorkspaceWritesWhatItsDoorWrites
+        tests/integration/ds/api/test_workspace_use_cases.cpp::TestWorkspaceUseCases.AOneShotDrawingChecksOnlyWhatItReadsAndAUseCaseThatNeedsMoreBindsOnceMore
+        tests/integration/ds/api/test_workspace_use_cases.cpp::TestWorkspaceUseCases.AWorkspaceMadeForAnOutputChecksAtOnceAsBefore
     }
   }
 

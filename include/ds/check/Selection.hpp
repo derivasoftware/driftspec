@@ -37,7 +37,11 @@ class Selection {
   static Selection of(const std::vector<Step>& steps);
   /// The same steps and one more.
   Selection with(Step step) const;
+  /// The steps of both (DS-408): what a workspace has run for every use case it was asked.
+  Selection joined(const Selection& other) const;
   bool has(Step step) const;
+  /// Whether every step of `other` is among these: a load that ran these needs no other for it.
+  bool covers(const Selection& other) const;
 
  private:
   std::set<Step> steps_;

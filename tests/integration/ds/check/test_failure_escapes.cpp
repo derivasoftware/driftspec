@@ -26,26 +26,26 @@ class TestFailureEscapes : public ::testing::Test {
 };
 
 TEST_F(TestFailureEscapes, AFailureInsideAnAttemptThatHandlesItEscapesNothing) {
-  const ds::api::Workspace ws{
+  const ds::api::Workspace ws = ds::api::Workspace::madeFor(
       metamodel,
       {{"a.ds", design("    sequence A::run {\n      attempt {\n        fail Busy\n      } on Busy {\n        return 0\n      }\n"
-                       "      return 1\n    }\n")}}};
+                       "      return 1\n    }\n")}});
   EXPECT_EQ(field(ws, "p@m::A::run", "escapes"), "");
 }
 
 TEST_F(TestFailureEscapes, AHandlersOwnFailureIsNotHandledByTheAttemptThatHoldsIt) {
-  const ds::api::Workspace ws{
+  const ds::api::Workspace ws = ds::api::Workspace::madeFor(
       metamodel,
       {{"a.ds", design("    sequence A::run {\n      attempt {\n        fail Busy\n      } on Busy {\n        fail Busy\n      }\n"
-                       "      return 1\n    }\n")}}};
+                       "      return 1\n    }\n")}});
   EXPECT_EQ(field(ws, "p@m::A::run", "escapes"), "Busy");  // raised again from its handler: it goes on
 }
 
 TEST_F(TestFailureEscapes, CallsThatCallEachOtherEndWithWhatEitherLetsEscape) {
-  const ds::api::Workspace ws{metamodel,
-                              {{"a.ds", design("    sequence A::run {\n      self -> b.walk() -> n\n      opt it is lost / lost {\n        "
-                                               "fail Lost\n      }\n      return n\n    }\n"
-                                               "    sequence B::walk {\n      self -> a.run() -> n\n      return n\n    }\n")}}};
+  const ds::api::Workspace ws = ds::api::Workspace::madeFor(
+      metamodel, {{"a.ds", design("    sequence A::run {\n      self -> b.walk() -> n\n      opt it is lost / lost {\n        "
+                                  "fail Lost\n      }\n      return n\n    }\n"
+                                  "    sequence B::walk {\n      self -> a.run() -> n\n      return n\n    }\n")}});
   EXPECT_EQ(field(ws, "p@m::A::run", "escapes"), "Lost");
   EXPECT_EQ(field(ws, "p@m::B::walk", "escapes"), "Lost");
   EXPECT_EQ(field(ws, "p@m::B::walk", "escape.Lost"), "p@m::B::walk -> p@m::A::run from p@m::A::run::sequence/lost");
