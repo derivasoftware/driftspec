@@ -90,9 +90,15 @@ package driftspec@ds {
     if c is class, has-abstract(c), not has-concrete(c)
   }
 
+  definition family-root(i) {
+    title: i roots a family: a pure interface, or an abstract class with concrete members that others inherit (DS-465)
+    if pure-interface(i)
+    if i is class, has-abstract(i), has-concrete(i)
+  }
+
   definition implements(x, i) {
-    title: x is a class of the family of the pure interface i, directly or through a class between
-    if x inherits i, pure-interface(i)
+    title: x is a class of the family rooted in i, a pure interface or an abstract class, directly or through a class between
+    if x inherits i, family-root(i)
     if x inherits y, implements(y, i)
   }
 
