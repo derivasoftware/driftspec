@@ -234,11 +234,35 @@ EdgeMarkup emitEdge(const IrEdge& e, const Route& route, const std::string& px) 
   // the diamond sits on the whole, the edge's source: draw from the part so the end marker lands there
   if (e.kind == "composition" || e.kind == "aggregation") std::reverse(points.begin(), points.end());
   std::string d;
-  for (size_t i = 0; i < points.size(); ++i) d += (i == 0 ? "M" : " L") + num(points[i].x) + "," + num(points[i].y);
+  if (route.curve && points.size() > 2) {
+    // a smooth curve through every point (DS-443): Catmull-Rom, each stretch a cubic Bezier, the ends held
+    d = "M" + num(points[0].x) + "," + num(points[0].y);
+    for (size_t i = 0; i + 1 < points.size(); ++i) {
+      const Point& p0 = points[i == 0 ? 0 : i - 1];
+      const Point& p1 = points[i];
+      const Point& p2 = points[i + 1];
+      const Point& p3 = points[i + 2 < points.size() ? i + 2 : i + 1];
+      d += " C" + num(p1.x + (p2.x - p0.x) / 6) + "," + num(p1.y + (p2.y - p0.y) / 6) + " " + num(p2.x - (p3.x - p1.x) / 6) + "," +
+           num(p2.y - (p3.y - p1.y) / 6) + " " + num(p2.x) + "," + num(p2.y);
+    }
+  } else {
+    for (size_t i = 0; i < points.size(); ++i) d += (i == 0 ? "M" : " L") + num(points[i].x) + "," + num(points[i].y);
+  }
   const auto marker = kMarkerByKind.find(e.kind);
   const std::string markerAttr = marker == kMarkerByKind.end() ? "" : " marker-end=\"url(#" + px + marker->second + ")\"";
   EdgeMarkup out;
-  if (!e.label.empty() && points.size() >= 2) {
+  if (!e.label.empty() && route.label) {  // where the router put it: on the curve, clear of the boxes (DS-443)
+    // on the outer side of its curve: a label left of the line between the ends grows to the left, away from it
+    const bool left = !points.empty() && route.label->x * 2 < points.front().x + points.back().x;
+    const int x = route.label->x + (left ? -6 : 6);
+    const int y = route.label->y - 4;
+    const auto lines = text::linesOf(e.label);
+    std::string rows;
+    for (size_t i = 0; i < lines.size(); ++i)
+      rows += "<tspan x=\"" + num(x) + "\" dy=\"" + num(i == 0 ? 0 : 14) + "\">" + text::escapeXml(lines[i]) + "</tspan>";
+    out.label = "<text class=\"pr-edge-label\"" + std::string(left ? " text-anchor=\"end\"" : "") + " x=\"" + num(x) + "\" y=\"" + num(y) +
+                "\">" + (lines.size() == 1 ? text::escapeXml(e.label) : rows) + "</text>";
+  } else if (!e.label.empty() && points.size() >= 2) {
     // beside the midpoint of the longest segment
     size_t best = 0;
     int bestLen = -1;
@@ -746,7 +770,7 @@ std::string Svg::render(const IrDocument& doc, int maxWidth) const {
     if (n.kind == "lifeline") return sequenceSvg(doc, metrics_, style_, sequenceStyle_);
   }
   const IrDocument bundled = doc.bundled();
-  return render(bundled, Layout(metrics_).place(bundled, maxWidth));
+  return render(bundled, Layout(metrics_).place(bundled, maxWidth, true));  // routed as its kind is drawn (DS-443)
 }
 
 std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
@@ -764,6 +788,15 @@ std::string Svg::render(const IrDocument& doc, const LayoutResult& lay) const {
   }
   for (const auto& r : lay.routes) {
     for (const auto& pt : r.second.points) extend(pt.x, pt.y);
+    if (r.second.label && r.first < doc.edges.size()) {  // a label the router placed, a loop's beside its box (DS-443)
+      int widest = 0;
+      const auto lines = text::linesOf(doc.edges[r.first].label);
+      for (const auto& l : lines) widest = std::max(widest, static_cast<int>(l.size()) * M.CHAR_W);
+      const auto& pts = r.second.points;
+      const bool left = !pts.empty() && r.second.label->x * 2 < pts.front().x + pts.back().x;  // as emitEdge sets it
+      extend(r.second.label->x + (left ? -6 - widest : 6 + widest), r.second.label->y - 16);
+      extend(r.second.label->x, r.second.label->y + 14 * static_cast<int>(lines.size()));
+    }
   }
   if (lay.placed.empty()) extend(0, 0), extend(10, 10);
 

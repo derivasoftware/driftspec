@@ -80,6 +80,14 @@ std::string edgeKind(const std::string& relation) {
   return "";
 }
 
+/// What heads every render-IR document, and the one place it is written (DS-443): the contract's version, the
+/// diagram's kind, so a drawing can tell how to draw it without guessing from its nodes (a box diagram that says no
+/// kind is a class diagram), and its title.
+nlohmann::json documentHead(const model::Entity& diagram) {
+  const std::string kind = diagram.field("kind");
+  return {{"ir", 1}, {"kind", kind.empty() ? "class" : kind}, {"title", diagram.name}};
+}
+
 }  // namespace
 
 std::vector<std::string> IrExport::diagrams() const {
@@ -127,7 +135,8 @@ std::string IrExport::renderTour(const model::Entity& tour, bool pretty) const {
   if (!tour.fields.count("hide") && !tour.fields.count("show")) boxes.fields["hide"] = "fields, methods";
   const nlohmann::json drawn = nlohmann::json::parse(renderBoxes(boxes, false));
   // one document: its parts named in the order they are drawn, each node and edge saying which one it is of
-  nlohmann::json out = {{"ir", 1}, {"title", tour.name}, {"parts", {"boxes", "sequence"}}};
+  nlohmann::json out = documentHead(tour);
+  out["parts"] = {"boxes", "sequence"};
   out["nodes"] = nlohmann::json::array();
   out["edges"] = nlohmann::json::array();
   for (const auto& part : {std::make_pair("boxes", &drawn), std::make_pair("sequence", &sequence)}) {
@@ -159,9 +168,7 @@ std::string IrExport::renderBoxes(const model::Entity& entity, bool pretty) cons
   const std::set<std::string> containers = query::ClassBoxes::containers(model_, selected);
   auto up = [](const std::string& s) { return model::Scope(model::Scope(s).outer().text()).box().text(); };
 
-  nlohmann::json out;
-  out["ir"] = 1;
-  out["title"] = diagram->name;
+  nlohmann::json out = documentHead(*diagram);
   out["nodes"] = nlohmann::json::array();
   out["edges"] = nlohmann::json::array();
   std::set<std::string> placed;
@@ -671,9 +678,7 @@ std::string IrExport::renderSequence(const model::Entity& diagram, bool pretty) 
   // the lifelines stand on the cut the diagram writes, and the calls followed are the ones it says (DS-231)
   const axis::Cut cut(model_, metamodel_, diagram);
   b.cut = &cut;
-  nlohmann::json out;
-  out["ir"] = 1;
-  out["title"] = diagram.name;
+  nlohmann::json out = documentHead(diagram);
   std::set<std::string> subjects;  // the lifelines of the boxes and use cases whose scenarios are drawn
   for (const model::Entity* seq : selected) {
     const std::string subjectId = model::Identity(seq->id).subject().text();
@@ -836,9 +841,7 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
       edges.push_back(edge);
     }
   }
-  nlohmann::json out;
-  out["ir"] = 1;
-  out["title"] = diagram.name;
+  nlohmann::json out = documentHead(diagram);
   if (nodes.empty()) out["notice"] = "No state machine selected: include names its class or interface (shop@web)";
   out["nodes"] = nodes;
   out["edges"] = edges;
@@ -850,7 +853,9 @@ std::string IrExport::renderState(const model::Entity& diagram, bool pretty) con
 // where the machine has none, and one in which a behaviour calls the event against the machine.
 
 std::string IrExport::renderTable(const model::Entity& diagram, bool pretty) const {
-  nlohmann::json out = {{"ir", 1}, {"title", diagram.name}, {"nodes", nlohmann::json::array()}, {"edges", nlohmann::json::array()}};
+  nlohmann::json out = documentHead(diagram);
+  out["nodes"] = nlohmann::json::array();
+  out["edges"] = nlohmann::json::array();
   const auto listed = [](const std::vector<std::string>& names) {
     std::string all;
     for (const std::string& name : names) all += (all.empty() ? "" : ", ") + name;
@@ -936,9 +941,7 @@ std::string IrExport::renderRequirements(const model::Entity& diagram, bool pret
       query::RequirementsFilter(metamodel_, splitTrimmed(diagram.field("include"), ','), withDesign, withVerifications, diagram.id)
           .select(model_);
   const axis::Cut cut(model_, metamodel_, diagram);  // what answers to a requirement is the box that stands for it (DS-231)
-  nlohmann::json out;
-  out["ir"] = 1;
-  out["title"] = diagram.name;
+  nlohmann::json out = documentHead(diagram);
   out["nodes"] = nlohmann::json::array();
   out["edges"] = nlohmann::json::array();
   for (const auto& id : selected) {

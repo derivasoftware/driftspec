@@ -166,6 +166,8 @@ package driftspec@ds {
 
     dataclass IrDocument {
       @requirement REQ-00006-1
+      @requirement REQ-00251-1
+      + kind: std::string                    // the diagram's kind, how it is drawn (DS-443)
       + title: std::string
       + notice: std::string
       + owns table: IrTable                 // when it has columns, the document is drawn as this table
@@ -205,6 +207,7 @@ package driftspec@ds {
     class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
       @requirement REQ-00198-1
       @requirement REQ-00234-1               // a machine's start, its ends and its states as capsules (DS-442)
+      @requirement REQ-00251-1               // every document says its diagram's kind (DS-443)
       @requirement REQ-00006-1
       @requirement REQ-00121-1
       - refs model_: model::Model
@@ -346,7 +349,10 @@ package driftspec@ds {
 
     dataclass Route {
       @requirement REQ-00007-1
+      @requirement REQ-00251-1
       + owns many points: std::vector<Point>
+      + curve: bool                          // a smooth curve through the points (DS-443)
+      + owns optional label: Point           // where its label goes, when the router chose
     }
 
     dataclass Placed {
@@ -389,7 +395,7 @@ package driftspec@ds {
       - m_: Metrics
       + Layout(m: Metrics)
       + sizeOf(node: IrNode) -> Rect                                  // from its text alone
-      + place(doc: IrDocument, maxWidth: int) -> LayoutResult         // layered, wrapped to the width
+      + place(doc: IrDocument, maxWidth: int, asItsKind: bool) -> LayoutResult   // layered, wrapped to the width, routed as its kind asks (DS-443)
     }
 
     // the IR as a graph for the layout's layered engine (DS-392): each node a frame under its parent, a container
@@ -408,6 +414,7 @@ package driftspec@ds {
 
     class Svg {                              // the SVG drawing, with its links, tooltips and script
       @requirement REQ-00007-1
+      @requirement REQ-00251-1               // a curve drawn as a smooth path, its label where its router put it
       @requirement REQ-00234-1
       @requirement REQ-00231-1
       - owns metrics_: Metrics                 // in pixels, its text measured as the theme measures it

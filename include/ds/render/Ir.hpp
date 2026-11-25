@@ -66,6 +66,7 @@ struct IrTable {
 
 /// A render-IR document, read from JSON; what `ds render` emits and plantuml-render consumes.
 struct IrDocument {
+  std::string kind;  ///< the diagram's kind, as it is written (class, state, sequence, ...): how it is drawn (DS-443)
   std::string title;
   std::string notice;
   IrTable table;  ///< when it has columns, the document is drawn as this table

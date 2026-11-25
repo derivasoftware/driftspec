@@ -18,6 +18,9 @@ class IRouter {
   virtual ~IRouter() = default;
   /// The route of each edge, by edge; an edge without a route has none. Its points are whole units.
   virtual std::map<std::size_t, Route> route(const Routing& routing) const = 0;
+  /// Whether its routes need a lane of their own for every jog in the gap between two layers (DS-443): when not,
+  /// the gaps keep the spacing's height.
+  virtual bool lanes() const = 0;
 };
 
 }  // namespace layout
