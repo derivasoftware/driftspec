@@ -343,6 +343,14 @@ package driftspec@ds {
       + broken: std::set<std::string>
     }
 
+    // the block a file leaves open, read from its indentation (CST-00007-1, DS-304)
+    dataclass Unclosed {
+      @requirement REQ-00167-1
+      + line: int                            // the line that opens the block, 1-based
+      + until: int                           // the first line written outside it
+      + opener: std::string
+    }
+
     class Api {                              // the engine, called in process, over the metamodel it is given (DS-341)
       @interface engine                      // the class the binary interface is linked against
       @requirement REQ-00085-2
@@ -376,6 +384,7 @@ package driftspec@ds {
       // a text drawing instead (DS-453)
       + render(files: Files, diagram: std::string, format: std::string, width: int) -> std::string fails NotImplemented
       + page(files: Files, title: std::string, focus: std::vector<std::string>) -> std::string
+      - static unclosedBlock(text: std::string) -> Unclosed   // the block a file leaves open, read from its indentation (DS-304, DS-477)
     }
 
     // The engine for a page in a browser (DS-203): one request of texts in, one document out, a copy

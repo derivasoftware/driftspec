@@ -176,6 +176,8 @@ package driftspec@ds {
       + static parse(json: std::string) -> IrDocument
       + part(name: std::string) -> IrDocument
       + bundled() -> IrDocument
+      - static refsOf(j: nlohmann::json) -> std::map<std::string, std::string>   // what parse reads of a node or an edge (DS-477)
+      - static text(j: nlohmann::json, key: const char*) -> std::string
     }
 
     // All of it is JSON reads and field writes, so only what it creates can be told.
@@ -900,6 +902,8 @@ package driftspec@ds {
       + Layout(m: Metrics)
       + sizeOf(node: IrNode) -> Rect                                  // from its text alone
       + place(doc: IrDocument, maxWidth: int, asItsKind: bool) -> LayoutResult   // layered, wrapped to the width, routed as its kind asks (DS-443)
+      - static longest(lines: std::vector<std::string>) -> size_t
+      - static isHierarchy(kind: std::string) -> bool   // inheritance or realization: a base above what derives (DS-477)
     }
 
     // the IR as a graph for the layout's layered engine (DS-392): each node a frame under its parent, a container

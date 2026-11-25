@@ -16,19 +16,11 @@
 namespace ds {
 namespace api {
 
-namespace {
-
-/// The block a file leaves open, read from its indentation (CST-00007-1: braces enclose one thing per line, a
-/// closing brace at the indentation of the line that opened it): the first line that opens a block and is
-/// followed, before its brace, by a line written at its own indentation or outside it. Empty when every block
-/// closes where it should, or when the file is not written that way (DS-304).
-struct Unclosed {
-  int line = 0;   ///< the line that opens the block, 1-based
-  int until = 0;  ///< the first line written outside it
-  std::string opener;
-};
-
-Unclosed unclosedBlock(const std::string& text) {
+// The block a file leaves open, read from its indentation (CST-00007-1: braces enclose one thing per line, a
+// closing brace at the indentation of the line that opened it): the first line that opens a block and is
+// followed, before its brace, by a line written at its own indentation or outside it. Empty when every block
+// closes where it should, or when the file is not written that way (DS-304).
+Unclosed Api::unclosedBlock(const std::string& text) {
   struct Open {
     std::size_t indent;
     int line;
@@ -57,8 +49,6 @@ Unclosed unclosedBlock(const std::string& text) {
   }
   return {};
 }
-
-}  // namespace
 
 check::Selection Api::stepsFor(Output output, const model::Model& bound, const std::string& diagram) {
   if (output != Output::Drawing) return check::Selection::every();  // findings, the model, answers and the viewer read all

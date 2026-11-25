@@ -302,6 +302,7 @@ package driftspec@ds {
       + bottomPad: int
       + dividerOffset: int
       + static of(advance: int, lineHeight: int, smallAdvance: int, least: SequenceLeast) -> SequenceSpacing
+      + kLine: double                        // the SVG's 18 px line the proportions are written in (DS-477)
     }
 
     // the least room a sink's marks need in a sequence, in its units: around a head's label, a head's height, a message
@@ -482,6 +483,12 @@ package driftspec@ds {
       + CurvedRouter(spacing: Spacing)
       + route(routing: Routing) -> std::map<std::size_t, Route>
       + lanes() -> bool
+      - kLabelRise: int                 // how far a label's text rises above its point (DS-454)
+      - static centreOf(r: Rect) -> P             // P: a point, std::pair<double, double>
+      - static borderTowards(r: Rect, to: P) -> P
+      - static encloses(outer: Rect, inner: Rect) -> bool
+      - static crosses(r: Rect, p: P, margin: int) -> bool
+      - static halfway(points: std::vector<P>) -> P
     }
 
     // the one place that names the routers

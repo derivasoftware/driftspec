@@ -10,17 +10,6 @@
 namespace ds {
 namespace scene {
 
-namespace {
-
-// Sizes in scene units. A row is one member; a unit is sized by its longest row.
-const double kRow = 11, kHead = 22, kUnitPadBottom = 6, kCharWidth = 3.95, kUnitMinW = 150, kUnitMaxW = 430;
-const double kModulePad = 24, kModuleHead = 46, kUnitGap = 22;
-const double kPackagePad = 60, kPackageHead = 90, kBoxGap = 70, kLeftForInterfaces = 300;
-const double kInterfaceW = 360, kOperationRow = 30, kTopGap = 120;
-const double kTreeGap = 44;  // between a base and the row of what inherits from it: room for the trunk
-
-}  // namespace
-
 Projection::Projection(const model::Model& model, const model::Metamodel& metamodel, bool lean) : metamodel_(metamodel), lean_(lean) {
   for (const auto& pair : model.entities()) {
     const model::Entity& e = pair.second;

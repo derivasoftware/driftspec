@@ -8,14 +8,10 @@
 namespace ds {
 namespace layout {
 
-namespace {
-
-using P = std::pair<double, double>;
-
-P centreOf(const Rect& r) { return {r.x + r.w / 2.0, r.y + r.h / 2.0}; }
+CurvedRouter::P CurvedRouter::centreOf(const Rect& r) { return {r.x + r.w / 2.0, r.y + r.h / 2.0}; }
 
 /// Where the ray from the centre of `r` towards `to` leaves `r`, in whole units.
-P borderTowards(const Rect& r, const P& to) {
+CurvedRouter::P CurvedRouter::borderTowards(const Rect& r, const P& to) {
   const P c = centreOf(r);
   const double dx = to.first - c.first;
   const double dy = to.second - c.second;
@@ -27,24 +23,20 @@ P borderTowards(const Rect& r, const P& to) {
 }
 
 /// Whether `outer` holds all of `inner` and is bigger: a frame around it.
-bool encloses(const Rect& outer, const Rect& inner) {
+bool CurvedRouter::encloses(const Rect& outer, const Rect& inner) {
   return outer.x <= inner.x && outer.y <= inner.y && outer.x + outer.w >= inner.x + inner.w && outer.y + outer.h >= inner.y + inner.h &&
          (outer.w > inner.w || outer.h > inner.h);
 }
 
-/// How far a label's text rises above the point it is set at: a line of edge label, its baseline a little above the
-/// point (DS-454). The text runs from the point to a line above it.
-constexpr int kLabelRise = 16;
-
 /// Whether the text of a label set at `p`, a line tall above it, would cross `r` or come within `margin` of it.
-bool crosses(const Rect& r, const P& p, int margin) {
+bool CurvedRouter::crosses(const Rect& r, const P& p, int margin) {
   const bool across = p.first > r.x - margin && p.first < r.x + r.w + margin;
   const bool within = p.second - kLabelRise < r.y + r.h + margin && p.second > r.y - margin;
   return across && within;
 }
 
 /// The point halfway along a polyline.
-P halfway(const std::vector<P>& points) {
+CurvedRouter::P CurvedRouter::halfway(const std::vector<P>& points) {
   double total = 0;
   for (size_t i = 1; i < points.size(); ++i)
     total += std::hypot(points[i].first - points[i - 1].first, points[i].second - points[i - 1].second);
@@ -60,8 +52,6 @@ P halfway(const std::vector<P>& points) {
   }
   return points.front();
 }
-
-}  // namespace
 
 CurvedRouter::CurvedRouter(const Spacing& spacing) : spacing_(spacing) {}
 
