@@ -8,7 +8,7 @@
 package driftspec@ds {
   module emit {
     @requirement REQ-00202-2                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
-    @requirement REQ-00203-1                 // emit depends on no other module of the engine (DS-397)
+    @requirement REQ-00203-2                 // emit depends on no other module of the engine (DS-397)
 
     // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
     requirement REQ-00202-2 {
@@ -42,7 +42,7 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00203-1 {
+    requirement REQ-00203-2 {
       tags: architecture, emit
       status: draft
       @refines REQ-00106-3
@@ -52,7 +52,7 @@ package driftspec@ds {
         every module may write into it and it uses none of them.
       rationale:
         Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
-        another module would make it know what it writes.
+        another module would make it know what it writes. Revision 2 (DS-398): its parent is revised (REQ-00106-3).
       verification VER-00224-1 {
         status: approved
         title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
@@ -74,7 +74,7 @@ package driftspec@ds {
 
     rule emit-depends-on-no-engine-module {
       title: nothing of emit depends on anything of the engine outside emit, so every module may write into a sink and a sink uses none
-      @requirement REQ-00203-1
+      @requirement REQ-00203-2
       for class c in driftspec@ds@emit
       never depends(c, x), x in driftspec@ds, not x in driftspec@ds@emit
     }
