@@ -102,7 +102,9 @@ service::Outcome RenderCommand::document() const {
   const std::string doc = Disk::read(input_);
   if (format_ == "html" || format_ == "json")
     return {"bad-usage", "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace"};
-  return written(draw({doc}, false), "", {"default"});  // as it came, drawn as -f names
+  if (format_ == "ir") return written(doc, "", {"default"});  // the IR as it came
+  // read once, here where the text arrives (DS-458): what draws it is handed the document
+  return written(draw(render::IrDocument::parse(doc), false), "", {"default"});
 }
 
 service::Outcome RenderCommand::scene(api::Workspace& workspace) const {
@@ -146,15 +148,17 @@ service::Outcome RenderCommand::diagram(api::Workspace& workspace) const {
     if (outcome.name != "default") return outcome;
     return written(sink->result(), "\n", outcome);
   }
-  // the door's until see-design draws them (svg and text, DS-400) and writes the IR: the IR, made of the model, travels
-  // compact to the writer -f names (DS-418)
+  // the door's until see-design draws them (svg and text, DS-400) and writes the IR: the IR, made of the model, is
+  // described indented for a reader, or handed as the document to the writer -f names (DS-418, DS-458)
   const std::optional<render::IrDocument> document =
       render::IrExport(workspace.model(), metamodel_).document(model::Identity::ofDiagram(diagram_).text());
   if (!document) return {"no-diagram", "no diagram named " + diagram_};
-  const auto sink = emit::SinkFactory::json(false);
-  format::DescriptionFactory::ir(*document)->describe(*sink);
-  const std::string doc = sink->result();
-  return written(draw({doc}, true), format_ == "ir" ? "\n" : "", {"default"});
+  if (format_ == "ir") {
+    const auto sink = emit::SinkFactory::json(true);
+    format::DescriptionFactory::ir(*document)->describe(*sink);
+    return written(sink->result(), "\n", {"default"});
+  }
+  return written(draw(*document, true), "", {"default"});  // the document drawn, with no text between (DS-458)
 }
 
 // a diagram is not drawn of what did not read whole (DS-433): a file of its own, or one that declares what it shows,
@@ -188,8 +192,8 @@ std::string RenderCommand::unread(const model::Model& model) const {
 }
 
 // a diagram is its IR (DS-126): its layout and its cells are described in compact JSON, a line after (DS-398); the
-// IR, indented when it is a workspace's, and the drawings are written by the writer -f names
-std::string RenderCommand::draw(const render::IrText& ir, bool workspace) const {
+// drawings are written by the writer -f names; each is handed the document (DS-458)
+std::string RenderCommand::draw(const render::IrDocument& ir, bool workspace) const {
   const auto sink = emit::SinkFactory::json(false);
   if (format_ == "layout" || format_ == "cells") {
     const auto description = format_ == "layout" ? format::DescriptionFactory::layout(ir, theme_, width_)

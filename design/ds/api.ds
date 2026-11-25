@@ -261,19 +261,22 @@ package driftspec@ds {
     // writers; a name that is none of them is a pair ds does not write, said before anything is drawn (DS-398)
     sequence Workspace::render {
       local ir: render::IrExport
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
+      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name
       -> format::FormatFactory::diagram(theme_) -> writers
       opt a format that is none of the five / unknown {
         fail NotImplemented
       }
-      -> ir.document(diagram) -> made
+      -> ir.document(diagram) -> document
       opt no such diagram / no-diagram {
         return nothing
       }
       -> emit::SinkFactory::json(false) -> sink
-      -> format::DescriptionFactory::ir(made) -> irDescription   // the IR, compact, for the writers that draw it (DS-418)
-      -> irDescription.describe(sink)
-      -> sink.result() -> document
+      opt the IR itself / ir {                     // described here, compact; every other format is handed the document (DS-458)
+        -> format::DescriptionFactory::ir(document) -> irDescription
+        -> irDescription.describe(sink)
+        -> sink.result() -> json
+        return json
+      }
       alt its layout or its cells / described {
         -> format::DescriptionFactory::layout(document, theme_, width) -> description
         -> description.describe(sink)

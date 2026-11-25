@@ -101,7 +101,7 @@ class AnswersDescription : public ADescription {
 class LayoutDescription : public ADescription {
  public:
   /// `width` wraps the drawing, in columns; 0 lets it be.
-  LayoutDescription(const render::IrText& ir, const theme::Theme& theme, int width);
+  LayoutDescription(const render::IrDocument& document, const theme::Theme& theme, int width);
   std::string name() const override;
 
  private:
@@ -110,7 +110,7 @@ class LayoutDescription : public ADescription {
   /// of each part; `part`, when given, is the name of the part it is.
   void placed(const render::IrDocument& document, const std::string* part, emit::ISink& out_sink) const;
 
-  const render::IrText& ir_;
+  const render::IrDocument& document_;  ///< the diagram, as a document (DS-458): no text read back
   const render::Metrics metrics_;
   const int width_;
 };
@@ -143,12 +143,12 @@ class IrDescription : public ADescription {
 class CellsDescription : public ADescription {
  public:
   /// `width` wraps the drawing, in columns; 0 lets it be.
-  CellsDescription(const render::IrText& ir, const theme::Theme& theme, int width);
+  CellsDescription(const render::IrDocument& document, const theme::Theme& theme, int width);
   std::string name() const override;
 
  private:
   void say(emit::ISink& out_sink) const override;
-  const render::IrText& ir_;
+  const render::IrDocument& document_;  ///< the diagram, as a document (DS-458): no text read back
   const render::Text text_;
   const int width_;
 };

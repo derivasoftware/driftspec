@@ -71,8 +71,9 @@ class RenderCommand : public ICommand {
   service::Outcome diagram(api::Workspace& workspace) const;
   /// What a diagram reads that did not read whole (DS-433), said finding by finding: "" when it read whole.
   std::string unread(const model::Model& model) const;
-  /// A diagram's IR drawn as -f names; `workspace` when the IR is a workspace's, which is written indented.
-  std::string draw(const render::IrText& ir, bool workspace) const;
+  /// A diagram's IR drawn as -f names: its layout, its cells, or a drawing in svg or text; `workspace` when the IR is a
+  /// workspace's.
+  std::string draw(const render::IrDocument& ir, bool workspace) const;
   format::FormatOptions drawingOptions(bool workspace) const;
   /// The outcome, once the text is written where -o says; unwritten when the file cannot be.
   service::Outcome written(const std::string& text, const std::string& end, const service::Outcome& outcome) const;

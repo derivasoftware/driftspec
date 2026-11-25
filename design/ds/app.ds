@@ -187,7 +187,7 @@ package driftspec@ds {
       - page(workspace: api::Workspace) -> service::Outcome     // the viewer's page: door work pending
       - diagram(workspace: api::Workspace) -> service::Outcome  // a diagram: its layout and cells see-design's, its drawings and IR the door's
       - unread(model: model::Model) -> std::string              // what a diagram reads that did not read whole (DS-433)
-      - draw(ir: render::IrText, workspace: bool) -> std::string
+      - draw(ir: render::IrDocument, workspace: bool) -> std::string   // handed the document (DS-458)
       - drawingOptions(workspace: bool) -> format::FormatOptions
       - written(text: std::string, end: std::string, outcome: service::Outcome) -> service::Outcome   // unwritten when -o cannot be
     }
@@ -424,7 +424,8 @@ package driftspec@ds {
       return outcome
     }
 
-    // a render-IR document is drawn as it came, as -f names; the viewer needs a workspace
+    // a render-IR document is written as it came, or read once where its text arrives (DS-458) and drawn as -f names;
+    // the viewer needs a workspace
     sequence RenderCommand::document {
       -> Disk::readable(input_) -> found
       opt it cannot be read / no-workspace {
@@ -434,7 +435,12 @@ package driftspec@ds {
       opt the viewer asked of it / bad-usage {
         return badUsage
       }
-      -> draw(text, false) -> picture
+      opt the IR itself / ir {
+        -> written(text, end, drawn) -> outcome
+        return outcome
+      }
+      -> render::IrDocument::parse(text) -> document
+      -> draw(document, false) -> picture
       -> written(picture, end, drawn) -> outcome
       return outcome
     }
@@ -497,12 +503,15 @@ package driftspec@ds {
         -> sink.result() -> picture
       } else {
         -> model::Identity::ofDiagram(diagram_) -> id
-        -> ir.document(id) -> made
-        -> emit::SinkFactory::json(false) -> sink
-        -> format::DescriptionFactory::ir(made) -> irDescription   // the IR, compact, for the writer -f names (DS-418)
-        -> irDescription.describe(sink)
-        -> sink.result() -> document
-        -> draw(document, true) -> picture
+        -> ir.document(id) -> document
+        alt the IR itself, indented for a reader / ir {      // described by the door, not read back (DS-418, DS-458)
+          -> emit::SinkFactory::json(true) -> indented
+          -> format::DescriptionFactory::ir(document) -> irDescription
+          -> irDescription.describe(indented)
+          -> indented.result() -> picture
+        } else {
+          -> draw(document, true) -> picture                 // the document drawn, with no text between (DS-458)
+        }
       }
       -> written(picture, end, outcome) -> outcome
       return outcome
@@ -514,7 +523,7 @@ package driftspec@ds {
       -> workspace.model() -> model
       -> unread(model) -> why
       -> loaded.run(seeDesign, request, sink) -> outcome
-      -> ir.document(id) -> made
+      -> ir.document(id) -> document
       return noDiagram
     }
 
@@ -528,7 +537,7 @@ package driftspec@ds {
     }
 
     sequence RenderCommand::draw {
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
+      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name: svg or text
       -> emit::SinkFactory::json(false) -> sink
       opt its layout or its cells / described {
         alt its layout / layout {
