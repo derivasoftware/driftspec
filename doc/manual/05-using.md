@@ -217,9 +217,9 @@ claude mcp add driftspec-live -- driftspec-live mcp
 The editor of this site is DriftSpec compiled to WebAssembly: it runs in your browser, with
 no server behind it. Every example of these pages opens there with one click.
 
-## What 0.1.0 does not do yet
+## What 0.2 does not do yet
 
-DriftSpec is young. This is what a first release leaves out, so that nothing here surprises you.
+DriftSpec is young. This is what the release leaves out, so that nothing here surprises you.
 
 - **The language may still change.** The grammar is not frozen and some words are under review
   before 1.0; a release that renames one says so in its changelog.
@@ -233,8 +233,8 @@ DriftSpec is young. This is what a first release leaves out, so that nothing her
   no meaning of its own yet.
 - **Two versions of a design are not compared.** An earlier `ds diff` was taken out before this
   release; it may come back.
-- **Built and tested on Linux, Windows and macOS (Apple silicon); no Intel Mac wheel yet.** Every
-  push is built and tested on the three; the release carries a wheel for each, and none for an
-  Intel Mac until someone asks.
+- **Built and tested on Linux, Windows and macOS (Apple silicon); no Intel Mac wheel yet, and not
+  on PyPI yet.** Every push is built and tested on the three; the release carries a wheel for
+  each, and none for an Intel Mac until someone asks.
 - **DriftSpec checks the design, not the code.** Whether the code does what the design says is
   outside this tool.

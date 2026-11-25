@@ -66,7 +66,7 @@ package, the language server and the live session, and the `ds` command alone. D
 PyPI yet: install a downloaded wheel with pip.
 
 ```bash
-pip install "driftspec-0.1.0-cp310-abi3-<your platform>.whl[lsp]"
+pip install "driftspec-0.2.0-cp310-abi3-<your platform>.whl[lsp]"
 ds --version
 ```
 
@@ -103,7 +103,7 @@ The manual comes with the tool (`ds manual <topic>`) and lives in [`doc/manual/`
    classes and their relations.
 3. [Behaviour](doc/manual/03-behaviour.md): sequences, branches, scenarios and failures.
 4. [Logic](doc/manual/04-logic.md): rules and state machines.
-5. [Using DriftSpec](doc/manual/05-using.md): the commands, editors, Python and what 0.1.0 does
+5. [Using DriftSpec](doc/manual/05-using.md): the commands, editors, Python and what 0.2 does
    not do yet.
 
 Every example in the manual is checked by the tests. The `playground/` folder builds a site with

@@ -10,6 +10,811 @@ A merge request does not edit this file: it writes its entry as `changelog.d/<ca
 `tools/changelog.py` later moves each entry under the version its merge was released as (see
 `changelog.d/README.md`).
 
+## 0.2.0
+
+What changed for a user since 0.1.0, released on 18 November 2026: walkthroughs, overloads and outcomes that name their
+failure in the language; a check that keeps what is not yet written apart from what is wrong; drawings spaced the same in
+SVG and in the terminal; a faster engine; a manual that teaches what first users stumbled on. The entries of each 0.1
+release below say the same in detail.
+
+### Before you upgrade
+
+What a design written for 0.1 has to change.
+
+- Write types as your code writes them. `extern module` is gone and is now a syntax error: delete those blocks, since a
+  name the design does not declare is text, with no relation and no finding. The neutral types are gone too: write
+  `std::string` and `std::vector<Line>` in a C++ box, `str`, `list[Line]` and `Line | None` in a Python one.
+  `tools/migrate_types.py` does most of the rewrite; check what it wrote against the code.
+- Say an attribute's multiplicity in front of it, `many` or `optional`, beside `refs` or `shares`. The type no longer
+  says it.
+- Rename anything you called `final`: it is now the word for a state machine's final states.
+- In a rule, `name`, `id` and `kind` are now words of the language. A definition of one of those names is reported
+  (`E-RULE-RESERVED`), and no kind may declare a field named `name` or `id`.
+- Expect warnings where the check was silent: a bare name two classes of its package share (`W-NAME-AMBIGUOUS`; qualify
+  it, `store::Card`); a `show:`, `hide:` or interface `kind:` value nothing reads (`W-FIELD-VALUE`); a rule that reads
+  `uses` off an attribute (`W-RULE-NEVER-MATCHES`; read it through `owns`, `refs` or `shares`); a piece that realises a
+  requirement written outside the box that holds it (`W-SATISFIES-OUTSIDE-HOME`).
+- If you style the viewer with a theme of your own, set its six new variables: `--you`, `--shadow`, `--shadow-pop`,
+  `--shadow-soft`, `--k-interface` and `--k-abstract`.
+- On macOS, the wheel needs macOS 13.3 or later.
+- If you read the render IR or the export: every IR document says its diagram's kind; a state machine's start is a node
+  of kind `initial`, its ends `final` and its states `state`; the export writes a machine's transitions and rules as
+  records instead of text to split.
+- In Python, `driftspec.render` and `Workspace.render` draw the format asked for, cells and layout included, and raise
+  `driftspec.NotImplemented` for one they do not draw, where they used to hand back a text drawing.
+
+### The language
+
+- Take a reader through your design in steps with a walkthrough, a diagram of kind `walkthrough`. Each step shows a
+  diagram, or one scenario of a behaviour, frames what it is about, marks what it talks to, points a callout and says
+  its text. `ds check` tells what a step gets wrong, the viewer plays it, and `examples/shop` carries one from the
+  shop's promise to its classes.
+- Say which failure an outcome is the end of: `outcome bank-down fails BankUnreachable: nothing is paid`. A failure a
+  scenario lets escape and no outcome names is told at the scenario.
+- Declare two operations of one name with different parameters. Each is named by its parameter types,
+  `Factory::of(Scene)` beside `Factory::of(Report, int)`; a behaviour names its overload the same way, and a call is
+  related to the overload its arguments fit.
+- Mark a state machine's final states, `final Paid, Cancelled`. A transition out of one is a warning.
+- Write a dotted type as Python writes it: `store.Card` relates to the class `store::Card` names.
+- Write pointers, template bases such as `class SceneJson : IFormat<Scene>`, methods with type parameters, and Python
+  unions.
+- In a rule, read an entity's `name(x)`, `id(x)` and `kind(x)`, match a value against a pattern
+  (`name(c) matches "^I[A-Z]"`) and test a member's flag (`m is abstract`). A table's column reads them too:
+  `column is: kind(r)`.
+- When a rule breaks through a definition, read what the definition went through:
+  `broken for c = Shop: x = Store (depends: m = Shop::store)`.
+- A relation joins only the pairs of kinds it is declared for, so a class that inherits from a use case is an error.
+
+### The check
+
+- Read what is not yet written apart from what is wrong. An approved requirement that nothing satisfies and an approved
+  constraint that nothing verifies are coverage, not findings. `ds check` ends its counts line with how many are open
+  and says where they are listed; coverage never changes the exit code, and a draft owes nothing.
+- Find the entity each finding is about: it is named as `subject` in `ds check --json` and the export, and as
+  `Finding.subject` in Python.
+- Find a file that is not UTF-8 at its file, line and column (`E-ENCODING`), while every other file checks as usual.
+  Such a file used to check clean while export and render failed without naming it.
+- Trust a drawing: `ds render` no longer draws from a file that does not parse. It writes the syntax error and exits 1,
+  where it drew a blank and exited 0.
+- Write any `depth:` or `neighbours:`: one that is no number or too large for one is a warning, and no longer stops
+  `ds` or keeps it busy for good.
+- Read findings and coverage in the order they are written: by file, then line.
+
+### Drawings
+
+- See a sequence spaced the same in SVG and in the terminal: one engine places its lanes, rows and frames, in pixels or
+  in characters.
+- See a table spaced the same way: a cell longer than forty characters wraps between words in both, and each column
+  keeps room either side.
+- Recognise each kind by its colour, the same in every drawing and page, light and dark: class indigo, interface rose,
+  enum green, dataclass amber, function slate, abstract violet.
+<!-- DS-486 (one look, one theme source for the viewer, the playground and the drawings): its line goes here when its
+last part lands. -->
+- Read a state diagram as UML draws one: a filled dot where the machine starts, a bullseye for each final state, states
+  as capsules, transitions as curves with their labels clear of the states, and a transition back to its own state as a
+  loop beside it.
+- Fit more of a class diagram on a screen: a long edge running straight down no longer takes a row of its own.
+- Draw large designs in the terminal: a text drawing takes a tenth of the memory it took, 380 MB instead of 3 GB for 200
+  classes. One that would still take more than about 128 million characters is refused, with what it would take,
+  instead of exhausting the machine.
+- Read a table with symbols such as ≠ in it: a cell is measured in characters, so its column is no wider than it needs.
+- Tell in a diff a changed relation (`~`, in its colour) and a renamed one (`>`) from one that was removed.
+
+### Speed
+
+Each figure was measured when its change landed, on the design as it was then.
+
+- `ds check` on DriftSpec's own design went from about 330 ms to about 105 ms; on a generated design of 3,200 classes,
+  from 5 s to under 1 s; on the whole repository, from 810 to 370 ms.
+- Rules are evaluated with about half the instructions they took, and 5 to 7 % less again on designs with many rules.
+- Drawing a diagram runs only the part of the check it reads: DriftSpec's main class diagram went from 243 to 111 ms.
+- An editor gets its diagnostics in about half the time: 337 to 175 ms on DriftSpec's design, 484 to 184 ms on 3,200
+  classes.
+- `ds export` and every JSON document are written as they are made, faster and with less memory.
+
+### The manual
+
+- Learn from the guides what five first users had to find out by trial: how every kind of link is written, a
+  requirement's level, a constraint's verification, what a table's column may hold, the chain from a use case to its
+  scenarios, what a `fails` clause promises, a class carrying out an interface of its module, what each relation of a
+  rule sees, definitions, coverage and the counts line, asking the model with `ds query`, and adding to a design you did
+  not write.
+- Read the new walkthroughs guide, `ds manual walkthroughs`, with a worked example.
+- Look up the values a field takes in `ds manual diagram` and `ds manual interface`, and the new pages
+  `ds manual step` and `ds manual E-ENCODING`.
+- See what each kind is part of, structure, artefact, behaviour, logic or view, in `ds manual <kind> --json` and the
+  export.
+
+### The command line
+
+- Ask `ds query` the right question: its help says which subject each question takes, and a subject of the wrong kind
+  gets an error that says what it takes, instead of an empty answer.
+- List everything a scope holds at any depth: `ds query <workspace> entities shop@*`.
+- Get each relation's two ends: `ds query <workspace> relations <id> --json`.
+- List the walkthroughs and the steps of one with `walkthroughs`, and what escapes a use case with `failures`.
+- Ask for the findings or the coverage of a file or of an entity and everything it holds.
+- Play the walkthroughs in the page `ds render <workspace> -f html` writes.
+
+### The editor
+
+- Keep a design open: the language server keeps it loaded, parses again only the files you change, and publishes the
+  diagnostics of an edit in about half the time.
+- Hover and outline any line, operators, states, rules and outcomes included: the editor knows which declaration each
+  line is written in.
+- Follow the live viewer: each finding in its severity's colour, a count of what fails with the rest beside it, and the
+  coverage folded into a section of its own.
+
+### Python
+
+- Read a workspace as `ds` reads it with `driftspec.files()`: every `.ds` file below a folder, dot-folders included,
+  links to files followed.
+- Reload a workspace in place with `Workspace.reload(files)`, which parses again only what changed.
+- Get the severity table with `driftspec.severities()`, a relation's ends as `Answer.source` and `Answer.target`, and a
+  file that is not UTF-8 as `E-ENCODING`, since files are handed to the engine as bytes.
+
+### The playground
+
+- Use the site on a phone: it fits the screen as the browser bar comes and goes.
+
+### What 0.2 does not do yet
+
+- The language may still change before 1.0; a release that renames a word says so.
+- A type does not say who owns: ownership is what the attribute says, whatever the pointer.
+- There are no type aliases and no deployment yet.
+- A sequence does not say that it creates an object, and a message to a collection has no meaning of its own.
+- Two versions of a design are not compared.
+- There is no wheel for an Intel Mac, and DriftSpec is not on PyPI yet.
+- DriftSpec checks the design, not the code.
+
+## 0.1.168
+
+A rule answers for a constraint, and is answered by it (DS-110): a rule that names a constraint with @constraint has
+its reason, so W-RULE-NO-REQUIREMENT no longer lists it; and a rule that holds an approved constraint with one claim
+is its verification, checked on every run, so W-CST-NO-VERIFICATION no longer lists the constraint. Both stay
+coverage; nothing new is asked of a design.
+
+## 0.1.167
+
+The unit and integration tests are built as one executable per directory of tests (test_unit_ds_model,
+test_integration_ds_check, …) instead of one per file: 261 executables, each linking the whole engine,
+become 39, and the evidence build links and reads coverage for far fewer. Every test keeps its id, since
+the evidence names each test by the file it is written in. tests/unit/ds/parse keeps one executable per
+file: two of its files each define a fixture of their own under one name (DS-473).
+
+## 0.1.166
+
+Each relation joins exact pairs of kinds (DS-226): a class inherits a class and a use case a use case, a class
+realises an interface and an operation a use case, a state machine is the behaviour of a class or an interface. A
+class whose base is a use case, or a verification that names an interface, is now E-RELATION-KIND on its line, where
+both were silent; a base written as an artefact's name is read whole. `ds manual` lists each relation's pairs.
+
+## 0.1.165
+
+- The playground answers through a use case of its own, `play-design` (UC-00008-1, DS-460): the design as one document (its artefacts, its diagrams drawn as render draws them, the identities and where each is written, the report) or a page of the manual, byte for byte what it received before. api's Browser is now only a door, held to the rule that doors know no model, and its exemption is gone. (DS-460)
+
+## 0.1.164
+
+see-design draws every diagram of a workspace (DS-474). It draws the svg and text drawings through render, describes the render-IR, and writes the viewer's page framed on a diagram. It also says, when asked whole, which diagrams did not read whole (DS-433). So `ds render`, the engine's render and page, and the Python face no longer draw anything themselves; their output is byte for byte what it was. A drawing reaches the sink lent to see-design as one verbatim text, which a sink of emit now accepts once per document. The text sink writes it as it is, the JSON sink fails NotImplemented, and the Python sink keeps it as a str, so `Workspace.run("see-design", {"format": "svg", ...})` returns the drawing. This is a bridge until a figure is described as marks (DS-463). FormatFactory keeps only the viewer's page: the svg and text writers (DiagramSvg, DiagramText) are gone, and so are the drawing options of FormatOptions (pretty, width, color). DS-470's Drawings moves from api to render (`render::Drawings`), and see-design draws every svg through it. The viewer's page gets a walkthrough's cards only when its scene has a walkthrough. This makes `ds render <ws> -f html` play walkthroughs again: since DS-470 merged over DS-409, only the engine's page carried them. The table of questions `ds query` answers now lives in the manual, and both the query and the command line's help read it there. Two rules hold the doors in the design. One is that the command line and the api know no model: the loading machinery (Workspace, Api, Bound) is exempted for good, and the playground's Browser until DS-460. The other is that the command line reaches the engine only through the workspace.
+
+## 0.1.163
+
+No anonymous namespace is left in the engine but App.cpp's, which DS-409 removes (DS-477): each hidden helper is a
+member of the class it serves (Api, Request, IrDocument, render::Layout, CurvedRouter, scene::Projection, Theme and
+the theme's writers), and DriftSpec's design names each. Nothing ds writes changes.
+
+## 0.1.162
+
+- The editor and the live viewer attach a finding to the entity it is about (DS-426, phase c). The language server publishes each diagnostic's subject as `data.subject`, and hover on an entity lists its own problems, wherever they are written. In the live viewer a finding frames its entity when clicked, and the selection filter keeps the findings about what is selected. The static `ds render` page is unchanged. (DS-488)
+
+## 0.1.161
+
+- The Python face's native `Workspace.run(name, request)` hands `(outcome, object, message)`: the message is what the outcome says (for instance "no diagram named CL_Nope"), "" for the default. `driftspec.Workspace` returns what it returned before. (DS-479)
+
+## 0.1.159
+
+A table is placed by one engine of the layout too (DS-464, step 4), as the Owner approved from the before/after
+renders: `layout::GridEngine`, behind `ITableEngine` and named by `EngineFactory::table`, places a `TableGraph` (the
+corner, the headings, the rows, each text as its words in characters) with the SVG's proportions, so a cell longer than
+40 characters wraps between words in every sink, and a column takes its room each side. One `TableComposer` composes a
+table for SVG and for a terminal; a terminal's marks ("! " against the machine, "·" empty) are measured as written.
+SVG tables are the same, byte for byte; text and cells renders of tables change once, and the goldens are re-pinned.
+The grid's colours are string views, so no cell builds a string to say its colour.
+
+## 0.1.158
+
+The test of the speed budget (a hundred classes checked and drawn in under a hundred milliseconds,
+CST-00001-1) skips itself in the evidence build, which is unoptimised, instrumented and runs its tests
+side by side: a time measured there says nothing of the product's, and a budget it missed failed the
+evidence job. The tests' build still measures it (DS-480).
+
+## 0.1.157
+
+- Every check names the entity its finding is about, as the rules have since DS-426: the report (`ds check --json`) and the export write `subject` on findings of structure, links, behaviour typing, contracts, failures, dependencies, levels, diagrams, state machines and binding, only when there is one. A finding about a file or a word still names none. Messages and the text report are unchanged. (DS-478)
+
+## 0.1.155
+
+render's drawings place nothing, written as a requirement held by rules (DS-464, step 3): Svg and Text depend on no
+composer, on neither render's box projection nor the sequence projection, and on nothing of the layout module, so they
+reach what places a diagram only through IComposer, from ComposerFactory. Two new definitions, `draws(c)` and
+`places(x)`, name them. Nothing a design writes changes.
+
+## 0.1.154
+
+The Python tests' waits for a server, an answer or an event bound a hang, not a speed: two minutes for the
+language server's answer and the event stream, a minute for an HTTP answer or for what a test waits to come.
+On a loaded machine (CI's tests side by side) the old bounds, from five to twenty seconds, tripped a server
+that was only slow, and a passing test waits no longer for them (DS-481).
+
+## 0.1.153
+
+- `ds render <ws> -f html` carries a walkthrough's cards and the mode that plays them again, as the engine's page does; `ds render <ws> <D> -f svg` draws through the one path the cards take. Both were lost when DS-470 met the command line's move into its own module. (DS-483)
+
+## 0.1.152
+
+A state machine's transitions and rules are kept as records of the model (DS-384), one per transition and per rule,
+read once from the syntax, not joined into text that machine split again. What a designer writes does not change. The
+export writes them as lists of records in the state's fields (transitions: from, to, event, guard and action when
+written; rules: state and its literals), and the metamodel declares both as records, so ds manual state says so; a
+reader of the export gets data instead of a string to split.
+
+## 0.1.151
+
+Text sequences are placed by the layout's sequence engine too (DS-464, step 2), as the Owner chose: one
+`SequenceComposer` composes a sequence for SVG and for a terminal, the same proportions in pixels or in cells, so a
+terminal's sequences now space their lanes, rows and frames as the SVG does. A sink states the least room its marks
+need (`layout::SequenceLeast`, from `render::Metrics`): a terminal's boxed head and its loop of a message to its own
+lane take three rows, a head's label a border and a space each side, a frame's edge a row of its own. Text and cells
+renders of sequences and tours change once, and nothing else does; the goldens are re-pinned.
+
+## 0.1.150
+
+- The viewer plays walkthroughs (`ds render <ws> -f html`, the "walkthroughs" button, or a page opened on a walkthrough). Every diagram of the workspace is a card drawn exactly as `ds render <ws> <D> -f svg` draws it, and the one a step shows grows calmly into the stage. The step's focus is framed and the rest dimmed, its highlight is marked, and the coach speaks beside what it points at without covering what is lit, or as a sheet on a phone. A sequence step hands its behaviour to the tour replay. A page whose workspace has no walkthrough is written as it was. The scene's walkthrough steps now give what they light by identity, so a requirement is lit too. (DS-470)
+
+## 0.1.149
+
+DriftSpec's own design now holds three of the service layer's decisions as rules (DS-476), and no engine code changes.
+A use case knows no door: no class of `service` depends on or calls anything of `api`, `app` or the Python face
+(`use-cases-know-no-door`). Only `UseCaseFactory` names a use case: a door's class that names one is told by the
+convention of the families, and a use case that names another by `no-use-case-knows-another`. Neither `api` nor
+`service` declares a function (`api-operations-belong-to-classes`, `service-operations-belong-to-classes`). The
+requirements are REQ-00207-1, REQ-00208-1 and REQ-00209-1, at draft, and `test_service_principles` proves each rule
+with a deliberate violation.
+
+## 0.1.148
+
+- The manual gains a walkthroughs guide (`ds manual walkthroughs`): a worked example, what a step says, what the check tells and how to read one; `examples/shop` holds `WALK_Buy`, from the shop's promise to its classes. A step that shows a scenario written apart (`sequence X / s`) is no longer told W-SCENARIO-UNDECLARED. (DS-472)
+
+## 0.1.147
+
+A sequence is placed by one engine of the layout (DS-464, step 1): `layout::StackedEngine`, behind
+`ISequenceEngine` and named by `EngineFactory::sequence`, places a `SequenceGraph` (lanes, messages by row, frames)
+into a `SequencePlacement` with a `SequenceSpacing` made from the sink's measures: proportions written once, across in
+characters and down in lines, so the SVG's 8 px, 18 px and its small text's 7 px give exactly the pixels it always
+had. render projects the IR into the graph (`SequenceProjection`) and the SVG composes its sequences through the
+engine. The theme's measures say a character of small text. Every drawing is the same, byte for byte; text sequences
+move to the engine in the next step.
+
+## 0.1.146
+
+The ds command line is a thin adapter over the use cases (DS-409), and nothing it prints or exits with changes.
+`ds::app::CommandLine` owns the one CLI11 application, so the parse, the help, `--version` and the footers stay as
+they were. Each verb is an `ICommand` (`CheckCommand`, `ExportCommand`, `RenderCommand`, `QueryCommand`,
+`ManualCommand`), and `CommandFactory` names them. A verb opens a `Workspace` and runs its use case into the sink of
+the technology asked for. `CommandLine` turns the outcome into the exit code and writes what it says on stderr.
+`service::Outcome` now carries a `message`: `unknown-question`, `no-diagram`, `no-topic` and `errors` say what
+happened. `ds manual` as text now goes through learn-language, whose page gains a presentation half. Check-design
+names the workspace given, where its report says the open coverage is listed. Reading the disk is `app::Disk` and
+writing a document is `app::Output`. `main` is app's only function, and a rule of the design holds it so. The free
+functions of `ds/app/App.hpp` are gone.
+
+## 0.1.145
+
+A use case's outcome may say the failure it is the end of: `outcome bank-down fails BankUnreachable: nothing is paid`. A failure escaping the use case's scenario that an outcome names ends there, no longer a failure undeclared (DS-467). Two new warnings: W-OUTCOME-FAILURE-UNKNOWN for a failure the workspace names nowhere, W-OUTCOME-FAILURE-TWICE for two outcomes of one use case on the same failure.
+
+## 0.1.144
+
+- `ds check` tells what a walkthrough's steps get wrong, at the step: a name that resolves to nothing (W-WALK-UNDECLARED), an entity the shown diagram does not draw by its own filter (W-WALK-NOT-SHOWN), a callout pointing at what the step does not light (W-WALK-AT), a scenario the shown behaviour lacks (W-SCENARIO-UNDECLARED), and a walkthrough with no step or a step with no show or text (W-WALK-EMPTY). (DS-469)
+
+- Walkthroughs reach every reader: `ds export` and `ds render -f json` (the scene) give each walkthrough with its steps in order, the export by identity and the scene by diagram name and node index, with the behaviour a sequence step replays; `ds query <ws> walkthroughs [WALK_X]` lists them and the steps of one. A workspace without walkthroughs is written as it was. (DS-471)
+
+## 0.1.143
+
+A class, an interface or a module may declare two operations of one name with different parameters (DS-455). Each is
+then named by its parameter types as written, Factory::of(Scene) beside Factory::of(Report, int); one alone with its
+name keeps its bare name. A behaviour names the overload it is of by its types: sequence Factory::of(Scene) { ... }. A
+call is narrowed by its arguments to the overloads it could be a call of; a call two still match, or a behaviour that
+names an overloaded operation bare, is W-NAME-AMBIGUOUS and relates nothing. `(` after a sequence's subject is new
+syntax; nothing written before changes meaning.
+
+## 0.1.142
+
+A sequence is composed below its drawing too (DS-400): `SequenceSvgComposer` and `SequenceTextComposer` place its
+lanes, rows and frames as each technology always has, into a `SequenceLayout` the figure carries, and the drawings
+read it and place nothing. Every drawing is the same, byte for byte.
+
+## 0.1.140
+
+Each kind of the language says what it is part of (DS-427), in the Owner's five categories: structure, artefact, behaviour, logic and view. The export and ds manual <kind> --json write it with each kind, and the scene carries it for the viewer to group by. The editor reads it rather than tables of its own: what a line is written in is the nearest declaration above it whatever its kind, so an operator, a state, a rule and an outcome line find themselves.
+
+## 0.1.139
+
+The drawings take the render IR as a document, not as text they parse back (DS-458). The svg and text writers and the
+layout and cells descriptions are handed the IrDocument; the IR itself is described by the door that asks for it, and
+an IR file given to ds render is read once where it arrives. A use case no longer reads back the sink it is lent, so a
+sink with no text to give back (a Python one) draws a layout and its cells too. Per pass over ds's own design, each
+drawing format no longer describes the IR to text and reads it back: about 27 ms of work gone (25 ms of it the parse).
+
+## 0.1.138
+
+A diagram of kind walkthrough takes a reader through the design in steps (DS-468). Each step is written
+`step <title> { ... }` and says which diagram it shows (`show: DIAGRAM`, or `DIAGRAM / scenario`), what it is about
+(`focus:`), what it talks to (`highlight:`), where its callout points (`at:`) and what it says (`text:`). Each step is
+an entity of the model, numbered in the order written, and what it shows and lights are relations (shows, focuses,
+highlights, points-at). `ds manual step` describes it. The check, the page, the text and JSON forms and the manual
+section come in the next releases.
+
+## 0.1.137
+
+ds's own design reaches a family rooted in an abstract class through it, as one rooted in a pure interface (DS-465):
+format's descriptions, rooted in ADescription, are named only by their factory. Nothing a design writes changes.
+
+## 0.1.136
+
+The Python extension builds again: its sink takes the presentation half of ISink as the JSON sink does, skipping it, and says NotImplemented for a description that built nothing (DS-475).
+
+## 0.1.135
+
+An SVG table measures a cell by its characters, as the terminal's does (DS-466): a non-ASCII character such as ≠ is
+one, not the three bytes UTF-8 writes it in, so its column is no wider than it needs and it wraps at forty characters.
+
+## 0.1.134
+
+The Python face takes what a use case describes as Python objects (DS-459): Workspace.model(), report(), ask() and shows() no longer receive JSON text to parse back, through a sink in the native module that builds the dicts and lists as the description writes them. Every caller gets what it got before. Api's check and export go through the use cases too.
+
+## 0.1.133
+
+A box diagram is composed below its drawing (DS-400): `render::Figure` holds the document as it is drawn and where
+each node and route lands, made by a composer of its kind and technology behind `IComposer` (`BoxesSvgComposer`,
+`BoxesTextComposer`), which `ComposerFactory` names. `Svg::draw` and `Text::draw` draw a figure and place nothing;
+the svg, text, cells and layout outputs reach the layout only through their composer. Every drawing is the same, byte
+for byte.
+
+## 0.1.132
+
+A text sink writes the report and the answers (DS-399), and nothing ds prints changes. A sink now takes two
+halves of what a description says once: the structure (records, fields, lists, values) and the presentation
+(paragraphs, and tables of rows). The JSON sink writes the structure and skips the presentation; the new
+ds::emit::TextSink writes the presentation and skips the structure, a paragraph as its line and a table as its rows,
+the cells joined by two spaces. The report and the answers describe both halves, so `ds check` and `ds query` as
+text are their descriptions in the text sink, which emit::SinkFactory names "text"; ReportText and AnswersText are
+gone. A description is now abstract, ds::format::ADescription (was IDescription): it says its document through a
+private say() and then names it to the sink, and a sink that accepted nothing of its half fails with NotImplemented
+("the scene is not written in text") rather than hand over an empty page.
+
+A design written for the release before needs no change.
+
+## 0.1.131
+
+CI runs the tests with the JSON sink's checks on (DS-461): DS_JSON_CHECK=1 checks every sink its builder does not say
+of, whatever the build, and cpp-test, golden and viewer-js set it. A Release build leaves the checks off by default,
+so a broken sink contract passed CI while a debug build failed. Measured: the suite 67.4 s off, 67.6-69.3 s on.
+
+## 0.1.130
+
+The render IR is written by the streaming sink (DS-418). Each projector makes the diagram's IR as a typed document
+(render::IrDocument), IrExport heads it, and one description, format::IrDescription, writes it into the sink its
+door lends, every key in byte order with nothing kept back. The IR's bytes are unchanged; nlohmann stays only where an
+IR is read back (Ir.cpp's parse).
+
+## 0.1.129
+
+In the Python face, driftspec.render draws the format it is asked for: cells and layout no longer come back as a
+text drawing, and a format a diagram has no writer for raises driftspec.NotImplemented. The command line is
+unchanged.
+
+## 0.1.128
+
+render's architecture is written as requirements held by rules (DS-372): every operation of render is a member of a
+class; a projector is reached only through IProjector, from ProjectorFactory, by every class of render, the tour and
+the export included; and the drawings read the render-IR alone, knowing nothing of the model, the query or the axis.
+A new definition, `projects(c)`, names what projects a diagram. Nothing a design writes changes.
+
+## 0.1.127
+
+test_service passes in a Debug build too: its helper takes a use case's result only when the use case wrote one, as an outcome such as no-diagram is returned, not written (DS-462).
+
+## 0.1.126
+
+The workspace lives as long as its caller (DS-408): made over the use cases it serves, it takes files with reload, parsing again only what changed, and runs each use case by name, checking only the steps the use cases it ran need; one that needs more binds the files again, never parsing them again. The doors keep their workspace, now Workspace::madeFor, checked at once for what they read, until DS-409.
+
+## 0.1.125
+
+The SVG drawing keeps its helpers as members (DS-371): what drew nodes, edges, markers, members, sequences, tables
+and the parts of a drawing are private members of `Svg`, the marker table and the sequence's script its private
+constants; what an edge is drawn as and a sequence's lane are the dataclasses `EdgeMarkup` and `Lane`. render's design
+names no free function any more. Every drawing is the same, byte for byte.
+
+## 0.1.124
+
+The Owner approves the drafts of format's descriptions, layout's rules, the finding's subject and the
+curved routes (13 artefacts); VER-00131-2 traces the closed lists' test. The manual says that
+`relations` answers carry their two ends in JSON. Nothing a design writes changes.
+
+## 0.1.123
+
+The terminal drawing keeps its helpers as members (DS-371): what drew boxes, containers, edges, members, sequences,
+tables and the parts of a drawing are private members of `Text`; the character grid is the class `Grid`, with its
+`frame` and `clear`, over the dataclasses `Cell` and `SeqLine`. A node's badge letter and whether a section holds
+members are `IrNode::badgeOf` and `IrNode::holdsMembers`. Every drawing is the same, byte for byte.
+
+## 0.1.122
+
+The engine gains a service layer (DS-407): each use case of DriftSpec is a class behind one interface, IUseCase, made by UseCaseFactory, which describes its document into the sink a door lends it and ends in an outcome its use case declares. No door uses it yet (DS-409); what each describes is byte for byte what its door writes. REQ-00085-2: the use case a load serves chooses its check steps too.
+
+## 0.1.121
+
+Each document ds writes describes itself once, and each technology is a sink (DS-398). The scene, a check's report,
+a query's answers and a diagram's layout and cells are descriptions (ds::format::IDescription), named by
+DescriptionFactory alone; the sinks are named by emit::SinkFactory alone, by the technology's name; whoever asks for
+an output pairs the two, so a new document or a new technology is one class and one maker. What is no description
+yet (the report and the answers as text, the drawings, the IR and the viewer's page) is written by the writers
+FormatFactory names. A pair ds does not write fails with NotImplemented, naming the document and the technology:
+the command line says it as bad usage (exit 2), the browser answers it as its error. Rules of ds's own design keep
+it so, each proven by a deliberate violation. No output of the command line changes.
+
+In the Python face, Workspace.render with a format it does not know raises driftspec.NotImplemented (a
+NotImplementedError naming the document and the technology) instead of drawing text.
+
+A design written for the release before needs no change.
+
+## 0.1.120
+
+The viewer's tour test of ds's own design has the time it needs (DS-457): nearly all of it is ds loading and checking
+its design (about 2.3 s idle), which went past vitest's 5 s under load; the test now allows 30 s and says why.
+
+## 0.1.119
+
+A curved edge's label clears the states by its whole text, not only the point it is set at (DS-454): a label that
+fell just under a state no longer sits on its border.
+
+## 0.1.118
+
+Render's export draws each kind of diagram through a projector of its own behind one interface (DS-369):
+`IProjector`, with `ClassProjector`, `SequenceProjector`, `TourProjector`, `StateProjector`, `TableProjector` and
+`RequirementProjector`, which `ProjectorFactory` names by the diagram's kind. `IrExport` keeps the choice, the head
+every document opens with and the writing; the sequence projector's builder is a class of its own. A tour composes
+its two parts through the factory, without writing them out and reading them back. Every IR, SVG and text is the
+same, byte for byte.
+
+## 0.1.117
+
+The grammar regenerates in place again (DS-450): `grammar/package.json` keeps `grammar.js` CommonJS, as
+`tree-sitter generate` reads it, under a repository whose root package.json is an ES module. CONTRIBUTING.md says how.
+Nothing ds does changes.
+
+## 0.1.116
+
+A finding names its subject (DS-426): the identity of the entity it is about. The report (`ds check --json`) and the
+export write it as `subject`, only when there is one. A rule's or a definition's findings name the rule, a breach
+included (the breach carries the entities it binds); a finding about a file or a word names none. The other checks
+name their subject in later releases. Messages and the text report are unchanged. In Python, `Finding.subject`; the
+live viewer's rules panel attaches a rule's problems by it, no longer by where they are written.
+
+## 0.1.115
+
+A state diagram's transitions are smooth curves (DS-443): through the points the layering leaves, from border to
+border, two between the same states bowed apart, a transition back to the same state a loop beside it with its
+label beside the loop, and every label on its own curve. Every render-IR document now says its diagram's kind
+(`"kind": "state"`, `"class"`, ...), and the drawing routes by it; a reader of the IR gains one key and loses
+nothing. Other diagrams, and every terminal drawing, keep their orthogonal routes.
+
+## 0.1.114
+
+The rule evaluator's solver backtracks in place: it binds each answer into one working binding, continues and undoes it, instead of copying the bindings for every candidate, and a negation stops at its first answer. ds check is 5–7% faster on designs with many rules; every finding is as before (DS-401).
+
+## 0.1.113
+
+`ds query <workspace> relations <id> --json` says each relation's two ends (DS-445): every answer gains `from` and
+`to`, the identities as the model holds them, beside `id` (the other end) and `detail` (the arrow), which stay as they
+were. No other question's answers change, and the text output is as it was. In Python, an Answer of a relation carries
+them as `source` and `target`; every other Answer has them empty.
+
+## 0.1.112
+
+The Owner approves the drafts of the night's fixes and features (20 artefacts: format's JSON sink, final
+states, coverage, query's subjects and deep listing, render on a file that does not parse, the viewer
+page's size held on a fixture, table columns, the attribute page); VER-00218-2 traces the factory
+exemption's test. The manual's "Asking the model" table says what entities, findings and coverage take
+now. Nothing a design writes changes.
+
+## 0.1.111
+
+A diagram's show: and hide:, and an interface's kind:, take only the values ds knows, and any other is a warning, W-FIELD-VALUE,
+naming the value and the ones it takes (DS-435): show: ownership, multiplicity, operators, notes, requirements,
+derived-stereotypes, design or verifications; hide: fields or methods; an interface's kind: cli, gui, http, library,
+lsp or mcp. Each name of a list is checked on its own. `ds manual diagram` and `ds manual interface` list them. The
+counts line says one in the singular: 1 finding, 1 relation, 1 entity.
+
+What a design written for the release before may see: a value no drawing ever read (show: contracts, show: returns)
+is now said.
+
+## 0.1.110
+
+The layout module's architecture is written as requirements held by rules (DS-392): the layout depends on nothing
+of render or the scene, as it already depended on nothing of the model, and whoever places reaches an engine only
+through IEngine and a router only through IRouter, from the factories that name them: neither the scene nor render
+holds an engine, a router or a phase of the layered engine. A new definition, `engine-part(x)`, names them. Nothing
+a design writes changes.
+
+## 0.1.109
+
+`ds query <workspace> entities shop@*` lists everything a scope holds at any depth, one line each, as a diagram's `include: shop@*` takes it; `entities shop` still lists one level. A pattern that takes nothing is said, exit 1 (DS-444).
+
+## 0.1.108
+
+`ds manual attribute` no longer says an attribute uses its type (DS-439): an attribute owns, refs or shares it, as the
+model records. A rule that reads `uses` off an attribute is now W-RULE-NEVER-MATCHES; read the field through `owns`,
+`refs` or `shares`, or a definition such as `depends(c, x)`.
+
+## 0.1.107
+
+The layered engine's phases are classes of their own (DS-392, DS-370): the layerer assigns a component's layers,
+the orderer orders them to cross less, the positioner places them, the framer lays out the frames and packs their
+components, and the edges are routed by a router the engine is handed; the routers are named by a factory, the
+orthogonal one today. Nothing a design writes changes: every drawing is the same.
+
+## 0.1.106
+
+A column of a table reads what the entity of its row is as a rule reads it (DS-437): `column is: kind(r)`, `name(r)`,
+and `id(r)`. Such a line used to be refused with an E-SYNTAX.
+
+## 0.1.105
+
+ds render no longer draws a diagram from a file it reads that does not parse: a syntax error in the diagram's file, or in the file of what it shows, is written as ds check writes it and the render exits 1, where it drew a blank or an empty table and exited 0. A diagram that is missing or shows nothing while a file does not parse says that may be why. A broken file the diagram does not read stops nothing (DS-433).
+
+## 0.1.104
+
+A rule broken through a definition names what the definition went through: `never depends(c, x)` reports `broken for c = Shop: x = Store (depends: m = Shop::store)`, as a direct `m uses x` names m (DS-438).
+
+## 0.1.103
+
+A factory is exempt from reaching a family through its interface by its name, ...Factory, and not only by naming two
+classes of the family (DS-451). The factories of one product (SinkFactory, QueryFactory) and EngineFactory now name
+what they make in the design, as the code does. Nothing a design writes changes.
+
+## 0.1.102
+
+ds query says which subject each question takes (in --help, from the table its check reads) and answers a subject of another kind with an error that says what it takes, exit 1, instead of printing nothing: `artefacts REQ-…` says to ask `relations`. `findings` and `coverage` take a file or an identity, the entity and everything it holds (DS-436).
+
+## 0.1.101
+
+A use case whose scenario lets a failure escape gets W-FAILURE-UNDECLARED at the scenario, no longer W-FIELD-UNKNOWN for `escapes` and `escape.<Failure>`, fields the check writes itself. `ds query failures <use case>` answers what escapes it (DS-434).
+
+## 0.1.100
+
+What keeps the viewer's page small is held on a design made for it (DS-452): a behaviour called from many places costs
+the page once, so a caller adds its own call and never the steps its tour replays. The bound of 250 KB on ds's own
+design is gone, a number on a design that grows. Nothing a design writes changes.
+
+## 0.1.99
+
+The layout's engines number the boxes of a graph in the order it is read and give them back in that order (DS-392):
+an edge names its ends by number, and whoever places reads every box back without looking it up by name, which
+takes back what going through the engine interface had cost render's drawings. Nothing a design writes changes.
+
+## 0.1.98
+
+ds export is faster and lighter, and nothing changes in any output (DS-397). Every JSON document ds writes but the
+render IR (the export, the scene, the report, the answers, the layout and cells of a diagram, the manual's page, the
+engine's answers to the Python face and the browser) is now written by one streaming sink, ds::emit::JsonSink, in
+place of nlohmann's tree: byte for byte the same, keys in byte order, written whole or not at all. The macOS wheel
+needs macOS 13.3 or later: it is the first whose C++ library writes a double with std::to_chars.
+
+A design written for the release before needs no change.
+
+## 0.1.97
+
+A state machine says its final states (DS-442): `final <State>, ...` inside a state block. A transition out of a final
+state is W-STATE-LEAVES-FINAL; a state with no way out is not taken as final. A state diagram draws where the machine
+starts as UML's filled dot, each final state with an arrow to a bullseye, and its states as capsules; the terminal
+draws ●, ◉ and rounded boxes. The box that said "start" is gone: in the render-IR, a machine's start is a node of kind
+initial, its ends nodes of kind final and its states nodes of kind state, so a reader of the IR that looked for the
+classifier initial on a box reads the kind instead. `final` is a new word of the language: a design that used it as a
+name renames it.
+
+## 0.1.96
+
+Nothing a design writes changes. CI keeps a compiler cache of 12 GB instead of 5, so a merge request
+recompiles only what it touches, and each C++ job prints the disk the cache leaves (DS-449).
+
+## 0.1.95
+
+Render's drawings are placed by the layout module's layered engine (DS-392): render projects a diagram's IR into
+nested boxes and the edges between them, and reads the places and the routes back. The engine is the one render
+had, moved as it was. Nothing a design writes changes: every SVG, text, ir and layout drawing is the same.
+
+## 0.1.94
+
+The Owner approves the roadmap's drafts of 2026-11-24: the rule language, encoding, the theme and its
+constraint, layout, the editor, the viewer's severities, coverage of what nothing realises or verifies,
+and their verifications and the Owner's conventions as engine-wide rules (35 artefacts). REQ-00194 and REQ-00195 are revised to name StepFactory, the
+name the steps' factory took. Nothing a design writes changes.
+
+## 0.1.93
+
+One palette for every drawing and page (DS-441), as the Owner chose it: each kind one colour, light and dark. Class
+indigo, interface rose, enum green, dataclass amber, function slate and abstract violet, in the SVG's badges, the
+viewer (day and night), the playground and the terminal (class blue, interface magenta, enum green, dataclass yellow,
+function dim, abstract magenta). A dataclass has its own badge colour now, and a requirement, a verification and a
+constraint keep theirs, apart from the kinds'. The viewer and its night theme set two more variables, --k-interface
+and --k-abstract; a theme of your own that the viewer reads should set them too. What a design writes does not change;
+what it draws changes colour on purpose.
+
+## 0.1.92
+
+Nothing a design writes changes. Main's tests build and pass again (DS-448): the test of the scene's placement builds
+its checker the way the steps are built since DS-425, and the golden text report of ds's own design gains the open
+coverage line that DS-431 writes, now that DS-429 and DS-430 hold two of its requirements as open coverage.
+
+## 0.1.91
+
+The Owner's design conventions are rules of ds's own design (DS-405): a pure interface is named I and a capital, an
+abstract class A and a capital, and a factory its product and Factory; a class of a family is reached through the
+family's interface by every class but its own family and the factories; and what a class refers to is given to its
+constructor, itself or inside what it is given. Each rule is proven by a deliberate violation. Nothing a design
+writes changes.
+
+## 0.1.90
+
+The manual teaches what five first-time users had to find out by trial (DS-440): how every kind of
+link is written, the level of a requirement, the verification of a constraint, what a table's
+column may hold, the full chain from a use case to its scenarios, what a `fails` clause promises,
+a class carrying out an interface of its module, what each relation of a rule sees and the trap
+of `uses` against an attribute, definitions, the findings that catch a rule speaking of nothing,
+coverage and the counts line, asking the model with `ds query`, and adding to a design you did not
+write. The list of what this release does not do no longer says that pointers, template bases and
+Python unions cannot be written: they can.
+
+## 0.1.89
+
+An approved requirement that nothing satisfies is coverage (DS-429): `W-REQ-UNREALISED`, listed by `ds query <workspace>
+coverage` and counted as open by `ds check`, never a finding. A requirement counts as satisfied when something names it
+with `@requirement`, or when every requirement that refines it is satisfied, directly or through its own refinements. A
+draft owes nothing.
+
+An approved constraint that nothing verifies is coverage (DS-430): `W-CST-NO-VERIFICATION`, as an approved requirement
+nothing verifies is `W-REQ-NO-VERIFICATION`. Obeying a constraint is no verification of it. A draft owes nothing.
+
+## 0.1.88
+
+Each step of the check is given what it reads when it is made (DS-425). The checker's context is made once, holds the
+resolver and starts over with each run's notes; every step takes it at construction, and its run takes nothing.
+CheckerFactory makes, for a selection, the context, the steps made with it and the checker that runs them, and hands
+back that whole as the IChecker it is. Nothing a design writes changes.
+
+## 0.1.87
+
+Every page takes its colours from the one theme too (DS-393, second part): the viewer, its night theme, the live
+page, the playground and the page of a whole design carry what the theme writes for them between theme markers, and
+a colour written by hand anywhere in what DriftSpec ships fails the build. A shadow is a token now. The viewer's
+night theme sets four more variables (--you, --shadow, --shadow-pop, --shadow-soft); a theme of your own that the
+viewer reads should set them too. Every drawing draws as before.
+
+## 0.1.86
+
+The bind context is given what it refers to by a constructor, and the design declares it (DS-424). Nothing a design
+writes changes.
+
+## 0.1.85
+
+The layout is a module of its own (DS-392), pure geometry: an engine is given nested boxes of given sizes and the
+edges between them, and says where every box lands and how every edge runs, knowing nothing of what a box stands for.
+The scene's packing of shelves, fixed places and trees is its first engine, which the scene reaches through the
+engine interface the layout's factory hands out; render's layered engine follows. Nothing a design writes changes:
+findings, the viewer, its scene and every drawing are the same.
+
+## 0.1.84
+
+`ds check` says how much coverage is open (DS-431): when a design has open items of coverage, what is not yet written
+such as a requirement nothing verifies, the counts line ends with ` · N open`, and a line under it says where they are
+listed (`ds query <workspace> coverage`). A design with none reads as before. The exit code never depends on coverage,
+and `ds check --json` does not change.
+
+## 0.1.83
+
+The drawings take their style from one theme (DS-393, first part). Every colour of the SVG's stylesheet, light and
+dark, the font and how it measures, and the terminal's palette are held once, in `ds::theme::Theme`; the stylesheet
+every SVG carries and what a sequence adds to it are written from it, and the terminal drawing colours each role as
+it says. Every drawing ds writes is the same, byte for byte. Nothing a design writes changes.
+
+## 0.1.82
+
+A design file that is not valid UTF-8 is now reported with its file, line and column (DS-411). Such a file, one Latin-1
+é in a title for instance, used to check clean while `ds export`, `ds render -f json` and `ds query --json` exited with
+2 and an empty output, naming no file. Each file's encoding is checked when it is read: a file that is not UTF-8 is the
+new error E-ENCODING at its first byte that is not part of a character, on its line and at its column, both counted
+from 1 and the column in bytes, as E-SYNTAX counts them (`ds manual E-ENCODING`). As with a file that does not parse,
+it is reported once and read no further, the findings that only echo its absence are left out, and every other file is
+checked as usual: `ds check` exits with 1, and export, render and query write. The Python face hands the engine each
+file's bytes (`driftspec.read` gives a directory's files as bytes, and a mapping may hold bytes or str), so
+`driftspec.check` gives the same finding instead of failing in Python first; a mapping of str loads as before.
+
+Valid designs are unchanged: every finding, export, drawing, viewer page, answer and exit code is the same. The manual
+gains the page of E-ENCODING and its row in `ds manual codes`.
+
+## 0.1.81
+
+The manual and the README say what DriftSpec's Python face does since today: the language server keeps a design
+loaded and how fast its diagnostics arrive, `Workspace.reload` and `driftspec.severities()`, and the live viewer's
+colours, findings count, coverage section and the problems in its rules panel.
+
+## 0.1.80
+
+The language server is a door of classes (DS-422): a `DesignServer` owns the protocol and one `Editor` per design, every
+feature is a method, and the module keeps no state of its own. The kinds it names (what is structure, what is an
+artefact, a kind in an outline, the fields hover says) are written in one place, `Kinds`, until the metamodel gives each
+kind its category (DS-427). The language server and the live viewer open the browser the same way, `driftspec.browser`.
+What an editor is told and answered does not change.
+
+## 0.1.79
+
+The live viewer's rules panel attaches each rule's problems by where they are written (DS-421): a rule or definition
+finding written inside the rule is one of its problems, whatever its message says. They were matched by the start of
+the message, which a rewording of the finding would have broken without a sound. What the panel shows does not change.
+
+## 0.1.78
+
+The exporter reaches the diagram filters through IFilter alone (DS-423). What a class diagram draws around what its
+patterns take, which entities are boxes and the box a relation is drawn from are read by ClassBoxes, which the class
+filter and the exporter both ask; every filter answers boxes(), what its patterns take without what is drawn around.
+Nothing a design writes changes.
+
+## 0.1.77
+
+The scene's architecture is written as requirements held by rules (DS-391): every operation of the scene is a member
+of the class whose responsibility it is; the scene reads the model it places and draws and leaves it as it is; no
+layer knows the layout, so a layer reaches the boxes placed only through the map and the document; and the packer
+places boxes knowing nothing of the model. A new definition, `lays-out(b)`, names what places the boxes. Nothing a
+design writes changes.
+
+## 0.1.76
+
+The one place that names the concrete classes of an interface is a factory, named so (DS-404). Steps is StepFactory
+and Filters is FilterFactory; the node binders are made by NodeBinderFactory instead of the binder's constructor; and
+the Api asks CheckerFactory for the checker and holds it as the IChecker it is, so the load names no concrete checker
+(the viewer's tour of a load now reaches the check at IChecker::run). Nothing a design writes changes.
+
+## 0.1.75
+
+The language server keeps its workspace loaded and reloads it on a change (DS-420). `Workspace.reload(files)` loads a
+workspace again in place, for what it was loaded to give: a file whose text has not changed is not parsed again, and the
+whole is bound and checked again. The language server reloads the workspace it keeps on each change and publishes the
+diagnostics from its check, and reads the whole model only when a request asks for it. An editor sees the diagnostics of
+an edit in about half the time (DriftSpec's design 337 → 175 ms, a design of 3,200 classes 484 → 184 ms); what it is
+told and answered does not change.
+
+## 0.1.74
+
+The scene hides nothing (DS-390). The one place that names the concrete layers is a class, `LayerFactory`; the
+count of a text's characters is the text module's, which render's cells use as well; and a type is read without the
+names that qualify it by the model's `WrittenType`, with a scan instead of a regular expression, for the rows of a
+box and for the types an interface's contract compares. Nothing a design writes changes: findings, the viewer, its
+scene and every drawing are the same.
+
+## 0.1.73
+
+A diff's change on a relation or a message is drawn as on a box (DS-419). In the text drawing, a changed relation is
+marked `~` in its colour and a renamed one `>`; before, every change but `added` was marked `-` in red, as removed. A
+renamed message is marked `>` (it was `~`). In the SVG, a changed or renamed relation is drawn in its colour; the
+stylesheet had no rule for them, so they looked unchanged. Every SVG ds writes carries the one new stylesheet line. Nothing
+a design writes changes.
+
+## 0.1.72
+
+Nothing a design writes changes. From this release on the version goes up when a merge request is
+merged, one release per merge, and each merge request writes its entry under `changelog.d/`
+(DDEV-1548).
+
 ## 0.1.71
 
 The language server and the live viewer show a finding's severity as the severity table gives it (DS-386). The engine
