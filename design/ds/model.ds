@@ -137,6 +137,16 @@ package driftspec@ds {
       + withArity(arity: std::size_t) -> Identity {
         @requirement REQ-00029-2
       }
+      + withParameters(types: std::string) -> Identity {   // an overload's identity: name(T1, T2) (DS-455)
+        @requirement REQ-00252-1
+      }
+      + bare() -> Identity {                     // without the parameter list that closes it (DS-455)
+        @requirement REQ-00252-1
+      }
+      // where :: or @ is found outside a parameter list: an overload's types never split its identity (DS-455)
+      + static findOutsideParameters(text: std::string, what: std::string, last: bool) -> std::size_t {
+        @requirement REQ-00252-1
+      }
       + diagramName() -> std::string
       + sequence(scenario: std::string) -> Identity
       + state() -> Identity
