@@ -57,7 +57,7 @@ variables:
       # flight evicted one another (4.7/5.0 GiB, 22 cleanups in one job, 16% hits on the evidence build)
       # CCACHE_NAME: a job may keep its objects apart (DS-482: the evidence build's coverage
       # objects are the largest and evicted the gcc ones)
-      export CCACHE_DIR="$HOME/.cache/ccache/${CCACHE_NAME:-$CI_PROJECT_NAME}" CCACHE_MAXSIZE=12G
+      export CCACHE_DIR="$HOME/.cache/ccache/${CCACHE_NAME:-$CI_PROJECT_NAME}" CCACHE_MAXSIZE="${CCACHE_SIZE:-12G}"
       # a job runs in one of several folders of the runner (builds/<runner>/<slot>/...): the objects
       # are made independent of it, so the cache serves every slot and the coverage maps stay right
       export CCACHE_BASEDIR="$CI_PROJECT_DIR" CCACHE_NOHASHDIR=1
@@ -70,7 +70,7 @@ variables:
   after_script:
     - |
       CCACHE="$HOME/.cache/ccache-4.10.2/ccache"
-      export CCACHE_DIR="$HOME/.cache/ccache/${CCACHE_NAME:-$CI_PROJECT_NAME}" CCACHE_MAXSIZE=12G
+      export CCACHE_DIR="$HOME/.cache/ccache/${CCACHE_NAME:-$CI_PROJECT_NAME}" CCACHE_MAXSIZE="${CCACHE_SIZE:-12G}"
       echo "ccache: this job's calls"
       CCACHE_STATSLOG="$CI_PROJECT_DIR/ccache-stats.log" "$CCACHE" --show-log-stats -v || true
       echo "ccache: the shared cache"
@@ -93,6 +93,8 @@ cpp-evidence:
     ARGOS_EVIDENCE_JOBS: "6"
     # its own cache: its instrumented objects no longer evict cpp-test's and the wheel's
     CCACHE_NAME: $CI_PROJECT_NAME-evidence
+    # the host has 325 GB free (DS-482): the evidence cache's own 20 GB holds a build per slot
+    CCACHE_SIZE: 20G
     # Why the evidence build never hits the cache while cpp-test does (DS-482): ccache writes,
     # for every object, what it hashed and why it missed. A sample is kept as an artefact, to
     # compare two jobs' inputs. Removed once the miss is understood.
