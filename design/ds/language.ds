@@ -1769,6 +1769,7 @@ package driftspec@ds {
           tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepThatLightsWhatItsDiagramDoesNotDrawIsTold
           tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.ACalloutPointingAtWhatTheStepDoesNotLightIsTold
           tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AMissingScenarioAndAnEmptyWalkthroughAreTold
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AScenarioWrittenApartIsOneTheStepMayShow
           tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepIsRelatedToWhatItShowsAndLights
       }
     }
