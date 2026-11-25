@@ -4041,6 +4041,10 @@
             },
             {
               "type": "SYMBOL",
+              "name": "property_term"
+            },
+            {
+              "type": "SYMBOL",
               "name": "column_related"
             },
             {

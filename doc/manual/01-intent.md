@@ -284,6 +284,7 @@ requirement nothing satisfies or nothing proves.
 (`r.title`, `r.id`) or finds what the row is related to (`x where x satisfies r`): a bare `x`
 writes the short names of all it finds in one cell, and `x.id` writes each full identity in a
 row of its own. Constraints get a table of their own, with `x where x constrained-by c`.
+A column also reads what the row's entity is, as a rule does: `name(r)`, `id(r)` or `kind(r)`.
 
 ```ds
 package shop {
