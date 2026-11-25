@@ -8,19 +8,17 @@ namespace ds {
 namespace machine {
 
 std::vector<StateRule> StateRule::of(const model::Entity& machine) {
-  std::vector<StateRule> out;
-  for (const std::string& line : WrittenFields::pieces(machine.field("rules"), '\n')) {
-    const std::vector<std::string> parts = WrittenFields::pieces(line, '|');
-    if (parts.size() < 3) continue;
+  std::vector<StateRule> out;  // the records the binder read (DS-384)
+  for (const model::WrittenRule& written : machine.rules) {
     StateRule rule;
-    rule.state = parts[0];
+    rule.state = written.state;
     std::vector<std::string> said;
-    for (const std::string& text : WrittenFields::pieces(parts[1], ',')) {
-      rule.literals.push_back(Literal::read(text));
+    for (const model::RuleLiteral& l : written.literals) {
+      rule.literals.push_back({l.negated, l.left, l.op, l.right});
       said.push_back(rule.literals.back().written());
     }
     rule.text = WrittenFields::joined(said, ", ");
-    rule.line = std::atoi(parts[2].c_str());
+    rule.line = written.location.line;
     out.push_back(rule);
   }
   return out;

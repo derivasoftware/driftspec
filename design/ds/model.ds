@@ -364,7 +364,7 @@ package driftspec@ds {
     // ---- the metamodel (REQ-00066-1): the language declared once ----
     enum FieldType {                         // how to read a field's text
       @requirement REQ-00066-1
-      Text, Name, Names, Type, Params, Number, Status, Patterns
+      Text, Name, Names, Type, Params, Number, Status, Patterns, Records   // Records: a list of records of named fields (DS-384)
     }
 
     enum FieldSource {                       // who sets a field: the author, the syntax, or the checker
@@ -937,6 +937,32 @@ package driftspec@ds {
       + type: std::string
     }
 
+    // a state machine's transitions and rules as it writes them, one record each, read once from the syntax (DS-384)
+    dataclass WrittenTransition {
+      @requirement REQ-00039-1
+      + from: std::string
+      + to: std::string
+      + event: std::string
+      + guard: std::string                   // between [ ], without them
+      + action: std::string                  // the event it sends: / action
+      + owns location: Location
+    }
+
+    dataclass RuleLiteral {                  // a name of the context, alone or compared with a value; not turns it
+      @requirement REQ-00039-1
+      + negated: bool
+      + left: std::string
+      + op: std::string
+      + right: std::string
+    }
+
+    dataclass WrittenRule {                  // a state a rule computes and the literals that all hold in it (DS-249)
+      @requirement REQ-00039-1
+      + state: std::string
+      + owns many literals: std::vector<RuleLiteral>
+      + owns location: Location
+    }
+
     dataclass Entity {                       // one declared (or expected, R6) entity of the workspace
       @requirement REQ-00001-1
       + kind: Kind
@@ -947,6 +973,8 @@ package driftspec@ds {
       + flags: std::vector<std::string>
       + many params: std::vector<Param>
       + args: std::vector<std::string>
+      + owns many transitions: std::vector<WrittenTransition>   // a state machine's, never joined text (DS-384)
+      + owns many rules: std::vector<WrittenRule>
       + owns location: Location
       + expected: bool
       + has(flag: std::string) -> bool

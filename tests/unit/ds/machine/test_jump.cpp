@@ -8,10 +8,10 @@
 
 namespace {
 
-/// The jumps of a state machine, read from the field the binder writes them in (DS-250).
+/// The jumps of a state machine, from the records the binder reads its transitions into (DS-250, DS-384).
 TEST(TestJump, EachTransitionIsAJumpWithItsEventAndItsGuard) {
   ds::model::Entity machine;
-  machine.fields["transitions"] = "Open>Paid>pay [enough] / note\nPaid>Shipped>ship";
+  machine.transitions = {{"Open", "Paid", "pay", "enough", "note", {}}, {"Paid", "Shipped", "ship", "", "", {}}};
   const std::vector<ds::machine::Jump> jumps = ds::machine::Jump::of(machine);
   ASSERT_EQ(jumps.size(), 2u);
   EXPECT_EQ(jumps[0].from, "Open");
