@@ -397,9 +397,7 @@ package driftspec@ds {
       + Browser(metamodel: model::Metamodel)
       + answer(request: std::string) -> std::string
       // the answer, written into the sink answer builds; each record's fields in byte order (DS-397)
-      - respond(request: std::string, out_sink: emit::ISink) -> void
-      - artefacts(model: model::Model, out_sink: emit::ISink) -> void
-      - diagrams(workspace: Workspace, width: int, out_sink: emit::ISink) -> void
+      - respond(request: std::string, out_sink: emit::ISink) -> void   // through the use case play-design (DS-460)
     }
 
     // How every caller loads a workspace (DS-120): the files bound into one model written in the
@@ -496,7 +494,11 @@ package driftspec@ds {
       -> emit::SinkFactory::json(false) -> sink
       attempt {
         -> respond(request, sink)
-      } on NotImplemented {
+      } on BadRequest {
+        -> emit::SinkFactory::json(false) -> failed
+        -> failed.result() -> error
+        return error
+      } on emit::NotImplemented {
         -> emit::SinkFactory::json(false) -> failed
         -> failed.result() -> error
         return error
@@ -515,30 +517,12 @@ package driftspec@ds {
       return json
     }
 
-    // a request for the manual is answered by a manual made from the metamodel the browser holds (DS-342)
+    // the playground's door (DS-460): the request read, the design or the manual answered by play-design through the
+    // workspace, as every door asks the engine; it draws nothing and reads no model
     sequence Browser::respond {
-      local manual: model::Manual
       local workspace: Workspace
-
-      alt a request for the manual / manual {
-        -> manual.guides() -> guides
-        -> manual.page(topic) -> text
-        -> manual.topics() -> topics
-      } else {
-        -> artefacts(model, out_sink)
-        -> diagrams(workspace, width, out_sink)
-        -> check::Report::of(model, metamodel_) -> checked
-        -> format::DescriptionFactory::report(checked, "") -> report   // as ds check --json writes it, one field of the answer
-        -> report.describe(out_sink)
-      }
-    }
-
-    sequence Browser::diagrams {
-      -> query::QueryFactory::of(model, metamodel_) -> questions   // what each diagram takes
-      loop each diagram, in the order written {
-        -> workspace.render(diagram, format, width) -> drawing
-        -> questions.ask(shows, diagram) -> shown
-      }
+      -> Workspace::madeFor(metamodel_, files, output, diagram) -> workspace   // the model and no diagram: what the playground reads
+      -> workspace.run(play-design, request, out_sink) -> outcome
     }
 
     sequence Api::page {

@@ -103,13 +103,15 @@ TEST_F(TestDoorPrinciples, ADoorThatExportsTheIrAsksTheQueryOrNamesAWriterIsTold
 
 /// The exemptions cover exactly the loading machinery, api's Workspace, Api and Bound, for good, and api's Browser until
 /// DS-460: the model held by each of them is not told; held by any other class of the api or the command line, it is.
-TEST_F(TestDoorPrinciples, TheExemptionsCoverTheLoadingMachineryAndTheBrowserAlone) {
+TEST_F(TestDoorPrinciples, TheExemptionsCoverTheLoadingMachineryAlone) {
   const std::string held = "      - refs held_: model::Model\n";
   const std::vector<std::string> exempt = broken({{"ds/api.ds", "    class Workspace {", held},
                                                   {"ds/api.ds", "    class Api {", held},
-                                                  {"ds/api.ds", "    dataclass Bound {", "      + held: model::Model\n"},
-                                                  {"ds/api.ds", "    class Browser {", held}});
+                                                  {"ds/api.ds", "    dataclass Bound {", "      + held: model::Model\n"}});
   EXPECT_FALSE(has(exempt, knowNoModel));
+  // the playground's door answers through play-design (DS-460): it is held to the rule like every door
+  const std::vector<std::string> browser = broken({{"ds/api.ds", "    class Browser {", held}});
+  EXPECT_TRUE(has(browser, knowNoModel));
   const std::vector<std::string> identity = broken({{"ds/api.ds", "    class Identity {", held}});
   EXPECT_TRUE(has(identity, knowNoModel));
   const std::vector<std::string> disk = broken({{"ds/app.ds", "    class Disk {", held}});

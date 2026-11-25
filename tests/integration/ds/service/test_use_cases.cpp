@@ -201,7 +201,7 @@ TEST_F(TestUseCases, EachUseCaseEndsInAnOutcomeItsUseCaseDeclares) {
 
 TEST_F(TestUseCases, TheFactoryNamesEveryUseCaseAndAnyOtherNameIsNotImplemented) {
   const auto names = ds::service::UseCaseFactory::names();
-  EXPECT_EQ(names.size(), 6u);
+  EXPECT_EQ(names.size(), 7u);  // play-design, the playground's, since DS-460
   for (const auto& name : names) EXPECT_EQ(ds::service::UseCaseFactory(metamodel).of(name)->name(), name);
   EXPECT_THROW(ds::service::UseCaseFactory(metamodel).of("teleport"), ds::emit::NotImplemented);
 }

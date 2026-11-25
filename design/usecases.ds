@@ -63,6 +63,14 @@ package driftspec {
     outcome no-topic: there is no such page; the topics are listed
   }
 
+  usecase UC-00008-1 {
+    title: Play a design in the browser: write it and see every diagram, finding and artefact as it is written
+    status: draft
+    @requirement SREQ-00015-1
+
+    outcome default: the design's artefacts, diagrams drawn, identities with where each is written, and report; or the manual's page
+  }
+
   usecase UC-00007-1 {
     title: Edit a design: see its findings as it is typed, and move through it by name
     status: approved
