@@ -113,6 +113,11 @@ class Layout {
   LayoutResult place(const IrDocument& doc, int maxWidth = 0, bool asItsKind = false) const;
 
  private:
+  /// The longest of `lines`, in characters as written (DS-477).
+  static size_t longest(const std::vector<std::string>& lines);
+  /// Whether an edge of `kind` draws a base above what derives from it: inheritance or realization.
+  static bool isHierarchy(const std::string& kind);
+
   Metrics m_;
 };
 

@@ -20,6 +20,8 @@ struct Request {
   const std::string& get(const std::string& name) const;
   /// The argument of that name, or `fallback` when the request does not carry it.
   std::string getOr(const std::string& name, const std::string& fallback) const;
+  /// The argument of that name, or `fallback`, written as a whole number; BadRequest when it is not one (DS-477).
+  int number(const std::string& name, const std::string& fallback) const;
 };
 
 /// How a use case ended: one of the outcomes its use case declares in design/usecases.ds (default, errors...), and for

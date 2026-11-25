@@ -2,6 +2,7 @@
 #define DRIFTSPEC_RENDER_IR_HPP
 
 #include <map>
+#include <nlohmann/json_fwd.hpp>
 #include <optional>
 #include <string>
 #include <utility>
@@ -97,6 +98,11 @@ struct IrDocument {
   /// Relations that differ only in their text, drawn as one: same ends, kind,
   /// dash and link; the labels are joined one per line (as plantuml-render does).
   IrDocument bundled() const;
+
+ private:
+  /// What parse reads of a node or an edge (DS-477): its named references, and a text field ("" when it has none).
+  static std::map<std::string, std::string> refsOf(const nlohmann::json& j);
+  static std::string text(const nlohmann::json& j, const char* key);
 };
 
 }  // namespace render

@@ -99,6 +99,7 @@ package driftspec@ds {
       + terminal() -> std::vector<Terminal>
       + sgr(role: Role) -> std::string
       + cellColours() -> std::map<std::string, std::uint32_t>   // the light value of the first role that names each code
+      + filled(stylesheet: std::string, tokens: std::vector<Token>) -> std::string   // a stylesheet with this theme's values put in (DS-477)
     }
 
     // What writes the theme in one form a drawing or a page reads: it holds where the values go, never a value.
@@ -113,41 +114,48 @@ package driftspec@ds {
     class SvgStyleSheet : IThemeWriter {
       @requirement REQ-00231-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class SequenceStyleSheet : IThemeWriter {  // what a sequence's SVG adds: lifelines, rows, frames and their tokens
       @requirement REQ-00231-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class ViewerVariables : IThemeWriter {               // the viewer page's variables (viewer/scene.html): light, and dark when the system is
       @requirement REQ-00231-1
       @constraint CST-00012-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class ViewerNightVariables : IThemeWriter {               // the viewer's night theme (viewer/themes/night.css), a stylesheet a reader lays over the viewer
       @requirement REQ-00231-1
       @constraint CST-00012-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class LivePageVariables : IThemeWriter {               // the live page's variables (python/driftspec/live_page.py): light, and dark when the system is
       @requirement REQ-00231-1
       @constraint CST-00012-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class PlaygroundVariables : IThemeWriter {               // the playground's variables (playground/web/index.html): dark first, light where a page sets it
       @requirement REQ-00231-1
       @constraint CST-00012-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class DesignPageVariables : IThemeWriter {               // the design page's variables (tools/design_page.py): light, and dark twice
       @requirement REQ-00231-1
       @constraint CST-00012-1
       + write(theme: Theme) -> std::string
+      - kStylesheet: const char*        // where each value goes; the values are the theme's
     }
 
     class ThemeWriterFactory {                // the one place naming the writers, by the form they write

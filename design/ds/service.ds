@@ -248,6 +248,7 @@ package driftspec@ds {
       + arguments: std::map<std::string, std::string>
       + get(name: std::string) -> std::string fails BadRequest
       + getOr(name: std::string, fallback: std::string) -> std::string
+      + number(name: std::string, fallback: std::string) -> int fails BadRequest   // an argument written as a whole number (DS-477)
     }
 
     // how a use case ended: one of the outcomes its UC declares, and for any but default what happened, in a line, which
