@@ -1294,10 +1294,10 @@ package driftspec@ds {
       - relations() -> std::vector<Relation>
       + findings() -> std::vector<Finding>
       + coverage() -> std::vector<Finding> {
-        @requirement REQ-00124-2
+        @requirement REQ-00124-3
       }
       + cover() -> void {                     // what the metamodel calls coverage leaves the findings (DS-216)
-        @requirement REQ-00124-2
+        @requirement REQ-00124-3
       }
       + withdrawEchoes(broken: std::set<std::string>) -> void   // what only echoes files that do not parse or are not UTF-8 (DS-304, DS-411)
       + sortFindings() -> void {              // findings and coverage by file, line, code and message: no order of the steps (DS-382)

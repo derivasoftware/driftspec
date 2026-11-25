@@ -782,10 +782,10 @@ package driftspec@ds {
       }
       - checkArtefacts() -> void {
         @requirement REQ-00045-1
-        @requirement REQ-00124-2
+        @requirement REQ-00124-3
       }
       - realised(requirement: std::string, satisfied: std::set<std::string>, refinedBy: std::map<std::string, std::vector<std::string>>, seen: std::set<std::string>) -> bool {
-        @requirement REQ-00124-2              // satisfied, or every requirement that refines it realised (DS-429)
+        @requirement REQ-00124-3              // satisfied, or every requirement that refines it realised (DS-429)
       }
       - checkExtensions() -> void {
         @constraint CST-00003-2

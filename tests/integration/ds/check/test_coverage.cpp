@@ -115,4 +115,55 @@ TEST_F(TestCoverage, AnApprovedRequirementNothingRealisesAndAConstraintNothingVe
   for (const auto& f : model.findings()) EXPECT_NE(f.severity, ds::model::Severity::coverage) << f.code;  // never a finding
 }
 
+// DS-110: a rule that holds a constraint is its verification, checked by the machine, and the constraint is the rule's
+// reason; a rule with no claim checks nothing, and a rule with neither link still answers to nothing
+TEST_F(TestCoverage, ARuleThatHoldsAConstraintAnswersForItAndIsAnsweredByIt) {
+  const ds::model::Metamodel metamodel;
+  ds::model::Model model{metamodel};
+  ds::parse::Parser parser;
+  ds::bind::Binder binder(model, metamodel);
+  binder.bind(parser.parseText("a.ds",
+                               "package p {\n"
+                               "  constraint CST-00001-1 {\n"  // held by a rule that says one claim
+                               "    category: design\n"
+                               "    title: The store shall never depend on the web\n"
+                               "    status: approved\n"
+                               "  }\n"
+                               "  constraint CST-00002-1 {\n"  // named by a rule that says no claim: still unchecked
+                               "    category: design\n"
+                               "    title: Every class shall be kept\n"
+                               "    status: approved\n"
+                               "  }\n"
+                               "  module web {\n"
+                               "    class Page { }\n"
+                               "  }\n"
+                               "  module store {\n"
+                               "    class Order {\n"
+                               "      + total() -> int\n"
+                               "    }\n"
+                               "    rule blind {\n"
+                               "      @constraint CST-00001-1\n"
+                               "      for class c in p@store\n"
+                               "      never c owns x, x in p@web\n"
+                               "    }\n"
+                               "    rule kept {\n"
+                               "      @constraint CST-00002-1\n"
+                               "      for class c in p@store\n"
+                               "    }\n"
+                               "    rule loose {\n"
+                               "      for class c in p@store\n"
+                               "      never c owns x, x in p@web\n"
+                               "    }\n"
+                               "  }\n"
+                               "}\n"));
+  ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
+  std::set<std::string> unverified, reasonless;
+  for (const auto& c : model.coverage()) {
+    if (c.code == "W-CST-NO-VERIFICATION") unverified.insert(c.message.substr(0, c.message.find(' ')));
+    if (c.code == "W-RULE-NO-REQUIREMENT") reasonless.insert(c.message.substr(0, c.message.find(' ')));
+  }
+  EXPECT_EQ(unverified, (std::set<std::string>{"CST-00002-1"}));
+  EXPECT_EQ(reasonless, (std::set<std::string>{"p@store::loose"}));
+}
+
 }  // namespace

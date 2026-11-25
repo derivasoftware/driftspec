@@ -30,12 +30,13 @@ std::vector<model::Finding> RuleCheck::run() {
   return context_->take();
 }
 
-// A rule makes a requirement real (REQ-00095-2): it answers to one, and says what holds or what must
-// never happen, once; a definition says in which cases it holds. Then every rule is evaluated over the
-// model (REQ-00096-1).
+// A rule makes a requirement real (REQ-00095-2), or holds a constraint (DS-110): it answers to one, and says
+// what holds or what must never happen, once; a definition says in which cases it holds. Then every rule is
+// evaluated over the model (REQ-00096-1).
 void RuleCheck::checkRules() {
   std::set<std::string> linked;
   for (const auto& r : model_->index().ofKind("satisfies")) linked.insert(r.from);
+  for (const auto& r : model_->index().ofKind("constrained-by")) linked.insert(r.from);
   const auto said = [](const model::Entity& e, const char* key) {
     const auto it = e.fields.find(key);
     return it != e.fields.end() && !it->second.empty();
@@ -45,8 +46,9 @@ void RuleCheck::checkRules() {
     if (e.expected) continue;
     if (e.kind == model::Kind::Rule) {
       if (!linked.count(e.id))
-        context_->report(context_->metamodel().finding(model::Code::W_RULE_NO_REQUIREMENT,
-                                                       e.id + " answers to no requirement: write @requirement <ID>", e.location, e.id));
+        context_->report(context_->metamodel().finding(
+            model::Code::W_RULE_NO_REQUIREMENT,
+            e.id + " answers to no requirement or constraint: write @requirement <ID> or @constraint <ID>", e.location, e.id));
       const auto f = model_->formulas().find(e.id);
       const std::size_t claims = f == model_->formulas().end() ? 0 : f->second.claims.size();
       if (claims != 1)

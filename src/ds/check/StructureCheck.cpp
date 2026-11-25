@@ -224,6 +224,15 @@ void StructureCheck::checkArtefacts() {
   for (const auto& r : model_->index().ofKind("verifies")) verified.insert(r.to);
   for (const auto& r : model_->index().ofKind("satisfies")) satisfied.insert(r.to);
   for (const auto& r : model_->index().ofKind("refines")) refinedBy[r.to].push_back(r.from);
+  // a rule that answers to a constraint and says one claim is its verification, checked by the machine: the check
+  // evaluates it on every run and says each violation (DS-110). A rule with no claim checks nothing.
+  std::set<std::string> checkedByRule;
+  for (const auto& r : model_->index().ofKind("constrained-by")) {
+    const model::Entity* rule = model_->find(r.from);
+    if (!rule || rule->kind != model::Kind::Rule) continue;
+    const auto f = model_->formulas().find(rule->id);
+    if (f != model_->formulas().end() && f->second.claims.size() == 1) checkedByRule.insert(r.to);
+  }
   for (const auto& pair : model_->entities()) {
     const model::Entity& e = pair.second;
     if (e.expected) continue;
@@ -239,9 +248,10 @@ void StructureCheck::checkArtefacts() {
                                                      e.id + " is approved and nothing satisfies it, by itself or through its refinements",
                                                      e.location, e.id));
     }
-    if (e.kind == model::Kind::Constraint && approved && !verified.count(e.id)) {  // DS-430: obeying it is no verification
-      found_.push_back(context_->metamodel().finding(model::Code::W_CST_NO_VERIFICATION, e.id + " is approved and nothing verifies it",
-                                                     e.location, e.id));
+    // DS-430: obeying it is no verification; DS-110: a rule that holds it is
+    if (e.kind == model::Kind::Constraint && approved && !verified.count(e.id) && !checkedByRule.count(e.id)) {
+      found_.push_back(context_->metamodel().finding(
+          model::Code::W_CST_NO_VERIFICATION, e.id + " is approved and neither a verification nor a rule checks it", e.location, e.id));
     }
     const auto method = e.fields.find("method");
     if (e.kind == model::Kind::Verification && method != e.fields.end() && method->second == "test") {
