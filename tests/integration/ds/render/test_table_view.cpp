@@ -147,4 +147,24 @@ TEST_F(TestTableView, ATableWrittenWithRowsAndColumnsAnswersEachCell) {
   EXPECT_EQ(drafts["rows"][0]["label"], "REQ-00002-1");
 }
 
+/// A column reads the same terms as a rule (DS-437): name(x), id(x) and kind(x) say what the entity of the row is.
+TEST_F(TestTableView, AColumnReadsWhatTheEntityOfTheRowIsAsARuleDoes) {
+  ds::parse::Parser parser;
+  ds::model::Model other{metamodel};
+  ds::bind::Binder binder(other, metamodel);
+  binder.bind(parser.parseText(
+      "a.ds",
+      "package p {\n  module m {\n    class Cart {\n    }\n    enum Status { Open }\n  }\n}\n"
+      "diagram TK {\n  kind: table\n  for class c in p\n  column entity: name(c)\n  column is: kind(c)\n  column identity: id(c)\n}\n"));
+  ds::check::CheckerFactory::make(other, metamodel)->run(binder.notes());
+  for (const auto& f : other.findings()) EXPECT_NE(f.code, "E-SYNTAX") << f.message;
+  const auto t = nlohmann::json::parse(ds::render::IrExport(other, metamodel).render("diagram:TK", false))["table"];
+  EXPECT_EQ(t["corner"], "entity");
+  EXPECT_EQ(t["columns"], (std::vector<std::string>{"is", "identity"}));
+  ASSERT_EQ(t["rows"].size(), 1u);
+  EXPECT_EQ(t["rows"][0]["label"], "Cart");
+  EXPECT_EQ(t["rows"][0]["cells"][0]["text"], "class");
+  EXPECT_EQ(t["rows"][0]["cells"][1]["text"], "p@m::Cart");
+}
+
 }  // namespace

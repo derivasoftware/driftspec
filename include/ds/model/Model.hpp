@@ -144,9 +144,10 @@ struct Range {
 /// One column of a table (DS-268): a field of the row, what is related to the row, or a yes/no.
 struct Column {
   std::string name;
-  std::string form;      ///< "field", "related" or "holds"
-  std::string variable;  ///< the row's variable (field) or the one shown (related)
+  std::string form;      ///< "field", "property", "related" or "holds"
+  std::string variable;  ///< the row's variable (field, property) or the one shown (related)
   std::string field;     ///< the field read
+  std::string property;  ///< what is read of the entity, as a rule reads it: name, id or kind (DS-437)
   std::vector<Literal> body;
   Location location;
 };
