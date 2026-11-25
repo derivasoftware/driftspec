@@ -136,7 +136,14 @@ int manual(const ds::model::Metamodel& metamodel, const ds::model::Manual& book,
   for (const auto& k : metamodel.kinds())
     if (topic == metamodel.nameOf(k.kind)) kind = &k;
   if (kind) {
-    sink->field("kind").beginRecord().field("example").value(kind->example).field("fields").beginList();
+    sink->field("kind")
+        .beginRecord()
+        .field("category")
+        .value(ds::model::Metamodel::categoryName(kind->category))
+        .field("example")
+        .value(kind->example)
+        .field("fields")
+        .beginList();
     for (const auto& f : kind->fields) {
       sink->beginRecord().field("meaning").value(f.meaning).field("name").value(f.name).field("source").value(
           metamodel.fieldSourceName(f.source));

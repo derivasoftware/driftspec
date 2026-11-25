@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ds/layout/Box.hpp"
@@ -133,6 +134,7 @@ struct RuleView {
 
 /// The whole model laid out once, nested, in two variants: every member, public members only.
 struct SceneDocument {
+  std::vector<std::pair<std::string, std::string>> categories;  ///< each kind's category, for the viewer to group by (DS-427)
   std::vector<Node> nodes;
   layout::Box world;
   layout::Box leanWorld;

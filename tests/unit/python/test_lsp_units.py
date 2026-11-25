@@ -186,6 +186,74 @@ class TestSubject:
         assert optional(()) == (0, "") and optional((80, "C")) == (80, "C") and optional((None, None)) == (0, "")
 
 
+KINDS = """package q {
+  module m {
+    class V <<*>> {
+      operator *(k: float) -> V
+    }
+    class Order {
+      - open: bool = true
+      + close() -> void
+      + tidy() -> void
+    }
+    state Order {
+      Open if open
+      Closed if not open
+      Open -> Closed on close
+    }
+    rule every-class-holds-something {
+      title: a class holds something
+      for class c in q@m
+      holds m in c
+    }
+  }
+  usecase UC-00001-1 {
+    title: Close an order
+    outcome default: it is closed
+  }
+}
+"""
+
+
+class TestWhatALineIsWrittenIn:
+    """What a line is written in is the nearest declaration above it, whatever its kind (DS-427): its category is the
+    metamodel's, and the editor keeps no table of kinds of its own. A rule or a state line found the method above it
+    before; an operator and an outcome were passed over."""
+
+    def test_an_operator_a_state_a_rule_and_an_outcome_line_find_themselves(self, tmp_path, srv):
+        design = os.path.join(os.path.realpath(tmp_path), "design")
+        os.makedirs(design)
+        path = os.path.join(design, "q.ds")
+        with open(path, "w") as fh:
+            fh.write(KINDS)
+        editor = srv.editor_of(Client(os.path.realpath(tmp_path)), uri_of(path))
+        found = {line + 1: editor.enclosing(path, line).id for line in (3, 7, 11, 13, 17, 23)}
+        assert found == {
+            4: "q@m::V::operator*",  # an operator, as a method is
+            8: "q@m::Order::close",
+            12: "q@m::Order::state",  # a state line: the machine, not the method above it
+            14: "q@m::Order::state",
+            18: "q@m::every-class-holds-something",  # a rule line: the rule
+            24: "UC-00001-1::default",  # an outcome: itself, not its use case
+        }
+
+    def test_each_is_drawn_through_what_shows_it(self, tmp_path, srv):
+        design = os.path.join(os.path.realpath(tmp_path), "design")
+        os.makedirs(design)
+        path = os.path.join(design, "q.ds")
+        with open(path, "w") as fh:
+            fh.write(KINDS)
+        editor = srv.editor_of(Client(os.path.realpath(tmp_path)), uri_of(path))
+
+        def drawn(identity: str) -> list[str]:
+            return editor.with_focus({"q.ds": KINDS}, identity)[0]["__focus__.ds"].split("\n")[1:3]
+
+        assert drawn("q@m::V::operator*") == ["  kind: class", "  include: q@m::V"]
+        assert drawn("q@m::Order::state") == ["  kind: class", "  include: q@m::Order"]  # a state: its subject
+        assert drawn("q@m::every-class-holds-something") == ["  kind: class", "  include: q@m"]  # a rule: its box
+        assert drawn("UC-00001-1::default") == ["  kind: requirement", "  include: UC-00001-1"]  # an artefact
+
+
 class TestSeeing:
     def test_draw_gives_the_diagram_or_the_entity_as_text(self, project, srv):
         _, design, client = project

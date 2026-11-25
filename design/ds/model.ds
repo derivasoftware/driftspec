@@ -33,6 +33,30 @@ package driftspec@ds {
     if b = driftspec@ds@model::Model::tabulate
   }
 
+  requirement REQ-00264-1 {
+    status: draft
+    @refines REQ-00066-1
+    title: The metamodel shall say what each kind is part of, in one of five categories, and the export, the manual, the scene and the editor shall read it there
+    text:
+      Each kind of the language is part of one category, the Owner's five: structure (package, module,
+      interface, operation, class, enum, function, method, attribute, operator), artefact (requirement,
+      verification, constraint, usecase, outcome), behaviour (sequence, message, frame, view), logic (rule,
+      definition, state) and view (diagram, and a walkthrough's step). The metamodel says it once, KindSpec's category; the export writes
+      it with each kind, as ds manual <kind> --json does, and the scene carries each kind's category for the
+      viewer to group by, its perspectives drawing what they drew. A door keeps no table of kinds of its own:
+      the editor finds what a line is written in whatever its kind, and draws an artefact as a requirement.
+    rationale: Owner, 2026-11-25 (DS-427: the five categories, logic its own as the manual's perspectives have it); code-62, 2026-11-25 (D1 operator and outcome join, D2 the innermost entity whatever its kind, D3 the scene's layers keep what they draw).
+    tags: metamodel, editor, viewer
+    verification VER-00284-1 {
+      status: draft
+      title: Integration tests confirm the export and the scene say each kind's category as the metamodel gives it, and the editor finds a line's entity whatever its kind
+      method: test
+      tests:
+        tests/integration/ds/model/test_kind_categories.cpp::TestKindCategories.TheExportAndTheSceneSayEachKindsCategoryAsTheMetamodelGivesIt
+        tests/integration/python/test_editor_kinds.py::test_a_line_finds_what_it_is_written_in_whatever_its_kind
+    }
+  }
+
   module model {
     @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 
@@ -318,6 +342,12 @@ package driftspec@ds {
       + identity: bool                       // it holds an entity's identity, which a rename carries along (DS-346)
     }
 
+    // what a kind is part of: the Owner's five (DS-427), read by every door instead of a table of kinds of its own
+    enum Category {
+      @requirement REQ-00264-1
+      structure, artefact, behaviour, logic, view
+    }
+
     dataclass KindSpec {                     // one kind: its fields, the flags it takes, what it may be declared inside
       @requirement REQ-00066-1
       + kind: Kind
@@ -328,6 +358,7 @@ package driftspec@ds {
       + top: bool
       + syntax: std::string                  // how it is written (REQ-00079-2)
       + example: std::string                 // a minimal workspace that declares one and checks clean
+      + category: Category                   // what it is part of (DS-427)
     }
 
     dataclass RelationSpec {                 // one relation and the kinds it may join; no ends is any kind
@@ -445,7 +476,7 @@ package driftspec@ds {
       E_RULE_UNSAFE, E_RULE_UNSTRATIFIED, W_CONSUMES_UNDECLARED, W_CONSUMES_UNUSED, W_CONSUMES_BYPASS,
       W_LANGUAGE_UNKNOWN, W_USECASE_UNDECLARED, W_USECASE_SIGNATURE, W_USECASE_OUTCOME_UNHANDLED,
       W_SCENARIO_NO_OUTCOME, W_USECASE_UNREALISED, E_RULE_PATTERN, E_RULE_RESERVED, W_REQ_UNREALISED,
-      W_CST_NO_VERIFICATION
+      W_CST_NO_VERIFICATION, W_WALK_UNDECLARED, W_WALK_NOT_SHOWN, W_WALK_AT, W_WALK_EMPTY
     }
 
     enum Severity {                          // how much a finding weighs; what it means is its row of the severity table (DS-379)
@@ -599,6 +630,12 @@ package driftspec@ds {
       + syntaxOf(kind: Kind) -> std::string
       + exampleOf(kind: Kind) -> std::string
       + nameOf(kind: Kind) -> std::string                           // read from names_, never built per call
+      + static categoryOf(kind: Kind) -> Category {                 // the Owner's table, the one place that says it (DS-427)
+        @requirement REQ-00264-1
+      }
+      + static categoryName(category: Category) -> std::string {    // structure, artefact, behaviour, logic, view
+        @requirement REQ-00264-1
+      }
       + isArtefact(kind: Kind) -> bool {
         @requirement REQ-00043-1
       }
