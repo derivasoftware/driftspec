@@ -264,6 +264,7 @@ package driftspec@ds {
       - depth_: int
       - cutOf_: std::string
       + SequenceFilter(metamodel: model::Metamodel, include: std::vector<std::string>, depth: int, cutOf: std::string)
+      + static levelsOf(diagram: model::Entity) -> int          // how deep a diagram follows the calls: depth: n, * for every level (DS-369)
       + select(model: model::Model) -> std::set<std::string>
       + boxes(model: model::Model) -> std::set<std::string>   // what it selects (DS-423)
       + behaviours(model: model::Model) -> std::vector<Behaviour>
