@@ -77,7 +77,9 @@ variables:
     - df -h "$HOME" | tail -1 || true
     # the host the runner shares (DS-482): its cores, memory and load, to size the runner's
     # concurrent jobs and CMAKE_BUILD_PARALLEL_LEVEL with data
-    - echo "host: $(nproc) cores, load $(cut -d' ' -f1-3 /proc/loadavg)"; free -g | head -2 || true
+    - |
+      echo "host: $(nproc) cores, load $(cut -d' ' -f1-3 /proc/loadavg)"
+      free -g | head -2 || true
 
 cpp-evidence:
   extends: [.ccache]
