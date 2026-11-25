@@ -1,30 +1,34 @@
-// LLD of the emit namespace (ds::emit, DS-394, DS-397): what a document is written into, at the bottom of the
-// engine like text. A sink takes records of named fields, lists and values in the order a writer gives them, and
-// knows no document; a document knows no technology. Whoever asks for an output (the command line, the api) asks
-// SinkFactory for the sink, lends it to the writer and takes the result. The first technology is JSON; the IR is
-// still written with nlohmann until it stops reading its own output back (DS-418).
+// LLD of the emit namespace (ds::emit, DS-394, DS-397, DS-398): what a document is written into, at the bottom of
+// the engine like text. A sink takes records of named fields, lists and values in the order a description gives
+// them, and knows no document; a document knows no technology. Whoever asks for an output (the command line, the
+// api) asks SinkFactory for the sink of the technology, the technology axis, lends it to the description and takes
+// the result. The first technology is JSON; the IR is still written with nlohmann until it stops reading its own
+// output back (DS-418). A pair of a document and a technology ds does not write fails NotImplemented.
 
 package driftspec@ds {
   module emit {
-    @requirement REQ-00202-1                 // the sinks are made by SinkFactory alone and reached through their interface (DS-397)
-    @requirement REQ-00203-1                 // emit depends on no other module of the engine (DS-397)
+    @requirement REQ-00202-2                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
+    @requirement REQ-00203-2                 // emit depends on no other module of the engine (DS-397)
 
     // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
-    requirement REQ-00202-1 {
+    requirement REQ-00202-2 {
       tags: architecture, emit, format
-      status: approved
-      @refines REQ-00106-2
-      title: A sink of emit shall be made only by emit's SinkFactory, for the doors that ask for an output, and every other module shall reach it through its interface
+      status: draft
+      @refines REQ-00106-3
+      title: A sink of emit shall be made only by emit's SinkFactory, by the name of its technology, for the doors that ask for an output, and every other module shall reach it through its interface
       text:
         The command line and the api are the doors: each asks SinkFactory for the sink of the technology asked for,
-        holds it as an ISink, lends it by reference to whoever writes the document and takes the result. SinkFactory
-        is the one place that names a sink. Every other module writes into the ISink it is lent and names no sink of
-        its own, so a writer never knows which technology it writes and a new sink changes none of them.
+        by its name, or for the JSON sink every answer of the engine's interfaces is written in, holds it as an
+        ISink, lends it by reference to the description of the document and takes the result. SinkFactory is the
+        one place that names a sink, and a technology it has no sink of fails NotImplemented, naming it and the
+        technologies there are. Every other module writes into the ISink it is lent and names no sink of its own, so
+        a description never knows which technology it writes and a new sink changes none of them.
       rationale:
         Owner, 2026-11-24 (DS-394, DS-397): a taxonomy is used through its interface, its factories exempt. A family
         is reached through its interface by every class but its own and its factories (REQ-00198-1, DS-405), so the
-        doors ask SinkFactory for the sink rather than build it; the catalogue of formats will take that over when
-        it names the technologies (DS-398), and a use case is lent one by its door (DS-406).
+        doors ask SinkFactory for the sink rather than build it, and a use case is lent one by its door (DS-406).
+        Revision 2 (DS-398, Owner 2026-11-24): SinkFactory stays the technology axis, as DescriptionFactory is the
+        document axis; it grows a maker by technology rather than handing the technologies to a catalogue of pairs.
       verification VER-00223-1 {
         status: approved
         title: Integration tests confirm the design of ds names a sink of emit only in emit, and is told when a door, a format, the exporter or the render does
@@ -38,17 +42,17 @@ package driftspec@ds {
       }
     }
 
-    requirement REQ-00203-1 {
+    requirement REQ-00203-2 {
       tags: architecture, emit
-      status: approved
-      @refines REQ-00106-2
+      status: draft
+      @refines REQ-00106-3
       title: The emit module shall depend on no other module of the engine
       text:
         A sink takes names, texts, numbers and truth values and gives text. It reads no model and no document, so
         every module may write into it and it uses none of them.
       rationale:
         Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
-        another module would make it know what it writes.
+        another module would make it know what it writes. Revision 2 (DS-398): its parent is revised (REQ-00106-3).
       verification VER-00224-1 {
         status: approved
         title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
@@ -62,7 +66,7 @@ package driftspec@ds {
     // ---- the principles of emit, as rules (DS-397) ---------------------------------------------------------------
     rule sinks-are-reached-through-their-interface {
       title: no module but emit itself depends on a sink of emit, so a door asks SinkFactory for one and every writer is lent one through its interface
-      @requirement REQ-00202-1
+      @requirement REQ-00202-2
       for module b in driftspec@ds, class t in driftspec@ds@emit
       where b != driftspec@ds@emit, t inherits i
       never depends(x, t), x in b
@@ -70,14 +74,14 @@ package driftspec@ds {
 
     rule emit-depends-on-no-engine-module {
       title: nothing of emit depends on anything of the engine outside emit, so every module may write into a sink and a sink uses none
-      @requirement REQ-00203-1
+      @requirement REQ-00203-2
       for class c in driftspec@ds@emit
       never depends(c, x), x in driftspec@ds, not x in driftspec@ds@emit
     }
 
     // THE EXTENSION POINT: what a document is written into; each technology is a class that realises it
     class ISink {
-      @requirement REQ-00106-2
+      @requirement REQ-00106-3
       + ~ISink()
       + abstract beginRecord() -> ISink                   // a record opens where the sink stands
       + abstract endRecord() -> ISink
@@ -96,7 +100,7 @@ package driftspec@ds {
     // so a write that fails writes nothing. Checked (every build without NDEBUG, and the tests), it refuses a field
     // out of byte order or repeated, and a document that is no JSON.
     class JsonSink : ISink {
-      @requirement REQ-00106-2
+      @requirement REQ-00106-3
       - owns out_: std::string
       - pretty_: bool
       - checked_: bool
@@ -129,11 +133,36 @@ package driftspec@ds {
       - static misuse(what: std::string) -> void
     }
 
-    // the one place that names the sinks (DS-397): a door asks it for the sink of the technology it writes, holds an
-    // ISink, lends it to the writer and takes the result. It makes the JsonSink
+    // a pair of a document and a technology ds does not write (DS-394, DS-398): the documents and the technologies
+    // need not make a complete matrix. It names the document (none when nothing is written in the technology), the
+    // technology and what there is; whoever asked for the output says it as bad usage
+    class NotImplemented : std::logic_error {
+      @requirement REQ-00202-2
+      @requirement REQ-00106-3
+      - owns document_: std::string
+      - owns technology_: std::string
+      + NotImplemented(document: std::string, technology: std::string, there: std::vector<std::string>)
+      + document() -> std::string
+      + technology() -> std::string
+      - static said(document: std::string, technology: std::string, there: std::vector<std::string>) -> std::string
+    }
+
+    // THE TECHNOLOGY AXIS: the one place that names the sinks (DS-397, DS-398). A door asks it for the sink of the
+    // technology it writes, holds an ISink, lends it to the description and takes the result. It makes the JsonSink
     class SinkFactory {
-      @requirement REQ-00202-1
-      + static json(pretty: bool) -> std::unique_ptr<ISink>   // indented by two spaces when pretty, else compact
+      @requirement REQ-00202-2
+      + static of(technology: std::string, pretty: bool) -> std::unique_ptr<ISink> fails NotImplemented   // json
+      + static json(pretty: bool) -> std::unique_ptr<ISink>   // the technology of the engine's answers: indented by two spaces when pretty, else compact
+      + static names() -> std::vector<std::string>            // the technologies there are, for a message
+    }
+
+    sequence SinkFactory::of {
+      opt no sink of that technology / unknown {
+        -> names() -> there
+        fail NotImplemented
+      }
+      -> json(pretty) -> sink
+      return sink
     }
 
     sequence SinkFactory::json {

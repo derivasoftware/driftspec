@@ -7,7 +7,8 @@
 #include <string>
 
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/ViewerPage.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/scene/Scene.hpp"
@@ -109,7 +110,9 @@ TEST_F(TestSceneDocument, TheWorldHoldsEveryNodeInBothVariants) {
 
 TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const auto doc = nlohmann::json::parse(ds::format::SceneJson().write(ds::scene::Scene(model, metamodel).build(), {}, sink));
+  const ds::scene::SceneDocument document = ds::scene::Scene(model, metamodel).build();
+  ds::format::DescriptionFactory::scene(document)->describe(sink);
+  const auto doc = nlohmann::json::parse(sink.result());
   EXPECT_EQ(doc["version"], 2);
   const auto& fields = doc["fields"]["node"];
   const auto column = [&fields](const std::string& name) {
@@ -131,11 +134,11 @@ TEST_F(TestScene, TheDocumentIsCompactAndSaysHowToReadItself) {
 
 TEST_F(TestScene, ThePageIsTheViewerWithTheSceneAndTheTitleInside) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string page = ds::format::SceneHtml().write(ds::scene::Scene(model, metamodel).build(), {false, "a<b"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "a<b"}, sink);
   EXPECT_EQ(page.rfind("<!doctype html>", 0), 0u);
   EXPECT_NE(page.find("<canvas"), std::string::npos);
   const auto at = page.find("const PACKED='") + std::string("const PACKED='").size();
-  const std::string scene = ds::format::common::unpack(page.substr(at, page.find('\'', at) - at));
+  const std::string scene = ds::format::common::Packing::unpack(page.substr(at, page.find('\'', at) - at));
   EXPECT_NE(scene.find("\"p@m::A::run\""), std::string::npos);  // the scene travels packed, and unpacks whole
   EXPECT_EQ(page.find("\"p@m::A::run\""), std::string::npos);
   EXPECT_NE(page.find("a&lt;b \u00b7 DriftSpec"), std::string::npos);

@@ -9,7 +9,7 @@
 #include "ds/check/Report.hpp"
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
-#include "ds/format/TextFormats.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -113,7 +113,8 @@ TEST_F(TestFindingPrinciples, TheReportCountsWhatFailsAndPrintsEachSeverityByNam
   for (const auto& f : report.findings) fails += metamodel.severityOf(f.severity).fails ? 1 : 0;
   EXPECT_GT(fails, 0);
   EXPECT_EQ(report.errors, fails);
-  const auto json = nlohmann::json::parse(ds::format::ReportJson().write(report, {}, sink));
+  ds::format::DescriptionFactory::report(report)->describe(sink);
+  const auto json = nlohmann::json::parse(sink.result());
   ASSERT_EQ(json["findings"].size(), report.findings.size());
   for (std::size_t i = 0; i < report.findings.size(); ++i)
     EXPECT_EQ(json["findings"][i]["severity"], metamodel.severityOf(report.findings[i].severity).name);

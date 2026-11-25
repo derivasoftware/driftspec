@@ -8,7 +8,7 @@
 #include "ds/api/Workspace.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/emit/SinkFactory.hpp"
-#include "ds/format/Format.hpp"
+#include "ds/format/DescriptionFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
@@ -117,7 +117,7 @@ void Browser::respond(const std::string& request, emit::ISink& out_sink) const {
   }
   out_sink.endRecord().field("report");
   const check::Report report = check::Report::of(workspace.model(), metamodel_);
-  format::common::ReportEncoder(report).encode(out_sink);  // as ds check --json writes it
+  format::DescriptionFactory::report(report)->describe(out_sink);  // as ds check --json writes it, one field of the answer
   out_sink.endRecord();
 }
 

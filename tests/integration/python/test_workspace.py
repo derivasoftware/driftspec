@@ -80,6 +80,24 @@ class TestWorkspace:
         assert driftspec.without_revision("REQ-00001-2") == "REQ-00001"
 
 
+class TestNotImplemented:
+    """A pair the engine does not write, raised as driftspec.NotImplemented (DS-398)."""
+
+    def test_a_diagram_asked_in_a_format_the_engine_does_not_write_raises_not_implemented(self):
+        # a pair the engine does not write is said, never drawn as text instead (DS-398): a NotImplementedError that
+        # names the document and the technology
+        ws = driftspec.Workspace({"shop.ds": SHOP})
+        try:
+            ws.render("CL_Any", "yaml")
+        except driftspec.NotImplemented as failure:
+            assert isinstance(failure, NotImplementedError)
+            assert (failure.document, failure.technology) == ("diagram", "yaml")
+            assert str(failure) == "the diagram is not written in yaml; there is: cells ir layout svg text"
+        else:
+            raise AssertionError("a diagram was drawn in yaml")
+        assert issubclass(driftspec.NotImplemented, NotImplementedError)
+
+
 class TestReload:
     """DS-420: a workspace loaded again in place reads as one made anew from the same files, and what it answered
     before stays as it was."""

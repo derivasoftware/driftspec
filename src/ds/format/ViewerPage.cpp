@@ -1,19 +1,19 @@
-#include "ds/format/SceneFormats.hpp"
+#include "ds/format/ViewerPage.hpp"
 
 #include <string>
 #include <vector>
 
+#include "ds/format/DescriptionFactory.hpp"
+
 namespace ds {
 namespace format {
 
-const char* viewerTemplate();  // viewer/scene.html, compiled into ds by CMake
-
 // the viewer as one self-contained page with the scene inside, titled after the workspace
-std::string SceneHtml::page(const scene::SceneDocument& document, const std::string& title, const std::string& css,
-                            const std::vector<std::string>& focus, emit::ISink& out_sink) {
-  common::SceneEncoder(document).encode(out_sink);
+std::string ViewerPage::page(const scene::SceneDocument& document, const std::string& title, const std::string& css,
+                             const std::vector<std::string>& focus, emit::ISink& out_sink) {
+  DescriptionFactory::scene(document)->describe(out_sink);
   const std::string json =
-      common::pack(out_sink.result());  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
+      common::Packing::pack(out_sink.result());  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
   std::string safe;
   for (const char c : title) safe += c == '<' ? "&lt;" : c == '>' ? "&gt;" : c == '&' ? "&amp;" : std::string(1, c);
   std::string out = viewerTemplate();
@@ -57,8 +57,8 @@ std::string SceneHtml::page(const scene::SceneDocument& document, const std::str
       "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
       ".pipeThrough(new DecompressionStream('deflate'))).text();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\nconst STYLE='" + common::pack(own) + "';\nconst VIEWER='" + common::pack(code) + "';\n(async()=>{try{" +
-      inflate +
+      "\n" + mark + "\n" + aim + "\nconst STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" + common::Packing::pack(code) +
+      "';\n(async()=>{try{" + inflate +
       "const st=document.createElement('style');st.textContent=await "
       "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"
       "const t=await inflate(VIEWER);"
@@ -70,7 +70,7 @@ std::string SceneHtml::page(const scene::SceneDocument& document, const std::str
 }
 
 // a page as an iframe that carries it whole (srcdoc), to paste into any HTML document
-std::string SceneHtml::frame(const std::string& page, const std::string& title, int height) {
+std::string ViewerPage::frame(const std::string& page, const std::string& title, int height) {
   const auto attribute = [](const std::string& text) {
     std::string out;
     out.reserve(text.size() + text.size() / 8);
@@ -81,25 +81,11 @@ std::string SceneHtml::frame(const std::string& page, const std::string& title, 
          "px;border:0;border-radius:8px\" loading=\"lazy\" allowfullscreen srcdoc=\"" + attribute(page) + "\"></iframe>\n";
 }
 
-std::string SceneJson::name() const { return "json"; }
+std::string ViewerPage::name() const { return "html"; }
 
-std::string SceneJson::write(const scene::SceneDocument& document, const FormatOptions&, emit::ISink& out_sink) const {
-  common::SceneEncoder(document).encode(out_sink);
-  return out_sink.result();
-}
-
-std::string SceneHtml::name() const { return "html"; }
-
-std::string SceneHtml::write(const scene::SceneDocument& document, const FormatOptions& options, emit::ISink& out_sink) const {
+std::string ViewerPage::write(const scene::SceneDocument& document, const FormatOptions& options, emit::ISink& out_sink) const {
   const std::string written = page(document, options.title, options.css, options.focus, out_sink);
   return options.embed ? frame(written, options.title, options.height) : written;
-}
-
-std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> sceneFormats() {
-  std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> out;
-  out["json"] = std::make_unique<SceneJson>();
-  out["html"] = std::make_unique<SceneHtml>();
-  return out;
 }
 
 }  // namespace format

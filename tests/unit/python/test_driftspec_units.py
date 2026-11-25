@@ -7,7 +7,7 @@ import pytest
 import driftspec
 from driftspec import Workspace, check, expected_at, files, load, page, read, render, severities
 
-__covers__ = (files, read, load, check, render, page, expected_at, severities, Workspace)
+__covers__ = (files, read, load, check, render, page, expected_at, severities, Workspace, driftspec.NotImplemented)
 
 DESIGN = (
     "package p {\n"
@@ -107,6 +107,18 @@ class TestRender:
     def test_a_diagram_draws_and_one_the_design_lacks_draws_nothing(self):
         assert "C" in render(FILES, "CL_P", "text")
         assert render(FILES, "CL_None", "text") == ""
+
+
+class TestNotImplemented:
+    def test_it_is_a_not_implemented_error_that_names_the_document_and_the_technology(self):
+        failure = driftspec.NotImplemented("the diagram is not written in yaml; there is: svg", "diagram", "yaml")
+        assert isinstance(failure, NotImplementedError)
+        assert (str(failure), failure.document, failure.technology) == ("the diagram is not written in yaml; there is: svg", "diagram", "yaml")
+
+    def test_a_workspace_raises_it_for_a_format_the_engine_does_not_write(self):
+        with pytest.raises(driftspec.NotImplemented) as raised:
+            Workspace(FILES).render("CL_P", "yaml")
+        assert (raised.value.document, raised.value.technology) == ("diagram", "yaml")
 
 
 class TestPage:
