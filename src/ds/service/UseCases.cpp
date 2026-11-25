@@ -9,22 +9,6 @@
 namespace ds {
 namespace service {
 
-namespace {
-
-/// An argument written as a whole number; BadRequest when it is not one.
-int number(const Request& request, const std::string& name, const std::string& fallback) {
-  const std::string text = request.getOr(name, fallback);
-  try {
-    std::size_t end = 0;
-    const int value = std::stoi(text, &end);
-    if (end == text.size()) return value;
-  } catch (const std::exception&) {
-  }
-  throw BadRequest(name + " is no whole number: " + text);
-}
-
-}  // namespace
-
 // ---- UC-00001-1 ------------------------------------------------------------------------------------------------
 
 check::Report CheckDesign::report(const model::Model& model) const { return check::Report::of(model, metamodel_); }
@@ -67,7 +51,7 @@ Outcome SeeDesign::run(const model::Model& model, const Request& request, emit::
   const std::optional<render::IrDocument> document = diagram(model, request.get("diagram"));
   if (!document) return {"no-diagram", "no diagram named " + request.get("diagram")};
   // the layout and the cells are handed the document (DS-458): the sink lent receives the drawing alone, never read back
-  const int width = number(request, "width", "0");
+  const int width = request.number("width", "0");
   const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
                                               : format::DescriptionFactory::cells(*document, theme_, width);
   description->describe(sink);
@@ -169,7 +153,7 @@ std::vector<std::string> EditDesign::expectedAt(const std::string& text, int lin
 check::Selection EditDesign::needs(const model::Model&, const Request&) const { return check::Selection::of({}); }
 
 Outcome EditDesign::run(const model::Model&, const Request& request, emit::ISink& sink) const {
-  const std::vector<std::string> words = expectedAt(request.get("text"), number(request, "line", ""), number(request, "column", ""));
+  const std::vector<std::string> words = expectedAt(request.get("text"), request.number("line", ""), request.number("column", ""));
   sink.beginList();
   for (const auto& word : words) sink.value(word);
   sink.endList();

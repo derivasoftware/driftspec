@@ -255,5 +255,36 @@ const std::string& Theme::sgr(Role role) const {
   throw std::logic_error("the theme has no terminal colour for a role");
 }
 
+std::string Theme::filled(const std::string& stylesheet, const std::vector<Token>& tokens) const {
+  const Font& font = font_;
+  std::string out;
+  out.reserve(stylesheet.size() + stylesheet.size() / 4);
+  std::size_t at = 0;
+  while (true) {
+    const std::size_t open = stylesheet.find("{{", at);
+    if (open == std::string::npos) break;
+    const std::size_t close = stylesheet.find("}}", open);
+    if (close == std::string::npos) throw std::logic_error("a placeholder of the stylesheet is not closed");
+    out.append(stylesheet, at, open - at);
+    std::string name = stylesheet.substr(open + 2, close - open - 2);
+    if (name == "font-family") {
+      out += font.family;
+    } else if (name == "font-size") {
+      out += std::to_string(font.sizePx);
+    } else {
+      const bool dark = name.size() > 5 && name.compare(name.size() - 5, 5, ":dark") == 0;
+      if (dark) name.resize(name.size() - 5);
+      const Token* token = nullptr;
+      for (const auto& t : tokens)
+        if (t.name == name) token = &t;
+      if (token == nullptr) throw std::logic_error("the theme has no token " + name);
+      out += dark && !token->dark.empty() ? token->dark : token->light;
+    }
+    at = close + 2;
+  }
+  out.append(stylesheet, at, std::string::npos);
+  return out;
+}
+
 }  // namespace theme
 }  // namespace ds

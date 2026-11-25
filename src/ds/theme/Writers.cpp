@@ -5,43 +5,9 @@
 namespace ds {
 namespace theme {
 
-namespace {
-
-/// A stylesheet with its values put in: {{name}} is a token's light value, {{name:dark}} its dark one (the light one
-/// when it has none), {{font-family}} and {{font-size}} the font's.
-std::string filled(const std::string& stylesheet, const std::vector<Token>& tokens, const Font& font) {
-  std::string out;
-  out.reserve(stylesheet.size() + stylesheet.size() / 4);
-  std::size_t at = 0;
-  while (true) {
-    const std::size_t open = stylesheet.find("{{", at);
-    if (open == std::string::npos) break;
-    const std::size_t close = stylesheet.find("}}", open);
-    if (close == std::string::npos) throw std::logic_error("a placeholder of the stylesheet is not closed");
-    out.append(stylesheet, at, open - at);
-    std::string name = stylesheet.substr(open + 2, close - open - 2);
-    if (name == "font-family") {
-      out += font.family;
-    } else if (name == "font-size") {
-      out += std::to_string(font.sizePx);
-    } else {
-      const bool dark = name.size() > 5 && name.compare(name.size() - 5, 5, ":dark") == 0;
-      if (dark) name.resize(name.size() - 5);
-      const Token* token = nullptr;
-      for (const auto& t : tokens)
-        if (t.name == name) token = &t;
-      if (token == nullptr) throw std::logic_error("the theme has no token " + name);
-      out += dark && !token->dark.empty() ? token->dark : token->light;
-    }
-    at = close + 2;
-  }
-  out.append(stylesheet, at, std::string::npos);
-  return out;
-}
-
 // The stylesheet of plantuml-render's engine (shared.ts STYLE): one theming contract. Where each value goes; the values
 // are the theme's.
-const char* const kStyle = R"CSS(
+const char* const SvgStyleSheet::kStylesheet = R"CSS(
   .pr-diagram { font-family: var(--pr-font, {{font-family}}); font-size: {{font-size}}px;
     --pr-text: {{text}}; --pr-muted: {{muted}}; --pr-stroke: {{stroke}}; --pr-edge: {{edge}}; --pr-box-fill: {{box-fill}}; --pr-container-fill: {{container-fill}}; --pr-container-stroke: {{container-stroke}};
     --pr-note-fill: {{note-fill}}; --pr-note-stroke: {{note-stroke}}; --pr-head-class: {{head-class}}; --pr-head-interface: {{head-interface}}; --pr-head-enum: {{head-enum}}; --pr-head-function: {{head-function}}; --pr-head-abstract: {{head-abstract}};
@@ -124,7 +90,7 @@ const char* const kStyle = R"CSS(
   .pr-diagram .pr-edge-change-changed { stroke: var(--pr-changed); stroke-width: 2; } .pr-diagram .pr-edge-change-renamed { stroke: var(--pr-renamed); stroke-width: 2; }
 )CSS";
 
-const char* const kSequenceStyle = R"CSS(
+const char* const SequenceStyleSheet::kStylesheet = R"CSS(
   .pr-diagram .pr-lifeline-line { stroke: var(--pr-stroke); stroke-dasharray: 4 4; }
   .pr-diagram .pr-lifeline-head > rect { fill: var(--pr-head-class); stroke: var(--pr-stroke); }
   .pr-diagram .pr-actor circle, .pr-diagram .pr-actor path { fill: none; stroke: var(--pr-text); stroke-width: 1.4; stroke-linecap: round; }
@@ -164,7 +130,7 @@ const char* const kSequenceStyle = R"CSS(
 )CSS";
 
 // viewer/scene.html: where each value of the page goes; the values are the theme's.
-const char* const kViewerVariables = R"CSS(:root{
+const char* const ViewerVariables::kStylesheet = R"CSS(:root{
   --bg:{{bg}};--panel:{{panel}};--fg:{{fg}};--muted:{{muted}};--line:{{line}};--soft:{{soft}};
   --accent:{{accent}};--accent-soft:{{accent-soft}};--req:{{req}};--req-soft:{{req-soft}};
   --priv:{{priv}};--pkg:{{pkg}};--mod:{{mod}};--ifc:{{ifc}};
@@ -183,7 +149,7 @@ const char* const kViewerVariables = R"CSS(:root{
 )CSS";
 
 // viewer/themes/night.css: where each value of the page goes; the values are the theme's.
-const char* const kViewerNightVariables = R"CSS(:root {
+const char* const ViewerNightVariables::kStylesheet = R"CSS(:root {
   --bg: {{bg}};          /* the canvas */
   --panel: {{panel}};       /* boxes, cards, buttons */
   --fg: {{fg}};          /* text and outlines */
@@ -221,14 +187,14 @@ const char* const kViewerNightVariables = R"CSS(:root {
 )CSS";
 
 // python/driftspec/live_page.py: where each value of the page goes; the values are the theme's.
-const char* const kLivePageVariables =
+const char* const LivePageVariables::kStylesheet =
     R"CSS(:root{--bg:{{bg}};--panel:{{panel}};--fg:{{fg}};--muted:{{muted}};--line:{{line}};--accent:{{accent}};--ok:{{ok}};--err:{{err}};--warn:{{warn}};--info:{{info}};--sel:{{sel}};--on-sel:{{on-sel}};
  font-family:system-ui,"Segoe UI",sans-serif;font-size:13px;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--accent:{{accent:dark}};--ok:{{ok:dark}};--err:{{err:dark}};--warn:{{warn:dark}};--info:{{info:dark}};--sel:{{sel:dark}};color-scheme:dark}}
 )CSS";
 
 // playground/web/index.html: where each value of the page goes; the values are the theme's.
-const char* const kPlaygroundVariables = R"CSS(:root {
+const char* const PlaygroundVariables::kStylesheet = R"CSS(:root {
   --page: {{page:dark}}; --bg: {{bg:dark}}; --panel: {{panel:dark}}; --raised: {{raised:dark}}; --line: {{line:dark}};
   --rule: {{rule:dark}}; --fg: {{fg:dark}}; --muted: {{muted:dark}}; --faint: {{faint:dark}}; --soft: {{soft:dark}};
   --accent: {{accent:dark}};
@@ -261,7 +227,7 @@ const char* const kPlaygroundVariables = R"CSS(:root {
 )CSS";
 
 // tools/design_page.py: where each value of the page goes; the values are the theme's.
-const char* const kDesignPageVariables = R"CSS(:root {
+const char* const DesignPageVariables::kStylesheet = R"CSS(:root {
   --bg: {{bg}}; --panel: {{panel}}; --ink: {{ink}}; --muted: {{muted}}; --rule: {{rule}};
   --accent: {{accent}}; --accent-soft: {{accent-soft}}; --mark: {{mark}}; --warn: {{warn}};
   --kw: {{kw}}; --ty: {{ty}}; --id: {{id}}; --cm: {{cm}}; --st: {{st}}; --ar: {{ar}};
@@ -278,27 +244,19 @@ const char* const kDesignPageVariables = R"CSS(:root {
   --kw: {{kw:dark}}; --ty: {{ty:dark}}; --id: {{id:dark}}; --cm: {{cm:dark}}; --st: {{st:dark}}; --ar: {{ar:dark}}; color-scheme: dark }
 )CSS";
 
-}  // namespace
+std::string SvgStyleSheet::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.tokens()); }
 
-std::string SvgStyleSheet::write(const Theme& theme) const { return filled(kStyle, theme.tokens(), theme.font()); }
+std::string SequenceStyleSheet::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.tokens()); }
 
-std::string SequenceStyleSheet::write(const Theme& theme) const { return filled(kSequenceStyle, theme.tokens(), theme.font()); }
+std::string ViewerVariables::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.page("viewer")); }
 
-std::string ViewerVariables::write(const Theme& theme) const { return filled(kViewerVariables, theme.page("viewer"), theme.font()); }
+std::string ViewerNightVariables::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.page("viewer-night")); }
 
-std::string ViewerNightVariables::write(const Theme& theme) const {
-  return filled(kViewerNightVariables, theme.page("viewer-night"), theme.font());
-}
+std::string LivePageVariables::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.page("live")); }
 
-std::string LivePageVariables::write(const Theme& theme) const { return filled(kLivePageVariables, theme.page("live"), theme.font()); }
+std::string PlaygroundVariables::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.page("playground")); }
 
-std::string PlaygroundVariables::write(const Theme& theme) const {
-  return filled(kPlaygroundVariables, theme.page("playground"), theme.font());
-}
-
-std::string DesignPageVariables::write(const Theme& theme) const {
-  return filled(kDesignPageVariables, theme.page("design-page"), theme.font());
-}
+std::string DesignPageVariables::write(const Theme& theme) const { return theme.filled(kStylesheet, theme.page("design-page")); }
 
 std::map<std::string, std::unique_ptr<IThemeWriter>> ThemeWriterFactory::of() {
   std::map<std::string, std::unique_ptr<IThemeWriter>> out;
