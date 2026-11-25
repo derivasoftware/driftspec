@@ -3076,6 +3076,13 @@
             "source": "syntax",
             "type": "type",
             "values": []
+          },
+          {
+            "meaning": "the failure it is the end of: one escaping the use case's scenario ends in this outcome (DS-467)",
+            "name": "fails",
+            "source": "syntax",
+            "type": "name",
+            "values": []
           }
         ],
         "flags": [],

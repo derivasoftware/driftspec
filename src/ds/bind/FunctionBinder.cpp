@@ -22,7 +22,8 @@ void FunctionBinder::bind(TSNode node, const BindContext& ctx) const {
   model::Entity e;
   e.kind = model::Kind::Function;
   e.name = ctx.reader.fieldText(node, Field::name);
-  e.id = model::Scope(scope).qualify(e.name).text();  // ds@ds::load: a function is named like a class of its module
+  // ds@ds::load: a function is named like a class of its module; an overload carries its types (DS-455)
+  e.id = SignatureBinder::identityOf(ctx.reader, node, model::Scope(scope).qualify(e.name).text());
   e.scope = scope;
   e.location = ctx.locationOf(node);
   const std::string visibility = ctx.reader.fieldText(node, Field::visibility);

@@ -22,9 +22,12 @@ struct Request {
   std::string getOr(const std::string& name, const std::string& fallback) const;
 };
 
-/// How a use case ended: one of the outcomes its use case declares in design/usecases.ds (default, errors...).
+/// How a use case ended: one of the outcomes its use case declares in design/usecases.ds (default, errors...), and for
+/// any but default what happened, in a line, which each door words in its own convention (DS-409): the command line
+/// writes it on stderr, as ds has always said it.
 struct Outcome {
   std::string name;
+  std::string message = "";
 };
 
 /// A request that is not the use case's: an argument it needs and is not given, or one it cannot read.

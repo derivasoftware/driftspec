@@ -49,6 +49,25 @@ struct DiagramView {
   std::vector<std::string> nodes;
 };
 
+/// One step of a walkthrough as the scene places it (DS-471): what it shows, by the name diagrams gives, and what it
+/// lights, landed on the nodes drawn.
+struct WalkStepView {
+  std::string title;
+  std::string diagram;                 ///< the shown diagram's name, as DiagramView names it
+  std::string behaviour;               ///< the behaviour a sequence step replays, X::sequence[/scenario]; "" for none
+  std::vector<std::string> focus;      ///< the nodes it focuses, landed
+  std::vector<std::string> highlight;  ///< the nodes it highlights, landed
+  std::string at;                      ///< the node its callout points at; "" for none
+  std::string text;
+};
+
+/// A walkthrough as the scene carries it (DS-471): from the one record model::Walkthroughs builds.
+struct WalkView {
+  std::string name;
+  std::string title;
+  std::vector<WalkStepView> steps;
+};
+
 /// One call of a behaviour, as written: whom it calls and which behaviour it goes on into.
 struct Call {
   std::string to;      ///< the node it calls
@@ -145,7 +164,8 @@ struct SceneDocument {
   std::vector<Tour> tours;
   std::vector<Requirement> requirements;  ///< every requirement and constraint, by id
   std::vector<Verification> verifications;
-  std::vector<RuleView> rules;  ///< every rule and definition, with what breaks each
+  std::vector<RuleView> rules;         ///< every rule and definition, with what breaks each
+  std::vector<WalkView> walkthroughs;  ///< every walkthrough, its steps in order (DS-471)
 };
 
 }  // namespace scene

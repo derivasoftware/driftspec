@@ -26,7 +26,12 @@ class Resolver {
   /// Whether `derived` is `base` or inherits from it, transitively.
   bool derives(const std::string& derived, const std::string& base) const;
   /// The member `name` of a type: its own, else the nearest one it inherits; nullptr when none declares it.
-  const model::Entity* member(const std::string& type, const std::string& name) const;
+  /// `argc`, when a call gives it, narrows the overloads of `name` to those it could be a call of (DS-455); one left is
+  /// the member, two or more none (overloadsOf says which).
+  const model::Entity* member(const std::string& type, const std::string& name, int argc = -1) const;
+  /// The overloads of `name` in `type` or, failing that, its nearest base that has any (DS-455): the operations whose
+  /// identity is `name(...)`, those taking `argc` parameters when a call gives it. A call matches what it could call.
+  std::vector<std::string> overloadsOf(const std::string& type, const std::string& name, int argc = -1) const;
   /// The element of a type written as the code writes it: the one entity of the design its text names
   /// (`list[Scope]`, `std::map<std::string, Scope*>` → the class Scope); "" for none or for two (DS-18).
   std::string resolveTypeText(const std::string& text, const std::string& scope) const;

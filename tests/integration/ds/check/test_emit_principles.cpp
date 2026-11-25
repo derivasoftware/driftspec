@@ -81,10 +81,10 @@ TEST_F(TestEmitPrinciples, ABehaviourOfTheRenderThatBuildsTheJsonSinkIsTold) {
 
 TEST_F(TestEmitPrinciples, ADoorThatBuildsTheJsonSinkIsTold) {
   // the api and the command line ask SinkFactory for the sink and hold an ISink: a member of the api lent the JsonSink,
-  // or a behaviour of the command line that builds it, is told
+  // or a verb of the command line whose behaviour builds it, is told
   const std::vector<std::string> api = broken({{"ds/api.ds", "    class Workspace {", "      - lend(out_sink: emit::JsonSink) -> void\n"}});
   EXPECT_TRUE(has(api, throughInterface));
-  const std::vector<std::string> app = broken({{"ds/app.ds", "    sequence check {", "      local json: emit::JsonSink\n"}});
+  const std::vector<std::string> app = broken({{"ds/app.ds", "    sequence CheckCommand::run {", "      local json: emit::JsonSink\n"}});
   EXPECT_TRUE(has(app, throughInterface));
 }
 

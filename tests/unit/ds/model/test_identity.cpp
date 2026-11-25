@@ -41,6 +41,22 @@ TEST(TestIdentity, AMemberOrAScenarioLiesWithin) {
 
 TEST(TestIdentity, ATemplateCarriesItsArity) { EXPECT_EQ(Identity("Index").withArity(2), Identity("Index<2>")); }
 
+/// An overload carries its parameter types as written (DS-455), and the :: and @ inside them never split it: its last
+/// name, its scope and what lies within it read past the list, and bare() drops it.
+TEST(TestIdentity, AnOverloadCarriesItsParameterTypesWhichNeverSplitIt) {
+  const Identity of = Identity("p@m::DescriptionFactory::of").withParameters("scene::SceneDocument, shop@core::Item");
+  EXPECT_EQ(of.text(), "p@m::DescriptionFactory::of(scene::SceneDocument, shop@core::Item)");
+  EXPECT_EQ(of.lastName(), "of(scene::SceneDocument, shop@core::Item)");
+  EXPECT_EQ(of.scope().text(), "p@m::DescriptionFactory");
+  EXPECT_EQ(of.bare().text(), "p@m::DescriptionFactory::of");
+  EXPECT_TRUE(of.within(Identity("p@m::DescriptionFactory")));
+  EXPECT_TRUE(of.sequence().within(of));
+  EXPECT_EQ(of.sequence().scope().text(), of.text());
+  EXPECT_EQ(Identity("p@m::C::run").bare().text(), "p@m::C::run");  // not an overload: as it is
+  EXPECT_EQ(Identity("of()").bare().text(), "of");
+  EXPECT_FALSE(Identity("of(scene::SceneDocument)").isQualified());  // a bare name with its types is still bare
+}
+
 TEST(TestIdentity, ADiagramIsNamedOnce) {
   EXPECT_EQ(Identity::ofDiagram("CL_Model"), Identity("diagram:CL_Model"));
   EXPECT_EQ(Identity::ofDiagram("diagram:CL_Model"), Identity("diagram:CL_Model"));

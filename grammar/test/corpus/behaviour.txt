@@ -838,3 +838,28 @@ diagram TOUR_Buy {
     (field
       (name)
       (line_text))))
+
+==========================================
+behaviour: The behaviour of an overload
+==========================================
+
+package p {
+  sequence Factory::of(Scene, int) {
+    return 1
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (sequence
+      (qualified_name
+        (name)
+        (name))
+      (overload_types
+        (type)
+        (type))
+      (return
+        (number)))))

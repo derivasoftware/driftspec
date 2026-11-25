@@ -163,6 +163,50 @@ diagram CL_Store {
 }
 ```
 
+## One name, several operations
+
+A class, an interface or a module may declare two operations of one name with different
+parameters. Each is then named by its parameter types as written: `Factory::of(Scene)`,
+`Factory::of(Report, int)`, `Factory::of()`. An operation alone with its name keeps its bare
+name. A behaviour names the one it is of by its types.
+
+```ds
+package shop {
+  module store {
+    class Scene { }
+    class Report { }
+
+    class Factory {
+      + static of(document: Scene) -> int
+      + static of(report: Report, depth: int) -> int
+    }
+
+    class Desk {
+      - factory: Factory
+      + open(scene: Scene) -> int
+    }
+
+    sequence Factory::of(Scene) {
+      return 1
+    }
+
+    sequence Desk::open {
+      self -> factory.of(scene) -> made
+      return made
+    }
+  }
+}
+
+diagram CL_Store {
+  kind: class
+  include: shop@store::*
+}
+```
+
+A call matches only the overloads it could be a call of: `factory.of(scene)` has one
+argument, so it calls `of(Scene)`. A call that two still match, or a behaviour that names
+`Factory::of` bare, is `W-NAME-AMBIGUOUS` and names them: write the parameter types.
+
 ## Values and enumerations
 
 A `dataclass` is a value: two with equal fields are the same. An `enum` is a closed list of

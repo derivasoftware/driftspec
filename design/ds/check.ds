@@ -294,12 +294,17 @@ package driftspec@ds {
       // the classes a bare name could be when two or more of its package share it (DS-325)
       + ambiguous(name: std::string, scope: std::string) -> std::vector<std::string> {
         @requirement REQ-00169-2
+        @requirement REQ-00253-1               // and the overloads an operation named bare could be (DS-455)
       }
       + derives(derived: std::string, base: std::string) -> bool {
         @requirement REQ-00029-2
       }
-      + member(type: std::string, name: std::string) -> model::Entity {
+      + member(type: std::string, name: std::string, argc: int) -> model::Entity {   // of its overloads, the one a call of argc arguments can call (DS-455)
         @requirement REQ-00036-2
+        @requirement REQ-00253-1
+      }
+      + overloadsOf(type: std::string, name: std::string, argc: int) -> std::vector<std::string> {   // DS-455
+        @requirement REQ-00253-1
       }
       + resolveTypeText(text: std::string, scope: std::string) -> std::string {
         @requirement REQ-00023-1
@@ -538,6 +543,10 @@ package driftspec@ds {
       - call(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00037-1
       }
+      // a call two overloads could still be a call of, by its arguments: W-NAME-AMBIGUOUS (DS-455)
+      - reportOverloads(seq: model::Entity, typeId: std::string, message: bind::Message) -> bool {
+        @requirement REQ-00253-1
+      }
       - expand(msg: model::Entity, op: model::Entity, message: bind::Message) -> void {
         @requirement REQ-00038-2
       }
@@ -652,6 +661,15 @@ package driftspec@ds {
       }
       - checkScenario(usecase: model::Entity) -> void {   // a use case has no signature: what escapes is said at its scenario (DS-434)
         @requirement REQ-00112-1
+      }
+      - outcomesOf(usecase: std::string) -> std::vector<const model::Entity*> {   // its own, then its bases' it does not redefine (DS-467)
+        @requirement REQ-00265-1
+      }
+      - checkOutcomes(usecase: model::Entity, named: std::set<std::string>) -> void {
+        @requirement REQ-00265-1
+      }
+      - failureNames() -> std::set<std::string> {   // a type, an enum's value, what a signature or a step fails with
+        @requirement REQ-00265-1
       }
     }
 
@@ -1039,6 +1057,10 @@ package driftspec@ds {
       loop each use case {
         -> checkScenario(usecase)
       }
+      -> failureNames() -> named
+      loop each use case {
+        -> checkOutcomes(usecase, named)
+      }
     }
 
     sequence StructureCheck::check {
@@ -1228,9 +1250,9 @@ diagram SEQ_CheckerRun {
   include: driftspec@ds@check::Checker::run
 }
 
-diagram SEQ_Load {                         // a load from the command line, two levels down: parse, then the Api's steps (DS-383)
+diagram SEQ_Load {                         // a load as the command line opens a workspace (DS-409), two levels down: parse, then the Api's steps (DS-383)
   kind: sequence
-  include: driftspec@ds@app::load
+  include: driftspec@ds@api::Workspace::reload
   depth: 2
 }
 

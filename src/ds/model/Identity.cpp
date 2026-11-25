@@ -1,5 +1,6 @@
 #include "ds/model/Identity.hpp"
 
+#include <algorithm>
 #include <utility>
 
 namespace ds {
@@ -15,16 +16,35 @@ Identity::Identity(std::string text) : text_(std::move(text)) {}
 
 Identity Identity::ofDiagram(const std::string& name) { return Identity(name.rfind(kDiagram, 0) == 0 ? name : kDiagram + name); }
 
+std::size_t Identity::findOutsideParameters(const std::string& text, const std::string& what, bool last) {
+  std::size_t found = std::string::npos;
+  int depth = 0;
+  for (std::size_t i = 0; i < text.size(); ++i) {
+    const char c = text[i];
+    if (c == '(') ++depth;
+    if (c == ')' && depth > 0) --depth;
+    if (depth == 0 && text.compare(i, what.size(), what) == 0) {
+      found = i;
+      if (!last) return found;
+    }
+  }
+  return found;
+}
+
 std::string Identity::lastName() const {
-  const auto cut = text_.find_last_of(":@");
+  const auto colons = findOutsideParameters(text_, "::", true);
+  const auto at = findOutsideParameters(text_, "@", true);
+  const auto cut = colons == std::string::npos ? at : at == std::string::npos ? colons + 1 : std::max(colons + 1, at);
   return cut == std::string::npos ? text_ : text_.substr(cut + 1);
 }
 
 Scope Identity::scope() const { return Scope(text_).outer(); }
 
-bool Identity::isQualified() const { return text_.find('@') != std::string::npos || text_.find("::") != std::string::npos; }
+bool Identity::isQualified() const {
+  return findOutsideParameters(text_, "@", false) != std::string::npos || findOutsideParameters(text_, "::", false) != std::string::npos;
+}
 
-bool Identity::isAbsolute() const { return text_.find('@') != std::string::npos; }
+bool Identity::isAbsolute() const { return findOutsideParameters(text_, "@", false) != std::string::npos; }
 
 bool Identity::within(const Identity& outer) const {
   // read in place, nothing built per comparison (DS-346): outer itself, or outer then :: or /
@@ -35,6 +55,18 @@ bool Identity::within(const Identity& outer) const {
 }
 
 Identity Identity::withArity(std::size_t arity) const { return Identity(text_ + "<" + std::to_string(arity) + ">"); }
+
+Identity Identity::withParameters(const std::string& types) const { return Identity(text_ + "(" + types + ")"); }
+
+Identity Identity::bare() const {
+  if (text_.empty() || text_.back() != ')') return *this;
+  int depth = 0;
+  for (std::size_t i = text_.size(); i-- > 0;) {  // back to the ( that opens the list that closes it
+    if (text_[i] == ')') ++depth;
+    if (text_[i] == '(' && --depth == 0) return Identity(text_.substr(0, i));
+  }
+  return *this;
+}
 
 std::string Identity::diagramName() const { return text_.rfind(kDiagram, 0) == 0 ? text_.substr(kDiagram.size()) : text_; }
 
@@ -87,18 +119,18 @@ Identity Scope::qualify(const std::string& name) const {
 }
 
 std::string Scope::outerOf(const std::string& text) {
-  const auto cut = text.rfind("::");
+  const auto cut = Identity::findOutsideParameters(text, "::", true);  // an overload's types never split it (DS-455)
   if (cut != std::string::npos) return text.substr(0, cut);
   std::string s = text;
   if (!s.empty() && s.back() == '@') s.pop_back();  // a package scope: step out of that package
-  const auto at = s.rfind('@');
+  const auto at = Identity::findOutsideParameters(s, "@", true);
   return at == std::string::npos ? "" : s.substr(0, at + 1);
 }
 
 Scope Scope::outer() const { return Scope(outerOf(text_)); }
 
 Scope Scope::package() const {
-  const auto at = text_.rfind('@');
+  const auto at = Identity::findOutsideParameters(text_, "@", true);
   return Scope(at == std::string::npos ? "" : text_.substr(0, at + 1));
 }
 

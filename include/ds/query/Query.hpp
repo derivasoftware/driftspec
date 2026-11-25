@@ -70,6 +70,7 @@ class Query : public IQuery {
   std::vector<Answer> findings(const std::string& subject) const;  ///< the findings of a file, or of an entity and all it holds ("" = all)
   std::vector<Answer> coverage(const std::string& subject) const;  ///< what is not yet written, as findings asks (DS-216)
   std::vector<Answer> coupling() const;                            ///< what each behaviour touches outside its module, and how
+  std::vector<Answer> walkthroughs(const std::string& subject) const;  ///< the walkthroughs, or one's steps in order (DS-471)
 
  private:
   bool known(const std::string& id) const;                                            // an entity, or a scope something is declared in

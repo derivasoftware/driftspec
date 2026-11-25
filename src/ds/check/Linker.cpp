@@ -51,10 +51,13 @@ bool Linker::reportAmbiguous(const bind::Reference& reference) {
   if (!context_->reported().insert("ambiguous " + use).second) return true;
   std::string names;
   for (const auto& c : candidates) names += (names.empty() ? "" : ", ") + c;
-  context_->report(context_->metamodel().finding(model::Code::W_NAME_AMBIGUOUS,
-                                                 "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
-                                                     " classes of its package: " + names + "; it relates nothing until it is qualified",
-                                                 reference.location));
+  const bool overloads = candidates.front().back() == ')';  // operations of one name, not classes (DS-455)
+  context_->report(context_->metamodel().finding(
+      model::Code::W_NAME_AMBIGUOUS,
+      "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
+          (overloads ? " operations of that name: " + names + "; it relates nothing until its parameter types are written"
+                     : " classes of its package: " + names + "; it relates nothing until it is qualified"),
+      reference.location));
   return true;
 }
 

@@ -267,11 +267,19 @@ std::vector<CodeSpec> Metamodel::buildCodes() {
        "Point at: at one of the step's focus: or highlight:, or add it there."},
       {Code::W_WALK_EMPTY, "W-WALK-EMPTY", Severity::warning, "A walkthrough has no step, or a step shows no diagram or says nothing.",
        "Write step <title> { show: <diagram>  text: <a sentence> } for each step of the walk."},
+      {Code::W_OUTCOME_FAILURE_UNKNOWN, "W-OUTCOME-FAILURE-UNKNOWN", Severity::warning,
+       "An outcome says it is the end of a failure that the workspace names nowhere: no type, no value of an enum, no "
+       "signature that may fail with it and no step that fails with it.",
+       "Correct the failure's name after fails, or declare it."},
+      {Code::W_OUTCOME_FAILURE_TWICE, "W-OUTCOME-FAILURE-TWICE", Severity::warning,
+       "Two outcomes of one use case, or of it and a use case it specialises, say they are the end of the same failure: "
+       "one failure ends in one outcome. An outcome that redefines its base's of the same name is no second one.",
+       "Keep the failure on one of them, or name another failure on the other."},
   };
   // a finding is made by its slot: a row out of the order of Code, or a Code with no row, would give another code
   for (std::size_t i = 0; i < out.size(); ++i)
     if (static_cast<std::size_t>(out[i].id) != i) throw std::logic_error("the catalogue is out of the order of Code at " + out[i].code);
-  if (out.size() != static_cast<std::size_t>(Code::W_WALK_EMPTY) + 1)
+  if (out.size() != static_cast<std::size_t>(Code::W_OUTCOME_FAILURE_TWICE) + 1)
     throw std::logic_error("the catalogue does not hold one row per Code");
   return out;
 }

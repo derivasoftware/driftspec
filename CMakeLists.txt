@@ -291,13 +291,17 @@ endif()
 
 find_package(Threads REQUIRED) # the work runs on a thread with a large stack
                                # (DS-279)
-# the command line as functions (ds/app/App.hpp), a library of its own beside
-# the engine so that its unit tests link it (DS-311)
-add_library(ds_app STATIC src/ds/app/App.cpp)
+# the command line (ds/app, DS-409): main, CommandLine and one ICommand per verb
+# made by CommandFactory, a library of its own beside the engine so that its
+# unit tests link it (DS-311)
+add_library(
+  ds_app STATIC
+  src/ds/app/App.cpp src/ds/app/CommandFactory.cpp src/ds/app/CommandLine.cpp
+  src/ds/app/Commands.cpp src/ds/app/Disk.cpp src/ds/app/Output.cpp)
 target_link_libraries(
   ds_app
-  PUBLIC driftspec
-  PRIVATE CLI11::CLI11 Threads::Threads)
+  PUBLIC driftspec CLI11::CLI11 # a verb declares itself on a CLI11 subcommand
+  PRIVATE Threads::Threads)
 add_executable(ds app/ds/main.cpp)
 # what one writer of the theme writes (DS-393): built from the theme alone,
 # never shipped; the pages carry it
@@ -326,8 +330,8 @@ foreach(test_src IN LISTS driftspec_TESTS)
   target_include_directories(
     ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
                                                             # share (DS-418)
-  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's functions
-                                             # (DS-311)
+  if(test_src MATCHES "/tests/unit/ds/app/") # the command line's classes
+                                             # (DS-311, DS-409)
     target_link_libraries(${test_name} PRIVATE ds_app)
   endif()
   target_compile_definitions(
@@ -347,6 +351,10 @@ foreach(test_src IN LISTS driftspec_INTEGRATION_TESTS)
   get_filename_component(test_name ${test_src} NAME_WE)
   add_executable(${test_name} ${test_src})
   target_link_libraries(${test_name} PRIVATE driftspec GTest::gtest_main)
+  if(test_src MATCHES "/tests/integration/ds/app/") # the command line, run in
+                                                    # process (DS-409)
+    target_link_libraries(${test_name} PRIVATE ds_app)
+  endif()
   target_include_directories(
     ${test_name} PRIVATE ${CMAKE_SOURCE_DIR}/tests/support) # helpers the tests
                                                             # share (DS-418)

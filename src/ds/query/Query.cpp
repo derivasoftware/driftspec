@@ -2,7 +2,9 @@
 
 #include <algorithm>
 
+#include "ds/model/Identity.hpp"
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/Walkthroughs.hpp"
 #include "ds/query/Pattern.hpp"
 #include "ds/text/Text.hpp"
 
@@ -19,7 +21,8 @@ std::vector<Question> Query::questions() {
           {"shows", "<diagram>", "a diagram"},
           {"findings", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
           {"coverage", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
-          {"coupling", "", "no subject"}};
+          {"coupling", "", "no subject"},
+          {"walkthroughs", "[walkthrough]", "a walkthrough: its steps in order"}};
 }
 
 std::string Query::usage() {
@@ -58,6 +61,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
   if (question == "shows") return shows(subject);
   if (question == "findings") return findings(subject);
   if (question == "coverage") return coverage(subject);
+  if (question == "walkthroughs") return walkthroughs(subject);
   return coupling();
 }
 
@@ -276,6 +280,24 @@ std::vector<Answer> Query::coverage(const std::string& subject) const {
     out.push_back({f.code, f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column), f.message});
   }
   return out;
+}
+
+// The walkthroughs, by identity, with their titles; of one, its steps in order, each with its title and what it shows
+// (DS-471). A name that is no walkthrough is told, not answered empty.
+std::vector<Answer> Query::walkthroughs(const std::string& subject) const {
+  const std::vector<model::Walkthrough> walks = model::Walkthroughs::of(model_);
+  std::vector<Answer> out;
+  if (subject.empty()) {
+    for (const auto& w : walks) out.push_back({"walkthrough", w.id, w.title});
+    return out;
+  }
+  const std::string id = model::Identity::ofDiagram(subject).text();
+  for (const auto& w : walks) {
+    if (w.id != id && w.id != subject) continue;
+    for (const auto& s : w.steps) out.push_back({"step", s.id, s.title + " → " + s.show + (s.scenario.empty() ? "" : " / " + s.scenario)});
+    return out;
+  }
+  return {{"error", subject, "no walkthrough is named so: ds query <workspace> walkthroughs lists them"}};
 }
 
 }  // namespace query
