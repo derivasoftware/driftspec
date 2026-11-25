@@ -10,6 +10,7 @@ package driftspec@ds {
     title: x is an engine of the layout, a sequence's engine, a router, or one of the layered engine's phases (DS-392, DS-464)
     if x inherits driftspec@ds@layout::IEngine
     if x inherits driftspec@ds@layout::ISequenceEngine
+    if x inherits driftspec@ds@layout::ITableEngine
     if x inherits driftspec@ds@layout::IRouter
     if x = driftspec@ds@layout::Framer
     if x = driftspec@ds@layout::Layerer
@@ -158,6 +159,7 @@ package driftspec@ds {
       + static packing() -> std::unique_ptr<IEngine>
       + static layered(spacing: Spacing, router: std::unique_ptr<IRouter>) -> std::unique_ptr<IEngine>   // orthogonal when handed none
       + static sequence(spacing: SequenceSpacing) -> std::unique_ptr<ISequenceEngine>   // the stacked one, in the sink's spacing (DS-464)
+      + static table(spacing: TableSpacing) -> std::unique_ptr<ITableEngine>   // the grid one, in the sink's spacing (DS-464)
     }
 
     sequence EngineFactory::packing {
@@ -173,6 +175,78 @@ package driftspec@ds {
     sequence EngineFactory::sequence {
       local engine: StackedEngine
       return engine
+    }
+
+    sequence EngineFactory::table {
+      local engine: GridEngine
+      return engine
+    }
+
+    // ---- a table's engine (DS-464): columns, rows and the lines of each cell, placed once with the sink's measures ----
+
+    // a table engine: a table graph in, where its columns, rows and lines land out
+    class ITableEngine {
+      @requirement REQ-00210-1
+      + ~ITableEngine()
+      + abstract place(graph: TableGraph) -> TablePlacement
+    }
+
+    // each text broken into lines no longer than the wrap, between words; each column as wide as its widest line and
+    // its room each side; each row as tall as its tallest cell, or its least
+    class GridEngine : ITableEngine {
+      @requirement REQ-00210-1
+      - owns spacing_: TableSpacing
+      + GridEngine(spacing: TableSpacing)
+      + place(graph: TableGraph) -> TablePlacement
+      - breaks(text: TableText) -> std::vector<std::size_t>       // the word each line after the first starts with
+      - widest(text: TableText, breaks: std::vector<std::size_t>) -> std::size_t
+    }
+
+    // the distances a table is placed with, in the sink's units: the svg's proportions, across in characters and down
+    // in lines; a cell wraps at the same characters in every sink
+    dataclass TableSpacing {
+      @requirement REQ-00210-1
+      + advance: int
+      + padX: int
+      + headHeight: int
+      + rowHeight: int
+      + lineHeight: int
+      + linePad: int
+      + wrap: std::size_t
+      + static of(advance: int, lineHeight: int) -> TableSpacing
+    }
+
+    // a table to place, knowing nothing of what it stands for: its corner, its headings and its rows
+    dataclass TableGraph {
+      @requirement REQ-00210-1
+      + owns corner: TableText
+      + owns many columns: std::vector<TableText>
+      + owns many rows: std::vector<TableRow>
+    }
+
+    dataclass TableRow {                     // a row's label and its cells, column by column
+      @requirement REQ-00210-1
+      + owns label: TableText
+      + owns many cells: std::vector<TableText>
+    }
+
+    dataclass TableText {                    // a text's words, each in characters
+      @requirement REQ-00210-1
+      + words: std::vector<std::size_t>
+    }
+
+    // where a table lands, in the sink's units: each column's edge and width, the headings' height, each row's top and
+    // height, and where each text breaks into lines, in reading order
+    dataclass TablePlacement {
+      @requirement REQ-00210-1
+      + columnX: std::vector<int>
+      + columnWidth: std::vector<int>
+      + headHeight: int
+      + rowY: std::vector<int>
+      + rowHeight: std::vector<int>
+      + breaks: std::vector<std::vector<std::size_t>>
+      + width: int
+      + height: int
     }
 
     // ---- a sequence's engine (DS-464): lanes, rows and frames, placed once with the sink's measures ----------------
