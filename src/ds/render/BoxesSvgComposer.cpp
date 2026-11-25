@@ -5,8 +5,8 @@ namespace render {
 
 Figure BoxesSvgComposer::compose(const IrDocument& doc, int width) const {
   Figure figure;
-  figure.document = doc.bundled();
-  figure.layout = Layout(metrics_).place(figure.document, width, true);
+  figure.owned = doc.bundled();
+  figure.layout = Layout(metrics_).place(figure.owned, width, true);
   return figure;
 }
 

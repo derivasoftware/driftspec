@@ -48,7 +48,7 @@ TEST(TestBoxesSvgComposer, EveryBoxIsPlacedInPixelsAsTheLayoutPlacesIt) {
     EXPECT_EQ(figure.layout.placed[i].rect.w, direct.placed[i].rect.w);
   }
   // where a box lands points into the figure's own document
-  EXPECT_EQ(figure.layout.placed[0].node, &figure.document.nodes[0]);
+  EXPECT_EQ(figure.layout.placed[0].node, &figure.document().nodes[0]);
 }
 
 }  // namespace

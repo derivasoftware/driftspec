@@ -45,7 +45,7 @@ TEST(TestBoxesTextComposer, EveryBoxIsPlacedInCellsAndAMovedFigureKeepsItsPlaces
   const ds::render::LayoutResult direct = ds::render::Layout(m).place(bundled, 40);
   EXPECT_EQ(figure.layout.placed[1].rect.y, direct.placed[1].rect.y);
   const ds::render::Figure moved = std::move(figure);
-  EXPECT_EQ(moved.layout.placed[0].node, &moved.document.nodes[0]);
+  EXPECT_EQ(moved.layout.placed[0].node, &moved.document().nodes[0]);
   EXPECT_EQ(moved.layout.placed[0].node->label, "Base");
 }
 
