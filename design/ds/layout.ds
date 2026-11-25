@@ -117,10 +117,10 @@ package driftspec@ds {
       - static width(id: std::string, computed: double, graph: Graph) -> double
       - static shelf(kids: std::vector<Packed>, gap: double, target: double, at: std::vector<std::pair<double, double>>) -> std::pair<double, double>
       - static target(kids: std::vector<Packed>, atLeast: double, factor: double) -> double
-      - static land(frame: Frame, packed: Packed, x: double, y: double, out: std::map<std::string, Box>) -> void
+      - static land(frame: Frame, packed: Packed, x: double, y: double, out: std::vector<Box>) -> void
     }
 
-    dataclass Graph {                        // what an engine is given: the boxes it refers to, the edges, how wide it may be
+    dataclass Graph {                        // what an engine is given: the boxes it refers to, numbered in the order it is read, the edges, how wide it may be
       @requirement REQ-00210-1
       + refs root: Frame
       + edges: std::vector<Edge>
@@ -131,16 +131,17 @@ package driftspec@ds {
 
     dataclass Placement {                    // where the boxes landed, how the edges run, and the widths kept
       @requirement REQ-00210-1
-      + boxes: std::map<std::string, Box>
+      + boxes: std::vector<Box>                // by number, in the order the graph is read: the root, then each frame, its kids and its ports
       + routes: std::map<std::size_t, Route>
       + widths: std::map<std::string, double>
     }
 
-    dataclass Edge {                         // an edge between two boxes, by their identities: whether it points up is all an engine reads
+    dataclass Edge {                         // an edge between two boxes, by their numbers in the order the graph is read: whether it points up is all an engine reads
       @requirement REQ-00210-1
-      + from: std::string
-      + to: std::string
+      + from: std::size_t                     // none when the end is no box of the graph
+      + to: std::size_t
       + upward: bool                          // the to box sits above the from box: a base above what inherits
+      + none: std::size_t                     // a constant: the end of an edge that is no box of the graph
     }
 
     dataclass Route {                        // how an edge runs: the corners of its polyline, in order
