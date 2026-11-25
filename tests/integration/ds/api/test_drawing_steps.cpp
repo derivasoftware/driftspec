@@ -93,7 +93,7 @@ TEST_F(TestDrawingSteps, TheApiDrawsADiagramAsTheWorkspaceLoadedWholeDoes) {
   const ds::api::Files files = filesOf("examples/shop");
   const ds::api::Workspace whole = ds::api::Workspace::madeFor(metamodel, files);
   for (const std::string diagram : {"CL_Shop", "HLD_ShopSales", "SEQ_Buy", "TOUR_Buy"})
-    for (const std::string format : {"svg", "ir", "text"})
+    for (const auto& format : formats)  // all five: cells and layout as the workspace draws them, not as text (DS-453)
       EXPECT_EQ(ds::api::Api(metamodel).render(files, diagram, format, 0), whole.render(diagram, format, 0)) << diagram << " " << format;
 }
 

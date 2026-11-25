@@ -80,6 +80,11 @@ class TestEnginePrinciples : public ::testing::Test {
   const std::string layoutScene = "driftspec@ds@layout::layout-knows-no-scene";
   const std::string sceneEngine = "driftspec@ds@layout::the-scene-places-through-iengine";
   const std::string renderEngine = "driftspec@ds@layout::render-places-through-iengine";
+  const std::string renderClasses = "driftspec@ds@render::render-operations-belong-to-classes";
+  const std::string projectors = "driftspec@ds@render::projectors-reach-each-other-through-iprojector";
+  const std::string drawingsModel = "driftspec@ds@render::the-drawings-read-only-the-ir";
+  const std::string drawingsQuery = "driftspec@ds@render::the-drawings-ask-no-query";
+  const std::string drawingsAxis = "driftspec@ds@render::the-drawings-know-no-cut";
   const std::string layersAlone = "driftspec@ds@scene::no-layer-knows-another";
   const std::string namedI = "driftspec@ds@pure-interfaces-are-named-i";
   const std::string namedA = "driftspec@ds@abstract-classes-are-named-a";
@@ -91,10 +96,11 @@ class TestEnginePrinciples : public ::testing::Test {
 TEST_F(TestEnginePrinciples, TheDesignOfDsKeepsEveryPrinciple) {
   const std::vector<std::string> rules = broken({});
   for (const std::string& rule :
-       {context,          asInterface,         alone,        builtOnce,      binderClasses, modelClasses, axisClasses,      axisReads,
-        exporterClasses,  exporterReads,       apiChooses,   machineClasses, machineReads,  queryClasses, stepsAsInterface, stepsAlone,
-        checkClasses,     sceneClasses,        sceneReads,   layerLayout,    packerModel,   namedI,       namedA,           namedFactory,
-        throughInterface, givenAtConstruction, layoutRender, layoutScene,    sceneEngine,   renderEngine})
+       {context,          asInterface,     alone,         builtOnce,        binderClasses,       modelClasses,  axisClasses,
+        axisReads,        exporterClasses, exporterReads, apiChooses,       machineClasses,      machineReads,  queryClasses,
+        stepsAsInterface, stepsAlone,      checkClasses,  sceneClasses,     sceneReads,          layerLayout,   packerModel,
+        namedI,           namedA,          namedFactory,  throughInterface, givenAtConstruction, layoutRender,  layoutScene,
+        sceneEngine,      renderEngine,    renderClasses, projectors,       drawingsModel,       drawingsQuery, drawingsAxis})
     EXPECT_FALSE(has(rules, rule)) << rule;
 }
 
@@ -362,6 +368,41 @@ TEST_F(TestEnginePrinciples, APlacerThatHoldsAnEngineOrAPhaseIsTold) {
   const std::vector<std::string> phase = broken({{"ds/render.ds", "    class Layout {", "      - refs framer_: layout::Framer\n"}});
   EXPECT_TRUE(has(phase, renderEngine));
   EXPECT_FALSE(has(phase, throughInterface));  // a phase is in no family: only the layout's rule sees it
+}
+
+/// Every operation of render is a member of a class (DS-372): a function written in render is told.
+TEST_F(TestEnginePrinciples, AFunctionOfRenderIsTold) {
+  const std::vector<std::string> rules =
+      broken({{"ds/render.ds", "    @requirement REQ-00007-1                 // the IR drawn as SVG and as terminal text\n",
+               "    function stray() -> int\n"}});
+  EXPECT_TRUE(has(rules, renderClasses));
+  EXPECT_FALSE(has(rules, projectors));
+}
+
+/// A projector is reached through IProjector (DS-372): the tour holding the sequence's projector is told, which the
+/// family rule allows a sibling, and so is the export holding the class diagram's.
+TEST_F(TestEnginePrinciples, AProjectorHeldByAnotherClassOfRenderIsTold) {
+  const std::vector<std::string> tour =
+      broken({{"ds/render.ds", "    class TourProjector : IProjector {\n", "      - owns sequence_: SequenceProjector\n"}});
+  EXPECT_TRUE(has(tour, projectors));
+  EXPECT_FALSE(has(tour, throughInterface));  // a sibling of the family: only render's rule sees it
+  const std::vector<std::string> exporter = broken({{"ds/render.ds", "    class IrExport {\n", "      - owns boxes_: ClassProjector\n"}});
+  EXPECT_TRUE(has(exporter, projectors));
+}
+
+/// The drawings read the IR alone (DS-372): Svg knowing the model, Text a filter and the layout a cut are each told.
+TEST_F(TestEnginePrinciples, ADrawingThatKnowsTheModelIsTold) {
+  const std::vector<std::string> model =
+      broken({{"ds/render.ds", "    class Svg {                              // the SVG drawing, with its links, tooltips and script\n",
+               "      - refs model_: model::Model\n"}});
+  EXPECT_TRUE(has(model, drawingsModel));
+  const std::vector<std::string> query =
+      broken({{"ds/render.ds", "    class Text {                             // the terminal drawing, box characters and optional colour\n",
+               "      - refs filter_: query::IFilter\n"}});
+  EXPECT_TRUE(has(query, drawingsQuery));
+  const std::vector<std::string> axis = broken({{"ds/render.ds", "    class Layout {\n", "      - refs cut_: axis::Cut\n"}});
+  EXPECT_TRUE(has(axis, drawingsAxis));
+  EXPECT_FALSE(has(axis, drawingsModel));
 }
 
 }  // namespace

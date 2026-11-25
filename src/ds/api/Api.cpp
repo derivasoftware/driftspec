@@ -128,9 +128,9 @@ std::string Api::check(const Files& files) const { return Workspace::madeFor(met
 std::string Api::exportModel(const Files& files) const { return Workspace::madeFor(metamodel_, files, Output::Model).exportModel(); }
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) const {
-  // svg, the IR itself, or text for anything else; loaded with the steps the drawing reads (DS-376)
-  return Workspace::madeFor(metamodel_, files, Output::Drawing, diagram)
-      .render(diagram, format == "svg" || format == "ir" ? format : "text", width);
+  // the format named, as the workspace draws it: svg, text, cells, layout or the IR, and NotImplemented for any other
+  // (DS-453); loaded with the steps the drawing reads (DS-376)
+  return Workspace::madeFor(metamodel_, files, Output::Drawing, diagram).render(diagram, format, width);
 }
 
 std::string Api::page(const Files& files, const std::string& title, const std::vector<std::string>& focus) const {
