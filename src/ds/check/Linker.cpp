@@ -151,7 +151,8 @@ bool Linker::kindAllowed(const bind::Reference& reference, const std::string& ta
   const model::Entity* to = model_->find(target);
   if (!spec || !from || !to || to->expected || metamodel_->joins(*spec, from->kind, to->kind)) return true;
   const std::string kind = metamodel_->nameOf(to->kind);
-  const std::string article = std::string("aeiou").find(kind[0]) == std::string::npos ? ", a " : ", an ";
+  // a usecase, said "you": the one kind whose vowel is not an's (DS-226)
+  const std::string article = std::string("aeio").find(kind[0]) == std::string::npos ? ", a " : ", an ";
   std::string message = reference.from + " " + reference.relation + " " + target + article + kind + ": the language joins " +
                         reference.relation + " only between other kinds";
   if (reference.relation == "owns" && to->kind == model::Kind::Interface)  // DS-224: owns is the default of an attribute

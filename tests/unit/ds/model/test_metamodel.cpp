@@ -287,13 +287,35 @@ TEST_F(TestBuild, DeclaresThePackageFirstAndAtTheTopEachKindWithHowItIsWritten) 
   }
 }
 
-TEST_F(TestBuildRelations, ContainmentComesFirstAndEveryOtherRelationHasItsEndsAndNoPairs) {
+// DS-226: a relation of exact pairs has as its ends the kinds its pairs hold, and nothing else
+TEST_F(TestBuildRelations, ContainmentComesFirstAndEveryRelationOfPairsHasTheirKindsAsItsEnds) {
   ASSERT_FALSE(metamodel.relations().empty());
   EXPECT_EQ(metamodel.relations()[0].kind, "contains");
   for (std::size_t i = 1; i < metamodel.relations().size(); ++i) {
-    EXPECT_NE(metamodel.relations()[i].kind, "contains");
-    EXPECT_TRUE(metamodel.relations()[i].pairs.empty()) << metamodel.relations()[i].kind;
+    const auto& r = metamodel.relations()[i];
+    EXPECT_NE(r.kind, "contains");
+    std::set<Kind> from, to;
+    for (const auto& [f, t] : r.pairs) {
+      from.insert(f);
+      to.insert(t);
+    }
+    if (r.pairs.empty()) continue;
+    EXPECT_EQ(from, std::set<Kind>(r.from.begin(), r.from.end())) << r.kind;
+    EXPECT_EQ(to, std::set<Kind>(r.to.begin(), r.to.end())) << r.kind;
   }
+  const auto* inherits = metamodel.relationOf("inherits");
+  ASSERT_NE(inherits, nullptr);
+  EXPECT_TRUE(metamodel.joins(*inherits, Kind::Class, Kind::Class));
+  EXPECT_TRUE(metamodel.joins(*inherits, Kind::UseCase, Kind::UseCase));
+  EXPECT_FALSE(metamodel.joins(*inherits, Kind::Class, Kind::UseCase));
+  const auto* realises = metamodel.relationOf("realises");
+  ASSERT_NE(realises, nullptr);
+  EXPECT_FALSE(metamodel.joins(*realises, Kind::Verification, Kind::Interface));
+  EXPECT_FALSE(metamodel.joins(*realises, Kind::Class, Kind::UseCase));
+  const auto* behaviour = metamodel.relationOf("behaviour-of");
+  ASSERT_NE(behaviour, nullptr);
+  EXPECT_TRUE(metamodel.joins(*behaviour, Kind::State, Kind::Interface));
+  EXPECT_FALSE(metamodel.joins(*behaviour, Kind::State, Kind::Package));
   const auto* uses = metamodel.relationOf("uses");
   ASSERT_NE(uses, nullptr);
   EXPECT_NE(std::find(uses->to.begin(), uses->to.end(), Kind::Enum), uses->to.end());

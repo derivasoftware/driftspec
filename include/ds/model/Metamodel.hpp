@@ -178,6 +178,9 @@ class Metamodel {
   /// The names of the fields that hold an identity, read from the kinds, each once, in the order declared.
   std::vector<std::string> buildIdentityFields() const;
   static RelationSpec rel(const std::string& kind, const std::string& meaning, std::vector<Kind> from, std::vector<Kind> to);
+  /// A relation that joins exactly these (from, to) pairs (DS-226): its from and to are the kinds they hold, so a
+  /// reader of either end sees them, and nothing crosses them.
+  static RelationSpec paired(const std::string& kind, const std::string& meaning, std::vector<std::pair<Kind, Kind>> pairs);
   /// Every relation: containment first, derived from the kinds, then the others as declared.
   std::vector<RelationSpec> buildRelations() const;
   /// Whether a kind is among `kinds`; an empty list holds any kind.

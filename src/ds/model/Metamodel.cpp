@@ -338,6 +338,15 @@ RelationSpec Metamodel::rel(const std::string& kind, const std::string& meaning,
   return {kind, meaning, std::move(from), std::move(to), {}};
 }
 
+RelationSpec Metamodel::paired(const std::string& kind, const std::string& meaning, std::vector<std::pair<Kind, Kind>> pairs) {
+  std::vector<Kind> from, to;
+  for (const auto& [f, t] : pairs) {
+    if (std::find(from.begin(), from.end(), f) == from.end()) from.push_back(f);
+    if (std::find(to.begin(), to.end(), t) == to.end()) to.push_back(t);
+  }
+  return {kind, meaning, std::move(from), std::move(to), std::move(pairs)};
+}
+
 // containment first, derived from where each kind may be declared, then every other relation as declared
 std::vector<RelationSpec> Metamodel::buildRelations() const {
   const Kind P = Kind::Package, M = Kind::Module, Rq = Kind::Requirement, V = Kind::Verification, Cs = Kind::Constraint;
@@ -355,16 +364,19 @@ std::vector<RelationSpec> Metamodel::buildRelations() const {
       rel("refines", "a requirement details another", {Rq}, {Rq}),
       rel("verifies", "a verification proves a requirement or a constraint", {V}, {Rq, Cs}),
       rel("about", "an artefact concerns the box it is declared in, where it gives its level", {Rq, V, Cs, Uc}, {}),
-      rel("realises", "the entity carries out an interface, or an interface operation a use case", {Cl, V, Op}, {I, Uc}),
+      // a class carries out an interface, an interface's operation a use case: no other pair (DS-226)
+      paired("realises", "the entity carries out an interface, or an interface operation a use case", {{Cl, I}, {Op, Uc}}),
       rel("exercised-by", "a behaviour is run by a verification", {S}, {V}),
-      rel("inherits", "a class derives from another; a use case specialises another", {Cl, Uc}, {Cl, Uc}),
+      paired("inherits", "a class derives from another; a use case specialises another", {{Cl, Cl}, {Uc, Uc}}),  // DS-226
       rel("bounded-by", "a template parameter is bounded by a class", {Cl}, {Cl}),
       rel("owns", "an attribute owns its value", {A}, {Cl, E}),
       rel("refs", "an attribute refers to a value it does not own", {A}, {Cl, E, I}),
       rel("shares", "an attribute shares ownership of its value", {A}, {Cl, E}),
       rel("uses", "the entity names a type", {F, Me, Op, O, S, Uc, Kind::Outcome},
           {Cl, E, I}),  // an attribute owns, refs or shares its type (DS-439)
-      rel("behaviour-of", "a sequence or a state machine is the behaviour of its subject", {S, St}, {Cl, F, Me, Op, I, P, M, Uc}),
+      // a sequence is the behaviour of any of these; a state machine of a class, or of an interface (its navigation) (DS-226)
+      paired("behaviour-of", "a sequence or a state machine is the behaviour of its subject",
+             {{S, Cl}, {S, F}, {S, Me}, {S, Op}, {S, I}, {S, P}, {S, M}, {S, Uc}, {St, Cl}, {St, I}}),
       rel("calls", "a message calls an operation", {Ms}, {F, Me, Op}),
       rel("expands-to", "a message expands to the sequence of what it calls", {Ms}, {S}),
       rel("couples-transient", "a behaviour touches a type for the length of a call", {S}, {Cl, E, F, I}),

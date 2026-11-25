@@ -232,6 +232,35 @@ TEST_F(TestMetamodelConformance, ARelationTheLanguageDoesNotAllowIsReportedAndNo
   bool realises = false;
   for (const auto& r : right.index().all()) realises |= r.kind == "realises" && r.from == "p@m::Api" && r.to == "p@engine";
   EXPECT_TRUE(realises);
+
+  // DS-226: each relation joins exact pairs of kinds, never any of its sources to any of its targets
+  const auto findings = [this](const std::string& text) {
+    ds::model::Model model{metamodel};
+    ds::parse::Parser parser;
+    ds::bind::Binder binder(model, metamodel);
+    binder.bind(parser.parseText("b.ds", text));
+    ds::check::CheckerFactory::make(model, metamodel)->run(binder.notes());
+    std::vector<std::string> kinds;
+    for (const auto& f : model.findings())
+      if (f.code == "E-RELATION-KIND") kinds.push_back(f.message);
+    return kinds;
+  };
+  const std::string shop =
+      "package s {\n  usecase UC-00001-1 buy(item: string) -> int {\n    title: Buy\n  }\n"
+      "  interface shell {\n    kind: cli\n    operation buy(item: string) -> int : UC-00001-1\n  }\n"
+      "  requirement REQ-00001-1: The shop shall sell\n";
+  // a class that names a use case as its base: read whole, not as a class UC nobody designs, and told
+  const std::vector<std::string> base = findings(shop + "  module m {\n    class Cart : UC-00001-1 { }\n  }\n}\n");
+  ASSERT_EQ(base.size(), 1u);
+  EXPECT_EQ(base[0], "s@m::Cart inherits UC-00001-1, a usecase: the language joins inherits only between other kinds");
+  // a verification that names an interface: a verification realises nothing
+  const std::vector<std::string> verification =
+      findings(shop + "  verification VER-00001-1 {\n    @requirement REQ-00001-1\n    @interface shell\n    method: review\n  }\n}\n");
+  ASSERT_EQ(verification.size(), 1u);
+  EXPECT_EQ(verification[0], "VER-00001-1 realises s@shell, an interface: the language joins realises only between other kinds");
+  // what the pairs keep: a class inheriting a class, realising an interface, an operation realising a use case
+  EXPECT_TRUE(
+      findings(shop + "  module m {\n    class Cart {\n      @interface shell\n    }\n    class Basket : Cart { }\n  }\n}\n").empty());
 }
 
 }  // namespace
