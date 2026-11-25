@@ -6,7 +6,8 @@
 //  F1  `function name(params) -> type` in a module, with the optional
 //      visibility of a member in front (`- function _row_of(...)`), public when
 //      absent. Its identity is the module's plus its name, like a class:
-//      iris@tasks::gather. Two of one name are E-DUPLICATE-IDENTITY.
+//      iris@tasks::gather. Two of one name with different parameters are overloads,
+//      each named by its parameter types (DS-455); with the same types, E-DUPLICATE-IDENTITY.
 //  F2  Its signature and body are a method's: parameters and the return give
 //      `uses`; the body holds notes, annotations (@requirement, @constraint),
 //      rules and nested artefacts.
@@ -39,7 +40,8 @@ package iris {
     }
     - function _row_of(task: Task) -> std::string
     function describe(tasks: std::vector<Task>) -> std::string
-    function describe(task: Task) -> std::string      // ! E-DUPLICATE-IDENTITY: a function is identified by its name, like a member
+    function describe(task: Task) -> std::string      // an overload: describe(Task) beside describe(std::vector<Task>) (DS-455)
+    function describe(one: Task) -> std::string       // ! E-DUPLICATE-IDENTITY: the same name and the same types, describe(Task) again
 
     sequence gather {
       -> board.issues(project) -> issues

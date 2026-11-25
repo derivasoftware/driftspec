@@ -132,7 +132,14 @@ void SequenceBinder::bind(TSNode c, const BindContext& ctx) const {
   const std::string& scope = ctx.scope;
   const std::string& owner = ctx.owner;
   const model::Location loc = ctx.locationOf(c);
-  const std::string subject = ctx.reader.fieldText(c, Field::subject);
+  std::string subject = ctx.reader.fieldText(c, Field::subject);
+  const TSNode overload = ctx.reader.child(c, Field::overload);
+  if (!ts_node_is_null(overload)) {  // the overload it is the behaviour of, by its parameter types (DS-455)
+    std::vector<std::string> types;
+    for (uint32_t i = 0; i < ts_node_named_child_count(overload); ++i)
+      types.push_back(SignatureBinder::normalised(ctx.reader.textOf(ts_node_named_child(overload, i))));
+    subject = model::Identity(subject).withParameters(text::join(types, ", ")).text();
+  }
   const std::string scenario = ctx.reader.fieldText(c, Field::scenario);
   model::Entity e;
   e.kind = model::Kind::Sequence;

@@ -42,6 +42,7 @@ enum class Field : std::uint8_t {
   operators,
   optional,
   otherwise,
+  overload,
   ownership,
   package,
   parameter,

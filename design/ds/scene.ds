@@ -653,6 +653,24 @@ package driftspec@ds {
       + sequences: std::vector<std::string>
     }
 
+    dataclass WalkStepView {                 // one step of a walkthrough, landed on the nodes drawn (DS-471)
+      @requirement REQ-00243-1
+      + title: std::string
+      + diagram: std::string                 // the shown diagram's name, as DiagramView names it
+      + behaviour: std::string               // the behaviour a sequence step replays; "" for none
+      + focus: std::vector<std::string>
+      + highlight: std::vector<std::string>
+      + at: std::string
+      + text: std::string
+    }
+
+    dataclass WalkView {                     // a walkthrough as the scene carries it (DS-471)
+      @requirement REQ-00243-1
+      + name: std::string
+      + title: std::string
+      + owns many steps: std::vector<WalkStepView>
+    }
+
     dataclass DiagramView {                  // a diagram of the workspace and the nodes it shows
       @requirement REQ-00072-2
       + name: std::string
@@ -689,6 +707,7 @@ package driftspec@ds {
       + owns many requirements: std::vector<Requirement>
       + owns many verifications: std::vector<Verification>
       + owns many rules: std::vector<RuleView>
+      + owns many walkthroughs: std::vector<WalkView>   // every walkthrough, its steps in order (DS-471)
     }
 
     // The scene builds the document and nothing else (DS-126): writing it as JSON or as the viewer
@@ -901,6 +920,15 @@ package driftspec@ds {
       + RulesLayer(model: model::Model, metamodel: model::Metamodel, map: Map)
       + decorate(out_document: SceneDocument) -> void
       - place(id: std::string) -> std::string
+    }
+
+    // walkthroughs: each one the model writes, from the record model::Walkthroughs builds once, landed on the map
+    class WalkthroughLayer : ILayer {
+      @requirement REQ-00243-1
+      - refs model_: model::Model
+      - refs map_: Map
+      + WalkthroughLayer(model: model::Model, map: Map)
+      + decorate(out_document: SceneDocument) -> void
     }
 
     // ---- the scene: the entry point the rest of ds uses -------------------------------------------

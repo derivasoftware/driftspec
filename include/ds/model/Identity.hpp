@@ -36,6 +36,14 @@ class Identity {
   bool within(const Identity& outer) const;
   /// A template's identity with how many parameters it takes (R15): Repository → Repository<1>.
   Identity withArity(std::size_t arity) const;
+  /// An overload's identity, its parameter types as written (DS-455): C::of → C::of(scene::SceneDocument). Written so
+  /// only when two operations of one owner share a name; otherwise an operation is its bare name.
+  Identity withParameters(const std::string& types) const;
+  /// Without the parameter list that closes it, if any (DS-455): C::of(scene::SceneDocument) → C::of.
+  Identity bare() const;
+  /// Where `what` (:: or @) is found outside a parameter list, the first or the last time (DS-455): an overload's
+  /// types hold :: and @ of their own (of(shop@core::Item)), which never split its identity. npos when nowhere.
+  static std::size_t findOutsideParameters(const std::string& text, const std::string& what, bool last);
   /// The name of a diagram's identity: diagram:CL_Shop → CL_Shop (anything else is kept).
   std::string diagramName() const;
 

@@ -1,6 +1,7 @@
 #include "ds/export/JsonExport.hpp"
 
 #include "ds/model/Metamodel.hpp"
+#include "ds/model/Walkthroughs.hpp"
 
 namespace ds {
 namespace exporter {
@@ -132,7 +133,31 @@ void JsonExport::render(const model::Model& model, emit::ISink& out_sink) const 
   metamodel(out_sink);
   out_sink.field("relations");
   relations(model.index().all(), out_sink);
-  out_sink.field("version").value(metamodel_.version()).endRecord();
+  out_sink.field("version").value(metamodel_.version());
+  const std::vector<model::Walkthrough> walks = model::Walkthroughs::of(model);
+  if (!walks.empty()) {  // a workspace with none is written as it was (DS-471)
+    out_sink.field("walkthroughs");
+    walkthroughs(walks, out_sink);
+  }
+  out_sink.endRecord();
+}
+
+// each walkthrough by identity, its steps in order, every key in byte order (DS-471)
+void JsonExport::walkthroughs(const std::vector<model::Walkthrough>& walks, emit::ISink& out_sink) {
+  out_sink.beginList();
+  for (const auto& w : walks) {
+    out_sink.beginRecord().field("id").value(w.id).field("name").value(w.name).field("steps").beginList();
+    for (const auto& s : w.steps) {
+      out_sink.beginRecord().field("at").value(s.at).field("diagram").value(s.diagram).field("focus");
+      texts(s.focus, out_sink);
+      out_sink.field("highlight");
+      texts(s.highlight, out_sink);
+      out_sink.field("id").value(s.id).field("n").integer(s.n).field("scenario").value(s.scenario).field("show").value(s.show);
+      out_sink.field("text").value(s.text).field("title").value(s.title).endRecord();
+    }
+    out_sink.endList().field("title").value(w.title).endRecord();
+  }
+  out_sink.endList();
 }
 
 }  // namespace exporter

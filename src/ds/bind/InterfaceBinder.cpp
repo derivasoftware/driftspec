@@ -37,7 +37,7 @@ void InterfaceBinder::bind(TSNode node, const BindContext& ctx) const {
     model::Entity o;
     o.kind = model::Kind::Operation;
     o.name = ctx.reader.fieldText(op, Field::name);
-    o.id = e.id + "::" + o.name;
+    o.id = SignatureBinder::identityOf(ctx.reader, op, e.id + "::" + o.name);  // an overload carries its types (DS-455)
     o.scope = e.id;
     o.location = ctx.locationOf(op);
     signatures_.bind(op, ctx, o, scope, {});

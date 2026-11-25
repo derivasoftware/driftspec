@@ -56,11 +56,12 @@ class TestLayers : public ::testing::Test {
 TEST_F(TestLayers, TheLayersComeInOrderAndEachAddsItsOwnPart) {
   const ds::scene::Map map({});
   const auto all = ds::scene::LayerFactory::of(model, metamodel, map);
-  ASSERT_EQ(all.size(), 4u);
+  ASSERT_EQ(all.size(), 5u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::TraceLayer*>(all[2].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::RulesLayer*>(all[3].get()), nullptr);
+  EXPECT_NE(dynamic_cast<ds::scene::WalkthroughLayer*>(all[4].get()), nullptr);  // DS-471
 
   const ds::scene::Scene scene(model, metamodel);
   const ds::scene::SceneDocument doc = scene.build();

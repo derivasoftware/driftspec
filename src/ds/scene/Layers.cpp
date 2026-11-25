@@ -10,6 +10,7 @@ std::vector<std::unique_ptr<ILayer>> LayerFactory::of(const model::Model& model,
   out.push_back(std::make_unique<BehaviourLayer>(model, map));
   out.push_back(std::make_unique<TraceLayer>(model, map));
   out.push_back(std::make_unique<RulesLayer>(model, metamodel, map));
+  out.push_back(std::make_unique<WalkthroughLayer>(model, map));
   return out;
 }
 
