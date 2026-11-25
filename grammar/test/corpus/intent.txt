@@ -479,3 +479,48 @@ diagram TB_Requirements {
             (name)
             (qualified_name
               (name))))))))
+
+==================
+intent: An outcome that is the end of a failure
+==================
+
+package bank {
+  usecase UC-00002-1 withdraw(amount: int) -> int {
+    title: Withdraw cash
+    outcome default: the cash
+    outcome bank-down -> int fails BankUnreachable: nothing is paid
+    outcome refused fails ds::Refused: the account says no
+  }
+}
+
+---
+
+(source_file
+  (package
+    (name)
+    (usecase
+      (name)
+      (name)
+      (parameters
+        (parameter
+          (name)
+          (type)))
+      (type)
+      (field
+        (name)
+        (line_text))
+      (outcome
+        (name)
+        (line_text))
+      (outcome
+        (name)
+        (type)
+        (qualified_name
+          (name))
+        (line_text))
+      (outcome
+        (name)
+        (qualified_name
+          (name)
+          (name))
+        (line_text)))))

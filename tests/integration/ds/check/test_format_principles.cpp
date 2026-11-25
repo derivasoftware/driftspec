@@ -83,9 +83,9 @@ TEST_F(TestFormatPrinciples, ADescriptionThatMakesItsOwnSinkIsTold) {
 }
 
 TEST_F(TestFormatPrinciples, ADoorThatNamesADescriptionIsTold) {
-  // a behaviour of the command line is no class, so the convention of the families does not reach it; format's rule does
+  // a verb of the command line that names the report's description is told by format's rule (DS-409)
   const std::vector<std::string> rules =
-      broken({{"ds/app.ds", "    sequence check {", "      local described: format::ReportDescription\n"}});
+      broken({{"ds/app.ds", "    sequence CheckCommand::run {", "      local described: format::ReportDescription\n"}});
   EXPECT_TRUE(has(rules, descriptionsByFactory));
   EXPECT_FALSE(has(rules, writersByFactory));
 }
@@ -101,7 +101,8 @@ TEST_F(TestFormatPrinciples, AnotherFactoryThatNamesADescriptionIsTold) {
 TEST_F(TestFormatPrinciples, AClassThatNamesAWriterIsTold) {
   const std::vector<std::string> api = broken({{"ds/api.ds", "    class Workspace {", "      - owns page_: format::ViewerPage\n"}});
   EXPECT_TRUE(has(api, writersByFactory));
-  const std::vector<std::string> app = broken({{"ds/app.ds", "    sequence main / render {", "      local page: format::ViewerPage\n"}});
+  const std::vector<std::string> app =
+      broken({{"ds/app.ds", "    sequence RenderCommand::page {", "      local page: format::ViewerPage\n"}});
   EXPECT_TRUE(has(app, writersByFactory));
   EXPECT_FALSE(has(app, descriptionsByFactory));
 }

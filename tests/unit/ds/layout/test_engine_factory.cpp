@@ -4,6 +4,8 @@
 #include "ds/layout/Frame.hpp"
 #include "ds/layout/Graph.hpp"
 #include "ds/layout/PackingEngine.hpp"
+#include "ds/layout/SequenceSpacing.hpp"
+#include "ds/layout/StackedEngine.hpp"
 
 namespace {
 
@@ -19,6 +21,14 @@ TEST(TestEngineFactory, ThePackingEngineIsHandedOutAsAnEngine) {
   ds::layout::Graph graph;
   graph.root = &unit;
   EXPECT_DOUBLE_EQ(engine->place(graph).boxes.at(0).w, 120);  // the root is the first box read
+}
+
+/// A sequence is placed by the stacked engine, handed out as a sequence engine (DS-464).
+TEST(TestEngineFactory, TheStackedEngineIsHandedOutAsASequenceEngine) {
+  const auto engine = ds::layout::EngineFactory::sequence(ds::layout::SequenceSpacing::of(8, 18, 7));
+  ASSERT_NE(engine, nullptr);
+  EXPECT_NE(dynamic_cast<const ds::layout::StackedEngine*>(engine.get()), nullptr);
+  EXPECT_TRUE(engine->place(ds::layout::SequenceGraph()).lanes.empty());
 }
 
 }  // namespace

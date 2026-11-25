@@ -69,8 +69,10 @@ void WalkthroughCheck::checkStep(const model::Entity& step) {
   // the scenario of the behaviour the shown diagram draws
   const std::string scenario = step.field("scenario");
   if (diagram && !scenario.empty()) {
-    const std::string behaviour = diagram->field("include") + "::sequence";
-    if (!model::Paths(*model_).hasScenario(behaviour, scenario))
+    // a scenario is a named branch of the behaviour, or a sequence written apart for it (`sequence X / s`)
+    const model::Identity subject(diagram->field("include"));
+    const bool apart = model_->find(subject.sequence(scenario).text()) != nullptr;
+    if (!apart && !model::Paths(*model_).hasScenario(subject.sequence().text(), scenario))
       found_.push_back(metamodel_->finding(model::Code::W_SCENARIO_UNDECLARED,
                                            step.id + " (" + step.name + ") shows " + show + " / " + scenario + ", and " +
                                                diagram->field("include") + " has no scenario '" + scenario + "'",

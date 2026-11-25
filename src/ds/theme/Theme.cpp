@@ -204,7 +204,7 @@ Theme::Theme()
                {"ar", "#5d6b65", "#93a39c"},
            }},
       },
-      font_{"\"JetBrains Mono\", \"Cascadia Code\", \"SFMono-Regular\", Menlo, Consolas, ui-monospace, monospace", 12, {8, 18}, {1, 1}},
+      font_{"\"JetBrains Mono\", \"Cascadia Code\", \"SFMono-Regular\", Menlo, Consolas, ui-monospace, monospace", 12, {8, 18, 7}, {1, 1, 1}},
       terminal_{
           {Role::muted, "2", "muted"},
           {Role::name, "1", ""},
