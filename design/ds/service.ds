@@ -182,6 +182,101 @@ package driftspec@ds {
 
   module service {
     @requirement REQ-00261-1
+    @requirement REQ-00207-1                 // a use case knows no door (DS-476)
+    @requirement REQ-00208-1                 // only UseCaseFactory names a use case (DS-476)
+    @requirement REQ-00209-1                 // every operation of the service is a member of a class (DS-476)
+
+    // ---- the service's architecture (DS-406, DS-476), as requirements and the rules that hold them ------------------
+    requirement REQ-00207-1 {
+      status: draft
+      @refines REQ-00261-1
+      title: The service shall depend on no door of the engine (the api, the command line, the Python face), so a use case runs the same whichever door calls it
+      text:
+        A use case is given the loaded model, a request and the sink its door lends it, and returns an outcome its UC
+        declares. No class of the service names or calls anything of api (the Api, the Workspace, the Browser), of
+        app (the command line and its verbs) or of the Python face, its native module and its sink included. Each
+        door translates the outcome and the failures to its own convention (DS-409), so a new door, or a change to
+        one, changes no use case.
+      rationale:
+        Owner, 2026-11-24 (DS-406): a service layer of use cases, the doors thin adapters over it. DS-476 (DS-410a),
+        2026-11-25: the decision as a rule, which today's design keeps.
+      tags: architecture, service
+      verification VER-00237-1 {
+        status: draft
+        title: Integration tests confirm the design of the service depends on no door, and is told when a use case holds the workspace, runs a verb of the command line or names the Python face's sink
+        method: test
+        tests:
+          tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.TheDesignOfDsKeepsTheRulesOfTheService
+          tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.AUseCaseThatKnowsADoorIsTold
+      }
+    }
+
+    requirement REQ-00208-1 {
+      status: draft
+      @refines REQ-00261-1
+      title: A use case shall be named by UseCaseFactory alone, so every door and the workspace hold it as the IUseCase it is and no use case names another
+      text:
+        A door or the workspace asks UseCaseFactory for a use case by its name and holds it as an IUseCase, so a use
+        case added or taken out changes neither. Two rules hold it. For every class outside the family it is the
+        convention of the families, families-are-reached-through-their-interface (REQ-00198-1), from which a factory
+        is exempt by its name (DS-451). A use case is inside the family, which that rule leaves free, so for the use
+        cases themselves it is the service's own rule, no-use-case-knows-another. The sequences of the use cases'
+        interfaces name the class that handles each operation: that is the trace from the UC to its class, not a
+        use of it.
+      rationale:
+        Owner, 2026-11-24 (DS-406): UseCaseFactory is the one place naming the use cases. DS-476 (DS-410a),
+        2026-11-25: tried on a copy, the convention of the families told a Workspace and a Browser that named a use
+        case and left a use case that held another untold, so the service adds the rule its siblings need, as bind,
+        check and render do.
+      tags: architecture, service, conventions
+      verification VER-00238-1 {
+        status: draft
+        title: Integration tests confirm no class of ds's design but UseCaseFactory names a use case, and the design is told when a door names one or a use case names another
+        method: test
+        tests:
+          tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.TheDesignOfDsKeepsTheRulesOfTheService
+          tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.ADoorThatNamesAUseCaseIsTold
+          tests/integration/ds/check/test_service_principles.cpp::TestServicePrinciples.AUseCaseThatKnowsAnotherIsTold
+      }
+    }
+
+    // the doors of the engine (DS-406): each translates a use case's outcome and its failures to its own convention
+    definition door(x) {
+      title: x is part of a door of the engine: the api, the command line, or the Python face with its native module
+      if x in driftspec@ds@api
+      if x in driftspec@ds@app
+      if x in driftspec@driftspec
+    }
+
+    // to know something is to depend on it, or to call it from a behaviour, as a static operation is called with no
+    // local to depend on (the idiom of only-the-api-chooses-the-steps)
+    definition knows(c, x) {
+      title: c depends on x, or a behaviour of one of its members calls x
+      if depends(c, x)
+      if m in c, s behaviour-of m, y in s, y calls x
+    }
+
+    rule use-cases-know-no-door {
+      title: no class of the service depends on a door, the api, the command line or the Python face, nor calls one, so a use case is the same whichever door calls it
+      @requirement REQ-00207-1
+      for class c in driftspec@ds@service
+      never knows(c, x), door(x)
+    }
+
+    rule no-use-case-knows-another {
+      title: a use case depends on no other use case, so each is reached through IUseCase and made by UseCaseFactory alone
+      @requirement REQ-00208-1
+      for class a in driftspec@ds@service, class b in driftspec@ds@service
+      where a inherits driftspec@ds@service::IUseCase, b inherits driftspec@ds@service::IUseCase, a != b
+      never depends(a, b)
+    }
+
+    rule service-operations-belong-to-classes {
+      title: no function is written in the service's module, so every operation of a use case is a member of a class
+      @requirement REQ-00209-1
+      for function f in driftspec@ds@service
+      never f in driftspec@ds@service
+    }
 
     // what a use case is asked: its arguments by name (the diagram, the question, the topic, the line...), each a text,
     // read as it is, as a whole number, as a flag or as lines
