@@ -1,21 +1,16 @@
 #include "ds/api/Workspace.hpp"
 
-#include <optional>
-
 #include "ds/api/Api.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DescriptionFactory.hpp"
-#include "ds/format/FormatFactory.hpp"
 #include "ds/model/Identity.hpp"
 #include "ds/model/SequenceTree.hpp"
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/query/Walk.hpp"
-#include "ds/render/IrExport.hpp"
-#include "ds/scene/Scene.hpp"
 
 namespace ds {
 namespace api {
@@ -191,39 +186,42 @@ std::string Workspace::ask(const std::string& question, const std::string& subje
 
 std::string Workspace::shows(const std::string& diagram) const { return ask("shows", diagram); }
 
+// render and page are the surface of a workspace made with madeFor (DS-474): see-design run over the model it holds,
+// with no prepare, since madeFor checked it for what it gives. A long-lived workspace made over its use cases holds a
+// stale model until a use case runs, so it asks run, never these.
 std::string Workspace::render(const std::string& diagram, const std::string& format, int width) const {
-  // a diagram is its IR: the IR, its layout and its cells are described in JSON, the layout and the cells a line after
-  // (DS-398); the drawings are written by their writers, each handed the document (DS-458); a name that is none of
-  // them is a pair ds does not write, said before anything is drawn
+  // a diagram is its IR: the IR, its layout and its cells are described in compact JSON, the layout and the cells a
+  // line after (DS-398); a drawing in svg or text is see-design's, written as it is into the text sink (DS-474); a
+  // name that is none of them is a pair ds does not write, said before anything is drawn (DS-453)
   const bool described = format == "ir" || format == "layout" || format == "cells";
-  const auto writers = format::FormatFactory::diagram(theme_);
-  const auto chosen = writers.find(format);
-  if (!described && chosen == writers.end()) throw emit::NotImplemented("diagram", format, {"cells", "ir", "layout", "svg", "text"});
-  const std::optional<render::IrDocument> document =
-      render::IrExport(model_, metamodel_).document(model::Identity::ofDiagram(diagram).text());
-  if (!document) return "";
-  const auto sink = emit::SinkFactory::json(false);
-  if (format == "ir") {
-    format::DescriptionFactory::ir(*document)->describe(*sink);
-    return sink->result();
+  if (!described && format != "svg" && format != "text")
+    throw emit::NotImplemented("diagram", format, {"cells", "ir", "layout", "svg", "text"});
+  const auto sink = emit::SinkFactory::of(described ? "json" : "text", false);
+  const service::Outcome outcome = seen({{{"format", format}, {"diagram", diagram}, {"width", std::to_string(width)}}}, *sink);
+  if (outcome.name != "default") return "";  // no such diagram
+  return sink->result() + (format == "layout" || format == "cells" ? "\n" : "");
+}
+
+// see-design run over the model this workspace holds, for render and page. Neither handler fires in practice: render
+// checks the format before it runs, both build the request themselves, and see-design is always one of the use cases.
+// A BadRequest becomes NotImplemented only because these doors build their own request: one here would be a bug in
+// Workspace, said as the one failure render promises.
+service::Outcome Workspace::seen(const service::Request& request, emit::ISink& sink) const {
+  try {
+    return useCases_.of("see-design")->run(model_, request, sink);
+  } catch (const service::BadRequest& e) {
+    throw emit::NotImplemented("diagram", request.getOr("format", ""), {});
   }
-  if (described) {
-    const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
-                                                : format::DescriptionFactory::cells(*document, theme_, width);
-    description->describe(*sink);
-    return sink->result() + "\n";
-  }
-  format::FormatOptions options;
-  options.width = width;
-  return chosen->second->write(*document, options, *sink);
 }
 
 std::string Workspace::page(const std::string& title, const std::vector<std::string>& focus) const {
-  format::FormatOptions options;
-  options.title = title;
-  options.focus = focus;
-  const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-  return format::FormatFactory::scene().at("html")->write(scene::Scene(model_, metamodel_).build(), options, *sink);
+  // the viewer's page is see-design's (DS-474), written as it is into the text sink: the identities it opens framed
+  // on travel one a line
+  std::string framed;
+  for (const auto& id : focus) framed += id + "\n";
+  const auto sink = emit::SinkFactory::text();
+  seen({{{"format", "html"}, {"title", title}, {"focus", framed}}}, *sink);
+  return sink->result();
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }

@@ -45,9 +45,8 @@ std::vector<CommandSpec> Manual::buildCommands() {
         {2, "bad usage (a format that needs a diagram without one), or nothing to read at the path"}}},
       {"query",
        "ds query <workspace> <question> [subject] [--json]",
-       // the same as Query::usage(), which the model may not ask: a test holds them equal (DS-436)
-       "ask the model: diagrams · entities [scope] · relations <identity> · artefacts <identity> · behaviours <identity> · failures "
-       "<identity> · shows <diagram> · findings [file | identity] · coverage [file | identity] · coupling",
+       // the usage of the one table of questions, which the query reads too (DS-436, DS-474)
+       "ask the model: " + usage(),
        {{0, "answered"},
         {1, "not a question, an identity the model does not declare, or a subject of a kind the question does not take"},
         {2, "bad usage, or no workspace at the path"}}},
@@ -56,6 +55,25 @@ std::vector<CommandSpec> Manual::buildCommands() {
        "this manual: the index, a kind (class, sequence...), a finding code (W-REF-UNDECLARED...), annotations, commands or codes",
        {{0, "the page"}, {1, "no such topic"}, {2, "bad usage"}}},
   };
+}
+
+std::vector<Question> Manual::questions() {
+  return {{"diagrams", "", "no subject"},
+          {"entities", "[scope]", "a scope: something others are declared in; with * after it (shop@*), all it holds at any depth"},
+          {"relations", "<identity>", "any identity"},
+          {"artefacts", "<identity>", "a design element: what realises, satisfies or obeys an artefact"},
+          {"behaviours", "<identity>", "what has a behaviour"},
+          {"failures", "<identity>", "what a failure may escape"},
+          {"shows", "<diagram>", "a diagram"},
+          {"findings", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
+          {"coverage", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
+          {"coupling", "", "no subject"}};
+}
+
+std::string Manual::usage() {
+  std::string out;
+  for (const auto& q : questions()) out += (out.empty() ? "" : " · ") + q.name + (q.subject.empty() ? "" : " " + q.subject);
+  return out;
 }
 
 const CommandSpec* Manual::commandOf(const std::string& name) const {

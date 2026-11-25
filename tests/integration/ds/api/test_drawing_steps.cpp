@@ -13,7 +13,6 @@
 #include "ds/check/Checker.hpp"
 #include "ds/check/Selection.hpp"
 #include "ds/check/Steps.hpp"
-#include "ds/format/DiagramFormats.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"

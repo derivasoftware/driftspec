@@ -276,6 +276,14 @@ class PySink : public ds::emit::ISink {
   ds::emit::ISink& table(const std::vector<std::string_view>&) override { return *this; }
   ds::emit::ISink& row(const std::vector<std::string_view>&) override { return *this; }
   ds::emit::ISink& endTable() override { return *this; }
+  /// A text already written in its technology, a drawing or the viewer's page (DS-474): kept as the str it is, the
+  /// object built, so the Python face gets the drawing as ds render writes it. Once per document: a second one is
+  /// refused.
+  ds::emit::ISink& verbatim(std::string_view text) override {
+    if (verbatim_) throw std::logic_error("PySink: a second verbatim text in one document");
+    verbatim_ = true;
+    return put(PyUnicode_DecodeUTF8(text.data(), static_cast<Py_ssize_t>(text.size()), "strict"));
+  }
   /// The description of `document` ends: one that built nothing here fails NotImplemented, as the JSON sink does.
   ds::emit::ISink& described(std::string_view document) override {
     if (!root_) throw ds::emit::NotImplemented(std::string(document), "python", {});
@@ -288,6 +296,7 @@ class PySink : public ds::emit::ISink {
     PyObject* out = root_ ? root_ : (Py_INCREF(Py_None), Py_None);
     root_ = nullptr;
     open_.clear();
+    verbatim_ = false;
     return out;
   }
 
@@ -321,6 +330,7 @@ class PySink : public ds::emit::ISink {
   PyObject* root_ = nullptr;
   std::vector<PyObject*> open_;  ///< the record or list being written, innermost last (borrowed: their parent holds them)
   std::string key_;
+  bool verbatim_ = false;  ///< a verbatim text is the object built since the last take
 };
 
 // a request as a use case reads it: its arguments by name, each a text

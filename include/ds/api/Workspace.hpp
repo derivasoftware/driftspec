@@ -13,7 +13,6 @@
 #include "ds/parse/Parser.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/service/UseCases.hpp"
-#include "ds/theme/Theme.hpp"
 
 namespace ds {
 namespace api {
@@ -88,10 +87,12 @@ class Workspace {
   std::string ask(const std::string& question, const std::string& subject) const;
   std::string shows(const std::string& diagram) const;
 
-  /// A diagram drawn in a format (svg, text, cells, ir, layout); "" when there is no such diagram. A format that is
-  /// none of them is a pair ds does not write: emit::NotImplemented, naming the diagram and the format (DS-398).
+  /// A diagram drawn in a format (svg, text, cells, ir, layout), as see-design draws it (DS-474); "" when there is no
+  /// such diagram. A format that is none of them is a pair ds does not write: emit::NotImplemented, naming the diagram
+  /// and the format (DS-398). With page, the surface of a workspace made with madeFor: see-design over the model it
+  /// holds, with no prepare, so a long-lived one, whose model is stale until a use case runs, asks run instead.
   std::string render(const std::string& diagram, const std::string& format, int width) const;
-  /// The viewer as one page, framed on the identities given.
+  /// The viewer as one page, framed on the identities given, as see-design writes it (DS-474).
   std::string page(const std::string& title, const std::vector<std::string>& focus) const;
 
  private:
@@ -105,10 +106,12 @@ class Workspace {
   std::string relations(const std::vector<model::Relation>& relations) const;
   /// A query's answers described in JSON, as ds query --json writes them (DS-398).
   static std::string answers(const std::vector<query::Answer>& answers);
+  /// see-design run over the model it holds, for render and page (DS-474): a BadRequest, which only a bug in the request
+  /// they build could raise, is said as the NotImplemented render promises.
+  service::Outcome seen(const service::Request& request, emit::ISink& sink) const;
 
   const service::UseCaseFactory useCases_;  ///< the use cases it serves, aggregated (DS-408)
   const model::Metamodel& metamodel_;
-  const theme::Theme theme_;  ///< the style its drawings are written in, made once with it (DS-393)
   Output output_;
   std::string diagram_;
   bool given_ = false;  ///< made for an output (the doors before DS-409): every reload checks what that output reads

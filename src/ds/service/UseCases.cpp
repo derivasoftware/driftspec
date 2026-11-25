@@ -1,29 +1,21 @@
 #include "ds/service/UseCases.hpp"
 
+#include <algorithm>
+#include <set>
+
 #include "ds/emit/NotImplemented.hpp"
+#include "ds/emit/SinkFactory.hpp"
 #include "ds/export/JsonExport.hpp"
 #include "ds/format/DescriptionFactory.hpp"
+#include "ds/format/FormatFactory.hpp"
+#include "ds/model/Identity.hpp"
 #include "ds/model/Manual.hpp"
 #include "ds/parse/Parser.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 
 namespace ds {
 namespace service {
-
-namespace {
-
-/// An argument written as a whole number; BadRequest when it is not one.
-int number(const Request& request, const std::string& name, const std::string& fallback) {
-  const std::string text = request.getOr(name, fallback);
-  try {
-    std::size_t end = 0;
-    const int value = std::stoi(text, &end);
-    if (end == text.size()) return value;
-  } catch (const std::exception&) {
-  }
-  throw BadRequest(name + " is no whole number: " + text);
-}
-
-}  // namespace
 
 // ---- UC-00001-1 ------------------------------------------------------------------------------------------------
 
@@ -47,30 +39,109 @@ std::optional<render::IrDocument> SeeDesign::diagram(const model::Model& model, 
   return render::IrExport(model, metamodel_).document(model::Identity::ofDiagram(name).text());
 }
 
+// a diagram is not drawn of what did not read whole (DS-433): a file of its own, or one that declares what it shows,
+// that did not parse may hold the very boxes it draws. A diagram that is missing or shows nothing may have been lost to
+// any of them; a file it does not read stops nothing (DS-411)
+std::string SeeDesign::unread(const model::Model& model, const std::string& name, const std::string& workspace) const {
+  std::set<std::string> reads;
+  const model::Entity* d = model.find(model::Identity::ofDiagram(name).text());
+  if (d) reads.insert(d->location.file);
+  std::size_t shown = 0;
+  for (const auto& a : query::QueryFactory::of(model, metamodel_)->ask("shows", name))
+    if (const model::Entity* e = a.kind == "error" ? nullptr : model.find(a.id)) {
+      reads.insert(e->location.file);
+      ++shown;
+    }
+  const bool lost = !d || shown == 0;  // missing, or showing nothing: what did not parse may be why
+  std::string said;
+  std::size_t count = 0;
+  for (const auto& f : model.findings()) {
+    if ((f.code != "E-SYNTAX" && f.code != "E-ENCODING") || !(lost || reads.count(f.location.file))) continue;
+    said += f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column) + "  " + f.code + "  " +
+            f.message + "\n";
+    ++count;
+  }
+  if (!count) return "";
+  const std::string files = count == 1 ? "a file" : std::to_string(count) + " files";
+  const std::string verb = count == 1 ? "does" : "do";
+  if (!lost) return said + name + " is not drawn: " + files + " it reads " + verb + " not read whole";
+  return said + name + (d ? " shows nothing" : " is not found") + ", and " + files + " of " + workspace + " " + verb +
+         " not read whole: what did not parse may be why";
+}
+
 check::Selection SeeDesign::needs(const model::Model& bound, const Request& request) const {
-  if (request.getOr("format", "json") == "json") return check::Selection::every();  // the viewer shows all a check derives
+  const std::string format = request.getOr("format", "json");
+  if (format == "json" || format == "html") return check::Selection::every();  // the viewer shows all a check derives
   // a drawing shows relations, calls and couplings, and stereotypes; a table is the answers of its rules (DS-268, DS-376)
   const check::Selection drawing = check::Selection::of({check::Step::Linker, check::Step::Behaviour, check::Step::Derivation});
   const std::string id = model::Identity::ofDiagram(request.getOr("diagram", "")).text();
   return bound.formulas().count(id) ? drawing.with(check::Step::Rules) : drawing;
 }
 
+std::vector<std::string> SeeDesign::formats() { return {"cells", "html", "ir", "json", "layout", "svg", "text"}; }
+
 Outcome SeeDesign::run(const model::Model& model, const Request& request, emit::ISink& sink) const {
   const std::string format = request.getOr("format", "json");
+  const std::vector<std::string> there = formats();
+  if (std::find(there.begin(), there.end(), format) == there.end()) throw emit::NotImplemented("diagram", format, there);
   if (format == "json") {
     const scene::SceneDocument document = viewer(model);
     format::DescriptionFactory::scene(document)->describe(sink);
     return {"default"};
   }
-  if (format != "layout" && format != "cells")  // the IR and the drawings are writers, not descriptions, until DS-400
-    throw emit::NotImplemented("diagram", format, {"json", "layout", "cells"});
-  const std::optional<render::IrDocument> document = diagram(model, request.get("diagram"));
-  if (!document) return {"no-diagram", "no diagram named " + request.get("diagram")};
-  // the layout and the cells are handed the document (DS-458): the sink lent receives the drawing alone, never read back
-  const int width = number(request, "width", "0");
-  const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
-                                              : format::DescriptionFactory::cells(*document, theme_, width);
-  description->describe(sink);
+  if (format == "html") return page(model, request, sink);
+  return drawn(model, format, request, sink);
+}
+
+Outcome SeeDesign::page(const model::Model& model, const Request& request, emit::ISink& sink) const {
+  // framed on what the diagram asked shows (DS-126), or on the identities the request names
+  std::vector<std::string> focus = request.lines("focus");
+  const std::string diagram = request.getOr("diagram", "");
+  if (!diagram.empty()) {
+    const auto shown = query::QueryFactory::of(model, metamodel_)->ask("shows", diagram);
+    if (!shown.empty() && shown.front().kind == "error") return {"no-diagram", "no diagram named " + diagram};
+    focus.clear();
+    for (const auto& a : shown) focus.push_back(a.id);
+  }
+  format::FormatOptions options;
+  options.title = request.getOr("title", "");
+  options.css = request.getOr("css", "");
+  options.focus = focus;
+  options.embed = request.flag("embed");
+  options.height = request.number("height", "640");
+  // the page is the scene in JSON inside its template: the scene and the focus travel compact inside it, written into
+  // a sink of their own; the page, written whole, is handed to the sink lent
+  const auto inside = emit::SinkFactory::json(false);
+  const scene::SceneDocument document = viewer(model);
+  sink.verbatim(format::FormatFactory::scene().at("html")->write(document, options, *inside));
+  return {"default"};
+}
+
+Outcome SeeDesign::drawn(const model::Model& model, const std::string& format, const Request& request, emit::ISink& sink) const {
+  const std::string& name = request.get("diagram");
+  if (request.flag("whole")) {  // asked whole, as the command line asks: what did not read whole is said, not drawn (DS-433)
+    const std::string why = unread(model, name, request.getOr("workspace", ""));
+    if (!why.empty()) return {"no-diagram", why};
+  }
+  const std::optional<render::IrDocument> document = diagram(model, name);
+  if (!document) return {"no-diagram", "no diagram named " + name};
+  // each is handed the document (DS-458): the sink lent receives the drawing alone, never read back
+  if (format == "ir") {
+    format::DescriptionFactory::ir(*document)->describe(sink);
+    return {"default"};
+  }
+  const int width = request.number("width", "0");
+  if (format == "layout" || format == "cells") {
+    const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
+                                                : format::DescriptionFactory::cells(*document, theme_, width);
+    description->describe(sink);
+    return {"default"};
+  }
+  // a drawing in svg or text, drawn here and handed to the sink as it is: a bridge until a figure is described as marks
+  // (DS-463)
+  const std::string drawing =
+      format == "svg" ? render::Svg(theme_).render(*document, width) : render::Text(theme_).render(*document, request.flag("color"), width);
+  sink.verbatim(drawing);
   return {"default"};
 }
 
@@ -169,7 +240,7 @@ std::vector<std::string> EditDesign::expectedAt(const std::string& text, int lin
 check::Selection EditDesign::needs(const model::Model&, const Request&) const { return check::Selection::of({}); }
 
 Outcome EditDesign::run(const model::Model&, const Request& request, emit::ISink& sink) const {
-  const std::vector<std::string> words = expectedAt(request.get("text"), number(request, "line", ""), number(request, "column", ""));
+  const std::vector<std::string> words = expectedAt(request.get("text"), request.number("line", ""), request.number("column", ""));
   sink.beginList();
   for (const auto& word : words) sink.value(word);
   sink.endList();

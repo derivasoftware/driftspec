@@ -108,7 +108,7 @@ TEST_F(TestSceneOfTheTaxonomy, AHeaderThatNamesABaseInAnotherModuleIsWideEnoughF
 
 TEST_F(TestSceneOfTheTaxonomy, TheViewerLightsRelationsUpAndDocksItsPanels) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {false, "hola"}, sink);
+  const std::string page = ds::format::ViewerPage().write(ds::scene::Scene(model, metamodel).build(), {"hola"}, sink);
   // only inheritance is a family of lines; the rest of the relations light up in their colour
   const auto at = page.find("const VIEWER='") + std::string("const VIEWER='").size();
   const std::string code = ds::format::common::Packing::unpack(page.substr(at, page.find('\'', at) - at));  // the viewer travels packed

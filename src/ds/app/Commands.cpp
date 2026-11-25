@@ -9,19 +9,14 @@
 #endif
 
 #include <CLI/CLI.hpp>
-#include <optional>
-#include <set>
-#include <vector>
 
 #include "ds/app/Disk.hpp"
 #include "ds/app/Output.hpp"
 #include "ds/emit/SinkFactory.hpp"
 #include "ds/format/DescriptionFactory.hpp"
-#include "ds/format/FormatFactory.hpp"
-#include "ds/model/Identity.hpp"
-#include "ds/query/Query.hpp"
-#include "ds/render/IrExport.hpp"
-#include "ds/scene/Scene.hpp"
+#include "ds/model/Manual.hpp"
+#include "ds/render/Svg.hpp"
+#include "ds/render/Text.hpp"
 
 namespace ds {
 namespace app {
@@ -92,9 +87,31 @@ service::Outcome RenderCommand::run() const {
   const bool viewer = format_ == "html" || format_ == "json";
   api::Workspace workspace =
       api::Workspace::madeFor(metamodel_, Disk::files(input_), viewer ? api::Output::Viewer : api::Output::Drawing, diagram_);
-  if (format_ == "json") return scene(workspace);
-  if (viewer) return page(workspace);
-  return diagram(workspace);
+  if (!viewer && diagram_.empty()) return {"bad-usage", "which diagram? ds query " + input_ + " diagrams lists them"};
+  // every format is see-design's (DS-474): the structure in JSON, the scene and the IR indented for a reader and a
+  // layout and its cells compact, a line after (DS-398); a drawing in svg or text and the page in the text sink, as
+  // they are drawn, with no text between (DS-458)
+  const bool structure = format_ == "json" || format_ == "ir" || format_ == "layout" || format_ == "cells";
+  const auto sink = emit::SinkFactory::of(structure ? "json" : "text", format_ == "json" || format_ == "ir");
+  const service::Outcome outcome = workspace.run("see-design", request(), *sink);
+  if (outcome.name != "default") return outcome;  // no diagram, or one that did not read whole: said, nothing written
+  return written(sink->result(), structure ? "\n" : "", outcome);
+}
+
+service::Request RenderCommand::request() const {
+  service::Request asked{{{"format", format_},
+                          {"diagram", diagram_},
+                          {"width", std::to_string(width_)},
+                          {"color", DS_ISATTY(1) ? "true" : "false"},
+                          {"workspace", input_},
+                          {"whole", "true"}}};
+  if (format_ == "html") {  // the page: titled after the workspace, a reader's stylesheet over the viewer's, embedded or not
+    asked.arguments["title"] = Disk::titleOf(input_);
+    asked.arguments["css"] = css_.empty() ? "" : Disk::read(css_);
+    asked.arguments["embed"] = embed_ ? "true" : "false";
+    asked.arguments["height"] = std::to_string(height_);
+  }
+  return asked;
 }
 
 service::Outcome RenderCommand::document() const {
@@ -104,112 +121,22 @@ service::Outcome RenderCommand::document() const {
     return {"bad-usage", "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace"};
   if (format_ == "ir") return written(doc, "", {"default"});  // the IR as it came
   // read once, here where the text arrives (DS-458): what draws it is handed the document
-  return written(draw(render::IrDocument::parse(doc), false), "", {"default"});
+  return written(draw(render::IrDocument::parse(doc)), "", {"default"});
 }
 
-service::Outcome RenderCommand::scene(api::Workspace& workspace) const {
-  // the scene is the document (DS-126), described in the technology -f names, indented for a reader (DS-398)
-  const auto sink = emit::SinkFactory::of(format_, true);
-  const service::Outcome outcome = workspace.run("see-design", {{{"format", format_}}}, *sink);
-  return written(sink->result(), "\n", outcome);
-}
-
-// the door's until see-design frames the viewer on a diagram: what the diagram shows is the page's focus, and the
-// page is the viewer's around the scene
-service::Outcome RenderCommand::page(const api::Workspace& workspace) const {
-  std::vector<std::string> focus;
-  if (!diagram_.empty()) {
-    const auto shown = query::QueryFactory::of(workspace.model(), metamodel_)->ask("shows", diagram_);
-    if (!shown.empty() && shown.front().kind == "error") return {"no-diagram", "no diagram named " + diagram_};
-    for (const auto& a : shown) focus.push_back(a.id);
-  }
-  format::FormatOptions options;
-  options.title = Disk::titleOf(input_);
-  options.css = css_.empty() ? "" : Disk::read(css_);
-  options.focus = focus;
-  options.embed = embed_;
-  options.height = height_;
-  const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-  const scene::SceneDocument document = scene::Scene(workspace.model(), metamodel_).build();
-  return written(format::FormatFactory::scene().at("html")->write(document, options, *sink), "", {"default"});
-}
-
-service::Outcome RenderCommand::diagram(api::Workspace& workspace) const {
-  if (!diagram_.empty()) {
-    const std::string why = unread(workspace.model());
-    if (!why.empty()) return {"no-diagram", why};
-  }
-  if (diagram_.empty()) return {"bad-usage", "which diagram? ds query " + input_ + " diagrams lists them"};
+// a render-IR document is drawn here, the one drawing the command line makes itself, since it has no workspace: its
+// layout and its cells described in compact JSON, a line after (DS-398); a drawing in svg or text as render draws it,
+// each handed the document (DS-458)
+std::string RenderCommand::draw(const render::IrDocument& ir) const {
   if (format_ == "layout" || format_ == "cells") {
-    // its layout and its cells are see-design's, described in compact JSON, a line after (DS-398)
     const auto sink = emit::SinkFactory::json(false);
-    const service::Outcome outcome =
-        workspace.run("see-design", {{{"format", format_}, {"diagram", diagram_}, {"width", std::to_string(width_)}}}, *sink);
-    if (outcome.name != "default") return outcome;
-    return written(sink->result(), "\n", outcome);
-  }
-  // the door's until see-design draws them (svg and text, DS-400) and writes the IR: the IR, made of the model, is
-  // described indented for a reader, or handed as the document to the writer -f names (DS-418, DS-458)
-  const std::optional<render::IrDocument> document =
-      render::IrExport(workspace.model(), metamodel_).document(model::Identity::ofDiagram(diagram_).text());
-  if (!document) return {"no-diagram", "no diagram named " + diagram_};
-  if (format_ == "ir") {
-    const auto sink = emit::SinkFactory::json(true);
-    format::DescriptionFactory::ir(*document)->describe(*sink);
-    return written(sink->result(), "\n", {"default"});
-  }
-  return written(draw(*document, true), "", {"default"});  // the document drawn, with no text between (DS-458)
-}
-
-// a diagram is not drawn of what did not read whole (DS-433): a file of its own, or one that declares what it shows,
-// that did not parse may hold the very boxes it draws. A diagram that is missing or shows nothing may have been lost to
-// any of them; a file it does not read stops nothing (DS-411). The door's until see-design says it.
-std::string RenderCommand::unread(const model::Model& model) const {
-  std::set<std::string> reads;
-  const model::Entity* d = model.find(model::Identity::ofDiagram(diagram_).text());
-  if (d) reads.insert(d->location.file);
-  std::size_t shown = 0;
-  for (const auto& a : query::QueryFactory::of(model, metamodel_)->ask("shows", diagram_))
-    if (const model::Entity* e = a.kind == "error" ? nullptr : model.find(a.id)) {
-      reads.insert(e->location.file);
-      ++shown;
-    }
-  const bool lost = !d || shown == 0;  // missing, or showing nothing: what did not parse may be why
-  std::string said;
-  std::size_t count = 0;
-  for (const auto& f : model.findings()) {
-    if ((f.code != "E-SYNTAX" && f.code != "E-ENCODING") || !(lost || reads.count(f.location.file))) continue;
-    said += f.location.file + ":" + std::to_string(f.location.line) + ":" + std::to_string(f.location.column) + "  " + f.code + "  " +
-            f.message + "\n";
-    ++count;
-  }
-  if (!count) return "";
-  const std::string files = count == 1 ? "a file" : std::to_string(count) + " files";
-  const std::string verb = count == 1 ? "does" : "do";
-  if (!lost) return said + diagram_ + " is not drawn: " + files + " it reads " + verb + " not read whole";
-  return said + diagram_ + (d ? " shows nothing" : " is not found") + ", and " + files + " of " + input_ + " " + verb +
-         " not read whole: what did not parse may be why";
-}
-
-// a diagram is its IR (DS-126): its layout and its cells are described in compact JSON, a line after (DS-398); the
-// drawings are written by the writer -f names; each is handed the document (DS-458)
-std::string RenderCommand::draw(const render::IrDocument& ir, bool workspace) const {
-  const auto sink = emit::SinkFactory::json(false);
-  if (format_ == "layout" || format_ == "cells") {
     const auto description = format_ == "layout" ? format::DescriptionFactory::layout(ir, theme_, width_)
                                                  : format::DescriptionFactory::cells(ir, theme_, width_);
     description->describe(*sink);
     return sink->result() + "\n";
   }
-  return format::FormatFactory::diagram(theme_).at(format_)->write(ir, drawingOptions(workspace), *sink);
-}
-
-format::FormatOptions RenderCommand::drawingOptions(bool workspace) const {
-  format::FormatOptions options;
-  options.pretty = workspace;
-  options.width = width_;
-  options.color = DS_ISATTY(1);
-  return options;
+  if (format_ == "svg") return render::Svg(theme_).render(ir, width_);
+  return render::Text(theme_).render(ir, DS_ISATTY(1), width_);
 }
 
 service::Outcome RenderCommand::written(const std::string& text, const std::string& end, const service::Outcome& outcome) const {
@@ -220,13 +147,13 @@ service::Outcome RenderCommand::written(const std::string& text, const std::stri
 
 // ---- query (UC-00004-1) ----------------------------------------------------------------------------------------
 
-std::string QueryCommand::summary() const { return "ask the model: " + query::Query::usage(); }
+std::string QueryCommand::summary() const { return "ask the model: " + model::Manual::usage(); }
 
 void QueryCommand::declare(CLI::App& sub) {
   sub.add_option("workspace", workspace_, "a directory of .ds files")->required();
   sub.add_option("question", question_, "what to ask")->required();
-  std::string takes = "what it is asked about:";  // each question's, from the table the check of a subject reads (DS-436)
-  for (const auto& q : query::Query::questions()) takes += "\n  " + q.name + ": " + q.takes;
+  std::string takes = "what it is asked about:";  // each question's, from the manual's table the query reads (DS-436, DS-474)
+  for (const auto& q : model::Manual::questions()) takes += "\n  " + q.name + ": " + q.takes;
   sub.add_option("subject", subject_, takes);
   sub.add_flag("--json", json_, "answer as JSON");
 }

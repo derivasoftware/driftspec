@@ -5,7 +5,8 @@
 // sinks; whoever asks for an output pairs them, description.describe(sink), and a pair ds does not write fails
 // NotImplemented. To add a document: a description and its maker. To add a technology: a sink and its line in
 // SinkFactory. What is no description yet is a writer behind IFormat<its document>, found by name in the map
-// FormatFactory makes: the drawings (DS-400), the IR (DS-418) and the viewer's page.
+// FormatFactory makes: the viewer's page. The IR became a description (DS-418); the drawings in svg and text are
+// see-design's, drawn through render and handed to the sink as a verbatim text (DS-474).
 
 package driftspec@ds {
   // every document ds writes, whichever module builds it: the package's, not the format module's
@@ -304,22 +305,19 @@ package driftspec@ds {
     }
 
     // ---- what is no description yet: writers found by name ----------------------------------
-    // what every writer is given besides its document
+    // what a writer is given besides its document: how the viewer's page is titled, styled, framed and embedded
     dataclass FormatOptions {
       @requirement REQ-00106-4
-      + pretty: bool
       + title: std::string
       + css: std::string
       + focus: std::vector<std::string>
       + embed: bool
       + height: int
-      + width: int
-      + color: bool
     }
 
     // THE EXTENSION POINT of the writers: IFormat<D>, D the document a writer writes; each names its document in its
     // base, as the code does (DS-18). Whoever asks for the output lends the sink: the viewer's page describes the
-    // scene into it; a writer of text leaves it alone (DS-397)
+    // scene into it (DS-397)
     class IFormat<D> {
       @requirement REQ-00106-4
       + ~IFormat()
@@ -338,11 +336,11 @@ package driftspec@ds {
     }
 
     // the one place that names the writers, keyed by name; each goes when its document is described and its
-    // technology is a sink, as the answers and the report as text went (DS-399)
+    // technology is a sink, as the answers and the report as text went (DS-399) and the drawings when see-design drew
+    // them (DS-474)
     class FormatFactory {
       @requirement REQ-00106-4
       + static scene() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>>   // html
-      + static diagram(theme: theme::Theme) -> std::map<std::string, std::unique_ptr<IFormat<render::IrDocument>>>   // svg, text: the IR is a description (DS-458)
     }
 
     // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks. It is no
@@ -358,24 +356,6 @@ package driftspec@ds {
       // the scene described and the identities it opens framed on, written one after the other into the compact sink lent
       - static page(document: scene::SceneDocument, title: std::string, css: std::string, focus: std::vector<std::string>, out_sink: emit::ISink) -> std::string
       - static frame(page: std::string, title: std::string, height: int) -> std::string
-    }
-
-    // ds render -f svg
-    class DiagramSvg : IFormat<render::IrDocument> {
-      @requirement REQ-00106-4
-      - owns svg_: render::Svg
-      + DiagramSvg(theme: theme::Theme)            // drawn in the theme (DS-393)
-      + name() -> std::string
-      + write(document: render::IrDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
-    }
-
-    // ds render -f text: boxes in characters for a terminal
-    class DiagramText : IFormat<render::IrDocument> {
-      @requirement REQ-00106-4
-      - owns text_: render::Text
-      + DiagramText(theme: theme::Theme)            // drawn in the theme (DS-393)
-      + name() -> std::string
-      + write(document: render::IrDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
 
     // ---- what each factory makes (DS-451: a factory names its products) -----------------------
@@ -411,12 +391,6 @@ package driftspec@ds {
 
     sequence FormatFactory::scene {
       local page: ViewerPage
-      return writers
-    }
-
-    sequence FormatFactory::diagram {
-      local svg: DiagramSvg
-      local text: DiagramText
       return writers
     }
 

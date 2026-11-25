@@ -1,12 +1,12 @@
-// LLD of the emit namespace (ds::emit, DS-394, DS-397, DS-398, DS-399): what a document is written into, at the
-// bottom of the engine like text. A sink takes, in the order a description gives them, the two halves the
-// description says once: the structure (records of named fields, lists and values) and the presentation
-// (paragraphs, and tables of rows). It writes the half its technology writes, skips the other and knows no
-// document; a document knows no technology. Whoever asks for an output (the command line, the api) asks SinkFactory
-// for the sink of the technology, the technology axis, lends it to the description and takes the result. JSON
-// writes the structure and text the presentation; the IR is still written with nlohmann until it stops reading its
-// own output back (DS-418). A pair of a document and a technology ds does not write fails NotImplemented, and so
-// does a sink that accepted nothing of the document it was handed.
+// LLD of the emit namespace (ds::emit, DS-394, DS-397, DS-398, DS-399): what a document is written into, at the bottom
+// of the engine like text. A sink takes, in the order a description gives them, the two halves the description says
+// once: the structure (records of named fields, lists and values) and the presentation (paragraphs, and tables of
+// rows), and a text already written in its technology, a drawing, as it is (DS-474). It writes the half its technology
+// writes, skips the other and knows no document; a document knows no technology. Whoever asks for an output (the
+// command line, the api) asks SinkFactory for the sink of the technology, the technology axis, lends it to the
+// description and takes the result. JSON writes the structure and text the presentation; the IR is still written with
+// nlohmann until it stops reading its own output back (DS-418). A pair of a document and a technology ds does not write
+// fails NotImplemented, and so does a sink that accepted nothing of the document it was handed.
 
 package driftspec@ds {
   // every sink of emit and every description of format realise it: the package's, not the module's (DS-399)
@@ -42,7 +42,43 @@ package driftspec@ds {
     }
   }
 
+  // a text already written in a sink's technology, the bridge from a drawing to the sink (DS-474)
+  requirement REQ-00300-1 {
+    tags: architecture, emit, render
+    status: draft
+    @refines REQ-00106-4
+    title: A sink of emit shall write a text already written in its technology as it is, once per document, and a sink whose technology the text is not in shall fail NotImplemented
+    text:
+      A drawing in svg or in text and the viewer's page are written by what draws them, not described: they
+      reach the sink lent as one verbatim text, which the sink writes as it is. The text sink writes it exactly as
+      given, adding no line break; the JSON sink fails NotImplemented rather than skip it, so a drawing asked of
+      the JSON sink is told by the sink itself; the Python face's sink keeps it as the str it is, the object it
+      built. A verbatim text is the whole of its document: a second one before the result fails, and the design
+      says no behaviour hands a sink two of them. It is a bridge: when a figure is described as marks (DS-463), a
+      drawing becomes a description like any other and verbatim goes.
+    rationale:
+      DS-474 (coordinator, 2026-11-25): see-design draws, so the drawing must reach the sink its door lends
+      without the door drawing; a verbatim text joins the presentation half until DS-463 describes the figure.
+    verification VER-00320-1 {
+      status: draft
+      title: Integration tests confirm every drawing of every design is written by the text sink as render draws it, once per document, the JSON sink fails NotImplemented on it, and the Python face gets it as the str ds render writes
+      method: test
+      tests:
+        tests/integration/ds/emit/test_text_of_a_design.cpp::TestTextOfADesign.EveryDrawingOfADesignIsWrittenAsItIsByTheTextSinkAndRefusedByTheJsonSink
+        tests/integration/python/test_workspace_use_cases.py::test_a_drawing_reaches_python_as_the_text_ds_render_writes
+    }
+    verification VER-00321-1 {
+      status: draft
+      title: Integration tests confirm the design of ds hands no sink two verbatim texts in one behaviour, and is told when a description does
+      method: test
+      tests:
+        tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.TheDesignOfDsKeepsTheRulesOfEmit
+        tests/integration/ds/check/test_emit_principles.cpp::TestEmitPrinciples.ADescriptionThatHandsTwoVerbatimTextsIsTold
+    }
+  }
+
   module emit {
+    @requirement REQ-00300-1                 // a text already written in the sink's technology, once per document (DS-474)
     @requirement REQ-00202-3                 // the sinks are made by SinkFactory alone, by technology, and reached through their interface (DS-397, DS-398)
     @requirement REQ-00203-3                 // emit depends on no other module of the engine (DS-397)
     @requirement REQ-00204-1                 // each sink writes the half it can and fails on a document it accepted nothing of (DS-399)
@@ -119,6 +155,18 @@ package driftspec@ds {
       never depends(c, x), x in driftspec@ds, not x in driftspec@ds@emit
     }
 
+    definition verbatim-call(y) {
+      title: y is a message that hands a sink a verbatim text
+      if y calls driftspec@ds@emit::ISink::verbatim
+    }
+
+    rule a-verbatim-text-is-handed-once {
+      title: no behaviour hands a sink two verbatim texts, so a text already written in the sink's technology is the whole of its document
+      @requirement REQ-00300-1
+      for class c in driftspec@ds
+      never m in c, s behaviour-of m, a in s, b in s, a != b, verbatim-call(a), verbatim-call(b)
+    }
+
     // THE EXTENSION POINT: what a document is written into; each technology is a class that realises it, writing
     // the half it can, the structure or the presentation, and skipping the other (DS-399)
     class ISink {
@@ -141,6 +189,10 @@ package driftspec@ds {
       + abstract table(columns: std::vector<std::string_view>) -> ISink   // its rows follow, then endTable
       + abstract row(cells: std::vector<std::string_view>) -> ISink       // the cells in the order of the columns, ending at the last it has
       + abstract endTable() -> ISink
+      // a text already written in the sink's technology, written as it is, once per document (DS-474): a drawing in svg
+      // or text, the viewer's page. A sink whose technology it is not in fails NotImplemented, a second one logic_error.
+      // A BRIDGE: when a figure is described as marks (DS-463) the drawings become descriptions and it goes
+      + abstract verbatim(text: std::string_view) -> ISink fails NotImplemented, std::logic_error
       // the description of the document named ends: a sink that accepted nothing of its half since its last result fails
       + abstract described(document: std::string_view) -> ISink fails NotImplemented
       + abstract result() -> std::string                  // the document written, handed over; the sink is empty after
@@ -175,6 +227,7 @@ package driftspec@ds {
       + table(columns: std::vector<std::string_view>) -> ISink
       + row(cells: std::vector<std::string_view>) -> ISink
       + endTable() -> ISink
+      + verbatim(text: std::string_view) -> ISink fails NotImplemented        // an svg or a text drawing is no JSON: said, not skipped
       + described(document: std::string_view) -> ISink fails NotImplemented   // when nothing is written: JSON writes a byte for all it accepts
       + result() -> std::string
       - static checkedByDefault() -> bool                 // as DS_JSON_CHECK says, whatever the build (DS-461); else without NDEBUG
@@ -196,7 +249,8 @@ package driftspec@ds {
     class TextSink : ISink {
       @requirement REQ-00204-1
       - owns out_: std::string
-      - accepted_: bool                                   // a paragraph or a table since the last result
+      - accepted_: bool                                   // a paragraph, a table or a verbatim text since the last result
+      - verbatim_: bool                                   // a verbatim text since the last result
       + beginRecord() -> ISink                            // skipped, as the rest of the structure
       + endRecord() -> ISink
       + field(name: std::string_view) -> ISink
@@ -211,6 +265,7 @@ package driftspec@ds {
       + table(columns: std::vector<std::string_view>) -> ISink   // the columns name the cells; a terminal shows no header
       + row(cells: std::vector<std::string_view>) -> ISink
       + endTable() -> ISink
+      + verbatim(text: std::string_view) -> ISink fails std::logic_error       // as it is, no line break added; a second one is refused
       + described(document: std::string_view) -> ISink fails NotImplemented   // a table with no rows was accepted
       + result() -> std::string
     }

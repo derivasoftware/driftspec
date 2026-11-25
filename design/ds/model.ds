@@ -798,6 +798,26 @@ package driftspec@ds {
         tests/integration/ds/model/test_manual.cpp::TestManual.EveryTopicHasAPageAndAnUnknownOneHasNone
     }
 
+    // a question ds query answers and the subject it takes: the one table the usage, the help and the query's check of a
+    // subject read (DS-436), kept by the manual (DS-474)
+    dataclass Question {
+      @requirement REQ-00079-2
+      + name: std::string
+      + subject: std::string
+      + takes: std::string
+    }
+
+    verification VER-00326-1 {
+      status: draft
+      @requirement REQ-00260-1
+      title: Integration tests confirm the manual keeps the one table of questions, whose usage is what its page of ds query says and what the query answers with
+      text: DS-474: the table moves from the query into the manual, so the command line's help reads the manual and the query delegates to it.
+      method: test
+      tests:
+        tests/integration/ds/model/test_manual.cpp::TestManual.TheQuestionsAreTheManualsOneTableAndItsUsageIsWhatTheQueryPageSays
+        tests/integration/ds/query/test_query.cpp::TestQuery.TheManualListsTheQuestionsAsTheQueryDoes
+    }
+
     dataclass CommandSpec {                  // a command of the manual: how it is invoked, what it does, what each exit code says
       @requirement REQ-00079-2
       + name: std::string
@@ -823,6 +843,9 @@ package driftspec@ds {
       }
       + commands() -> std::vector<CommandSpec>
       + commandOf(name: std::string) -> CommandSpec
+      // the one table of questions (DS-436, DS-474): the query reads it to answer, the command line to say its help
+      + static questions() -> std::vector<Question>
+      + static usage() -> std::string           // the questions as a usage line, for the help and the page of ds query
       // how the tables are built, once, by the constructor, and how the pages are written
       - static buildCommands() -> std::vector<CommandSpec>
       - static buildGuides() -> std::vector<std::pair<std::string, std::string>> {  // generated when ds is built (ManualGuides.cpp)
@@ -839,6 +862,16 @@ package driftspec@ds {
     sequence Manual::Manual {
       -> buildCommands() -> commands
       -> buildGuides() -> guides
+    }
+
+    sequence Manual::buildCommands {
+      -> usage() -> questions                   // what ds query asks, from the one table (DS-474)
+      return commands
+    }
+
+    sequence Manual::usage {
+      -> questions() -> table
+      return usage
     }
 
     // a page by its topic: the index, a guide, the grammar, a kind, a code, or one of the tables of the

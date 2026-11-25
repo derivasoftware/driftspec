@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <stdexcept>
 #include <string>
 
 #include "ds/emit/NotImplemented.hpp"
@@ -51,4 +52,17 @@ TEST_F(TestTextSink, TheResultIsHandedOverAndTheNextDocumentStartsWithNothingAcc
   EXPECT_EQ(sink.result(), "one\n");
   EXPECT_EQ(sink.result(), "");
   EXPECT_THROW(sink.described("report"), ds::emit::NotImplemented);  // what was accepted went with the result
+}
+
+TEST_F(TestTextSink, AVerbatimTextIsWrittenAsItIsOncePerDocument) {
+  // a drawing already written for a terminal or a page (DS-474): as it is, no line break added, and accepted
+  sink.verbatim("<svg/>").described("svg");
+  EXPECT_EQ(sink.result(), "<svg/>");
+  sink.verbatim("┌─┐\n└─┘\n");
+  EXPECT_THROW(sink.verbatim("again"), std::logic_error);  // a text written whole is its document: a second is refused
+  EXPECT_EQ(sink.result(), "┌─┐\n└─┘\n");
+  sink.verbatim("").described("text");  // an empty drawing is still a document handed over, so no failure
+  EXPECT_EQ(sink.result(), "");
+  sink.verbatim("next");  // the result started the next document, which takes one
+  EXPECT_EQ(sink.result(), "next");
 }

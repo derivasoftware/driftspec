@@ -161,13 +161,6 @@ package driftspec@ds {
       + to: std::string
     }
 
-    dataclass Question {                     // a question and the subject it takes: the one table usage, help and check read (DS-436)
-      @requirement REQ-00260-1
-      + name: std::string
-      + subject: std::string
-      + takes: std::string
-    }
-
     // ---- the contract ------------------------------------------------------------------------
     // what the rest of ds asks of the module: a question answered, or the model filtered
     class IQuery {
@@ -332,10 +325,10 @@ package driftspec@ds {
       - refs metamodel_: model::Metamodel     // the language of the model: the kinds of the answers by name (DS-351)
       + Query(model: model::Model, metamodel: model::Metamodel)
       + select(filter: IFilter) -> std::set<std::string>
-      + static questions() -> std::vector<Question> {
+      + static questions() -> std::vector<model::Question> {   // the manual's one table (DS-474)
         @requirement REQ-00260-1
       }
-      + static usage() -> std::string {     // the questions as a usage line, for the help and the manual
+      + static usage() -> std::string {     // the questions as a usage line, as the manual writes it (DS-474)
         @requirement REQ-00260-1
       }
       + ask(question: std::string, subject: std::string) -> std::vector<Answer> {
@@ -364,7 +357,7 @@ package driftspec@ds {
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
       - entityAnswer(entity: model::Entity, detail: std::string) -> Answer
       - static endsWith(text: std::string, suffix: std::string) -> bool   // a finding's file ends in the one asked
-      - refused(question: Question, subject: std::string) -> std::string {   // why a subject is of no kind the question takes
+      - refused(question: model::Question, subject: std::string) -> std::string {   // why a subject is of no kind the question takes
         @requirement REQ-00260-1
       }
       - within(at: model::Location, id: std::string) -> bool {   // on the entity or on anything it holds
@@ -378,6 +371,17 @@ package driftspec@ds {
     class QueryFactory {
       @requirement REQ-00003-2
       + static of(model: model::Model, metamodel: model::Metamodel) -> std::unique_ptr<IQuery>
+    }
+
+    // the questions are the manual's one table (DS-474): the query reads it, as the command line's help does
+    sequence Query::questions {
+      -> model::Manual::questions() -> table
+      return table
+    }
+
+    sequence Query::usage {
+      -> model::Manual::usage() -> usage
+      return usage
     }
 
     sequence QueryFactory::of {

@@ -9,28 +9,13 @@
 namespace ds {
 namespace query {
 
-std::vector<Question> Query::questions() {
-  return {{"diagrams", "", "no subject"},
-          {"entities", "[scope]", "a scope: something others are declared in; with * after it (shop@*), all it holds at any depth"},
-          {"relations", "<identity>", "any identity"},
-          {"artefacts", "<identity>", "a design element: what realises, satisfies or obeys an artefact"},
-          {"behaviours", "<identity>", "what has a behaviour"},
-          {"failures", "<identity>", "what a failure may escape"},
-          {"shows", "<diagram>", "a diagram"},
-          {"findings", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
-          {"coverage", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
-          {"coupling", "", "no subject"}};
-}
+std::vector<model::Question> Query::questions() { return model::Manual::questions(); }
 
-std::string Query::usage() {
-  std::string out;
-  for (const auto& q : questions()) out += (out.empty() ? "" : " · ") + q.name + (q.subject.empty() ? "" : " " + q.subject);
-  return out;
-}
+std::string Query::usage() { return model::Manual::usage(); }
 
 std::vector<Answer> Query::ask(const std::string& question, const std::string& subject) const {
-  const std::vector<Question> all = questions();
-  const auto q = std::find_if(all.begin(), all.end(), [&question](const Question& each) { return each.name == question; });
+  const std::vector<model::Question> all = questions();
+  const auto q = std::find_if(all.begin(), all.end(), [&question](const model::Question& each) { return each.name == question; });
   if (q == all.end()) return {{"error", question, "not a question ds answers"}};
   if (q->subject.empty() && !subject.empty())  // a subject it would ignore: the answer would not be about it
     return {{"error", subject, question + " takes no subject: ds query <workspace> " + question}};
@@ -65,7 +50,7 @@ std::vector<Answer> Query::ask(const std::string& question, const std::string& s
 // a scope is a kind others are declared in, a design element what may realise, satisfy or obey, what has a
 // behaviour what a behaviour may be of (and a class, whose methods' are its own, DS-53), and what a failure may
 // escape what has the escapes the check writes.
-std::string Query::refused(const Question& question, const std::string& subject) const {
+std::string Query::refused(const model::Question& question, const std::string& subject) const {
   const model::Entity* e = subject.empty() ? nullptr : model_.find(subject);
   if (!e) return "";  // a scope with no entity of its own, or none asked
   const model::Kind kind = e->kind;

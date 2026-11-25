@@ -20,6 +20,14 @@ struct CommandSpec {
   std::vector<std::pair<int, std::string>> exits;
 };
 
+/// A question ds query answers, with the subject it takes (DS-436): the one table the usage, the help and the query's
+/// check of a subject read, kept by the manual (DS-474).
+struct Question {
+  std::string name;
+  std::string subject;  ///< as a usage writes it: "" for none, <subject> when it needs one, [subject] when it may take one
+  std::string takes;    ///< what it takes, in words: said to a subject of another kind
+};
+
 /// The manual ds embeds (DS-79, DS-342): the index, the guides written in doc/manual, the grammar, a kind, a
 /// finding code, the commands, the annotations and the codes, each a page written from the metamodel it reads.
 /// The commands are the manual's: how each is invoked and what each exit code says, the table every command's
@@ -41,6 +49,11 @@ class Manual {
   const std::vector<CommandSpec>& commands() const { return commands_; }
   /// The command of that name; nullptr when ds has none.
   const CommandSpec* commandOf(const std::string& name) const;
+  /// The questions ds query answers, with the subject each takes: the one table (DS-436, DS-474), which the query
+  /// reads to answer and the command line to say its help.
+  static std::vector<Question> questions();
+  /// The questions as a usage line: diagrams · entities [scope] · relations <identity> · ...
+  static std::string usage();
 
  private:
   /// The commands, as the manual says them.

@@ -122,4 +122,20 @@ TEST_F(TestManual, EveryTopicHasAPageAndAnUnknownOneHasNone) {
   EXPECT_TRUE(manual.page("weather").empty());
 }
 
+/// The questions ds query answers are the manual's one table (DS-436, DS-474): each with the subject it takes and what
+/// it takes in words; its usage is the line the page of ds query says and ds query --help lists, so the help and the
+/// query read one source.
+TEST_F(TestManual, TheQuestionsAreTheManualsOneTableAndItsUsageIsWhatTheQueryPageSays) {
+  const std::vector<ds::model::Question> questions = ds::model::Manual::questions();
+  ASSERT_EQ(questions.size(), 10u);
+  for (const auto& q : questions) EXPECT_FALSE(q.takes.empty()) << q.name;
+  std::string usage;
+  for (const auto& q : questions) usage += (usage.empty() ? "" : " · ") + q.name + (q.subject.empty() ? "" : " " + q.subject);
+  EXPECT_EQ(ds::model::Manual::usage(), usage);
+  const ds::model::CommandSpec* query = manual.commandOf("query");
+  ASSERT_NE(query, nullptr);
+  EXPECT_EQ(query->does, "ask the model: " + usage);
+  EXPECT_NE(manual.page("commands").find("ask the model: " + usage), std::string::npos);
+}
+
 }  // namespace
