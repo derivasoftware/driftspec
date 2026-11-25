@@ -95,24 +95,6 @@ cpp-evidence:
     CCACHE_NAME: $CI_PROJECT_NAME-evidence
     # the host has 325 GB free (DS-482): the evidence cache's own 20 GB holds a build per slot
     CCACHE_SIZE: 20G
-    # Why the evidence build never hits the cache while cpp-test does (DS-482): ccache writes,
-    # for every object, what it hashed and why it missed. A sample is kept as an artefact, to
-    # compare two jobs' inputs. Removed once the miss is understood.
-    CCACHE_DEBUG: "1"
-    CCACHE_DEBUGDIR: $CI_PROJECT_DIR/ccache-debug
-  after_script:
-    - !reference [.ccache, after_script]
-    - |
-      mkdir -p ccache-sample
-      find ccache-debug -name '*.ccache-log' 2>/dev/null | sort | sed -n 1,25p | while read -r log; do
-        base="${log%.ccache-log}"
-        cp "$log" "$base".ccache-input-text ccache-sample/ 2>/dev/null || cp "$log" ccache-sample/
-      done
-      grep -hE "^\[.*\] (Result|Hash|Failed|Unsupported|Disabling|Uncacheable)" ccache-sample/*.ccache-log 2>/dev/null | cut -d' ' -f3- | sort | uniq -c | sort -rn | sed -n 1,20p || true
-  artifacts:
-    when: always
-    paths: [.argos/evidence/reach.jsonl, ccache-sample/]
-    expire_in: 1 day
 
 # The tests run the Release engine with the JSON sink's checks on (DS-461): fields in byte order, one document, no
 # result taken with nothing written. A Release build leaves them off by default, so a broken contract passed CI while a
