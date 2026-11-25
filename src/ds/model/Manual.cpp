@@ -45,9 +45,12 @@ std::vector<CommandSpec> Manual::buildCommands() {
         {2, "bad usage (a format that needs a diagram without one), or nothing to read at the path"}}},
       {"query",
        "ds query <workspace> <question> [subject] [--json]",
-       "ask the model: diagrams · entities <scope> · relations <id> · artefacts <id> · behaviours <id> · shows <diagram> · findings "
-       "[file] · coverage [identity] · coupling · failures <operation>",
-       {{0, "answered"}, {1, "not a question, or an identity the model does not declare"}, {2, "bad usage, or no workspace at the path"}}},
+       // the same as Query::usage(), which the model may not ask: a test holds them equal (DS-436)
+       "ask the model: diagrams · entities [scope] · relations <identity> · artefacts <identity> · behaviours <identity> · failures "
+       "<identity> · shows <diagram> · findings [file | identity] · coverage [file | identity] · coupling",
+       {{0, "answered"},
+        {1, "not a question, an identity the model does not declare, or a subject of a kind the question does not take"},
+        {2, "bad usage, or no workspace at the path"}}},
       {"manual",
        "ds manual [topic] [--json]",
        "this manual: the index, a kind (class, sequence...), a finding code (W-REF-UNDECLARED...), annotations, commands or codes",

@@ -8,6 +8,7 @@
 #include "ds/check/Steps.hpp"
 #include "ds/emit/JsonSink.hpp"
 #include "ds/format/TextFormats.hpp"
+#include "ds/model/Manual.hpp"
 #include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 #include "ds/parse/Parser.hpp"
@@ -90,6 +91,69 @@ TEST_F(TestQuery, TheFindingsOfAFile) {
   EXPECT_FALSE(all.empty());
   EXPECT_EQ(all.size(), file.size());
   EXPECT_TRUE(ds::query::Query(model, metamodel).ask("findings", "other.ds").empty());
+}
+
+TEST_F(TestQuery, EachQuestionTakesTheSubjectItSaysAndAnswersAnotherKindWithAnError) {
+  const ds::query::Query query(model, metamodel);
+  const auto refused = [&query](const std::string& question, const std::string& subject) {
+    const auto answers = query.ask(question, subject);
+    return answers.size() == 1 && answers.front().kind == "error" ? answers.front().id + ": " + answers.front().detail : std::string();
+  };
+  // a subject a question would ignore, or one of a kind it does not take: said, never an empty answer (DS-436)
+  EXPECT_EQ(refused("diagrams", "iris"), "iris: diagrams takes no subject: ds query <workspace> diagrams");
+  EXPECT_EQ(refused("coupling", "iris"), "iris: coupling takes no subject: ds query <workspace> coupling");
+  EXPECT_EQ(refused("artefacts", "REQ-00001-2"),
+            "REQ-00001-2: REQ-00001-2 is a requirement: artefacts takes a design element: what realises, satisfies or obeys an "
+            "artefact; ds query <workspace> relations REQ-00001-2 says what it links");
+  EXPECT_EQ(refused("failures", "iris@projection::Projection"),
+            "iris@projection::Projection: iris@projection::Projection is a class: failures takes what a failure may escape");
+  EXPECT_EQ(refused("behaviours", "VER-00050-1"), "VER-00050-1: VER-00050-1 is a verification: behaviours takes what has a behaviour");
+  EXPECT_EQ(refused("entities", "diagram:REQ_Tracker"),
+            "diagram:REQ_Tracker: diagram:REQ_Tracker is a diagram: entities takes a scope: something others are declared in");
+  EXPECT_NE(refused("entities", "artefacts.ds"), "");  // a file is no scope: only the findings and the coverage take one
+  // what each takes is answered as before
+  EXPECT_EQ(refused("artefacts", "iris@projection::Projection"), "");
+  EXPECT_EQ(refused("entities", "iris"), "");
+  EXPECT_EQ(refused("relations", "REQ-00001-2"), "");
+  EXPECT_EQ(refused("findings", "artefacts.ds"), "");
+  // every question says the subject it takes, and the usage lists them so
+  for (const auto& q : ds::query::Query::questions()) EXPECT_FALSE(q.takes.empty()) << q.name;
+  EXPECT_EQ(ds::query::Query::usage().rfind("diagrams · entities [scope] · relations <identity>", 0), 0u);
+}
+
+TEST_F(TestQuery, FindingsAndCoverageTakeAFileOrAnEntityAndEverythingItHolds) {
+  const ds::query::Query query(model, metamodel);
+  const auto codes = [&query](const std::string& question, const std::string& subject) {
+    std::multiset<std::string> out;
+    for (const auto& a : query.ask(question, subject)) out.insert(a.kind);
+    return out;
+  };
+  // an identity: what lies on the entity, here the two findings written inside REQ-00003-1 (DS-436)
+  EXPECT_EQ(codes("findings", "REQ-00003-1"), (std::multiset<std::string>{"E-REF-UNPINNED", "W-PARENT-IGNORED"}));
+  // and on anything it holds: the package holds the requirements, so its findings include theirs
+  const auto package = codes("findings", "iris");
+  EXPECT_EQ(package.count("E-REF-UNPINNED"), 1u);
+  EXPECT_EQ(package.count("W-REVISION-DRIFT"), codes("findings", "REQ-00002-1").count("W-REVISION-DRIFT"));
+  // the coverage of an identity: what names it, as before, and what lies on what it holds
+  EXPECT_EQ(codes("coverage", "SREQ-00002-1"), (std::multiset<std::string>{"W-REQ-NO-VERIFICATION", "W-REQ-UNREALISED"}));
+  EXPECT_GE(codes("coverage", "iris").size(), codes("coverage", "SREQ-00002-1").size());
+  // a file, for both
+  EXPECT_EQ(codes("coverage", "artefacts.ds"), codes("coverage", ""));
+  EXPECT_EQ(codes("findings", "artefacts.ds"), codes("findings", ""));
+  // an identity the model does not declare is said, as for the other questions
+  EXPECT_EQ(query.ask("coverage", "nope").front().kind, "error");
+}
+
+TEST_F(TestQuery, TheManualListsTheQuestionsAsTheQueryDoes) {
+  // the model may not ask the query: the manual writes the usage itself, held equal to the table here (DS-436)
+  const ds::model::Manual manual(metamodel);
+  bool found = false;
+  for (const auto& c : manual.commands())
+    if (c.name == "query") {
+      found = true;
+      EXPECT_EQ(c.does, "ask the model: " + ds::query::Query::usage());
+    }
+  EXPECT_TRUE(found);
 }
 
 TEST_F(TestQuery, AnUnknownQuestionIsAnError) {
