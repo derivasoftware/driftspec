@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "ds/api/Api.hpp"
 #include "ds/emit/NotImplemented.hpp"
@@ -46,6 +47,15 @@ class Counted : public ds::emit::ISink {
   ds::emit::ISink& number(double value) override { return mark(to_.number(value)); }
   ds::emit::ISink& boolean(bool value) override { return mark(to_.boolean(value)); }
   ds::emit::ISink& null() override { return mark(to_.null()); }
+  ds::emit::ISink& paragraph(std::string_view text) override { return mark(to_.paragraph(text)); }
+  ds::emit::ISink& table(const std::vector<std::string_view>& columns) override { return mark(to_.table(columns)); }
+  ds::emit::ISink& row(const std::vector<std::string_view>& cells) override { return mark(to_.row(cells)); }
+  ds::emit::ISink& endTable() override { return mark(to_.endTable()); }
+  /// The end of a description writes nothing: the sink it writes into says whether it accepted any of it (DS-399).
+  ds::emit::ISink& described(std::string_view document) override {
+    to_.described(document);
+    return *this;
+  }
   std::string result() override { return to_.result(); }
 
  private:
