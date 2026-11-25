@@ -99,6 +99,8 @@ class Theme {
   const std::map<std::string, std::uint32_t>& cellColours() const { return cellColours_; }
 
  private:
+  /// Each drawing token as the playground's colour its rules gave it (DS-490): its palette is the one source of both.
+  void drawnAsThePlayground();
   std::vector<Token> tokens_;
   std::map<std::string, std::vector<Token>> pages_;
   Font font_;

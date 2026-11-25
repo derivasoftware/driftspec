@@ -1,6 +1,11 @@
 #include "ds/theme/Theme.hpp"
 
+#include <cstdint>
+#include <cstdio>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace ds {
 namespace theme {
@@ -54,6 +59,10 @@ Theme::Theme()
       {"frame-loop", "#047857", "#6ee7b7"},
       {"frame-opt", "#b45309", "#fcd34d"},
       {"frame-other", "#334155", "#cbd5e1"},
+      {"line-requirement", "", ""},   // the line under an artefact's name, in its kind's colour (DS-490): set below
+      {"line-constraint", "", ""},
+      {"line-usecase", "", ""},
+      {"line-verification", "", ""},
       },
       pages_{
           {"viewer",
@@ -231,10 +240,83 @@ Theme::Theme()
           {Role::verificationBadge, "32", ""},
           {Role::constraintBadge, "33", ""},
       } {
+  drawnAsThePlayground();
   for (const auto& t : terminal_) {  // a code takes the colour of the first role that names a token with it
     if (t.token.empty() || t.sgr.empty() || cellColours_.count(t.sgr)) continue;
     cellColours_[t.sgr] = static_cast<std::uint32_t>(std::stoul(token(t.token).light.substr(1), nullptr, 16));
   }
+}
+
+namespace {
+/// a colour `share` of the way from `under` to `over`, as CSS's color-mix(in srgb, over share%, under) gives it
+std::string mixed(const std::string& over, const std::string& under, double share) {
+  const auto rgb = [](const std::string& hex) {
+    const std::uint32_t v = static_cast<std::uint32_t>(std::stoul(hex.substr(1), nullptr, 16));
+    return std::vector<double>{double(v >> 16 & 0xff), double(v >> 8 & 0xff), double(v & 0xff)};
+  };
+  const auto a = rgb(over), b = rgb(under);
+  char out[8];
+  std::snprintf(out, sizeof out, "#%02x%02x%02x", int(a[0] * share + b[0] * (1 - share) + .5), int(a[1] * share + b[1] * (1 - share) + .5),
+                int(a[2] * share + b[2] * (1 - share) + .5));
+  return out;
+}
+}  // namespace
+
+// a drawing looks as the playground draws it (DS-490): each of its tokens is the playground's colour its own rules gave
+// that token, so the playground's palette is the one source of both and a drawing carries the look on any page
+void Theme::drawnAsThePlayground() {
+  const std::vector<Token>& p = pages_.at("playground");
+  const auto of = [&p](const std::string& name) -> const Token& {
+    for (const auto& t : p)
+      if (t.name == name) return t;
+    throw std::logic_error("the playground's palette has no token " + name);
+  };
+  const std::vector<std::pair<std::string, std::string>> as{
+      {"text", "fg"},
+      {"muted", "muted"},
+      {"stroke", "rule"},
+      {"edge", "rule"},
+      {"box-fill", "panel"},
+      {"container-stroke", "line"},
+      {"note-fill", "raised"},
+      {"note-stroke", "line"},
+      {"head-class", "panel"},
+      {"head-interface", "panel"},
+      {"head-enum", "panel"},
+      {"head-function", "panel"},
+      {"head-abstract", "panel"},
+      {"badge-class", "k-class"},
+      {"badge-interface", "k-interface"},
+      {"badge-enum", "k-enum"},
+      {"badge-function", "muted"},
+      {"badge-abstract", "k-class"},
+      {"badge-dataclass", "k-dataclass"},
+      {"name", "fg"},
+      {"type", "s-ty"},
+      {"param", "s-pn"},
+      {"punct", "muted"},
+      {"vis-public", "v-pub"},
+      {"vis-protected", "v-prot"},
+      {"vis-private", "v-priv"},
+      {"vis-package", "muted"},
+      {"line-requirement", "c-req"},
+      {"line-constraint", "c-cst"},
+      {"line-usecase", "c-state"},
+      {"line-verification", "c-seq"},
+  };
+  for (const auto& a : as)
+    for (auto& t : tokens_)
+      if (t.name == a.first) {
+        const Token& from = of(a.second);
+        t.light = from.light;
+        t.dark = from.dark;
+      }
+  // a container: the panel 45% over the background, as the playground mixes it
+  for (auto& t : tokens_)
+    if (t.name == "container-fill") {
+      t.light = mixed(of("panel").light, of("bg").light, .45);
+      t.dark = mixed(of("panel").dark, of("bg").dark, .45);
+    }
 }
 
 const Token& Theme::token(const std::string& name) const {

@@ -16,8 +16,8 @@ std::string fixture(const std::string& name) {
   return text.str();
 }
 
-/// The stylesheets written from the theme (DS-393), pinned to the literals the SVG carried before the theme: the fixtures
-/// are those literals as they were, so a value the theme holds wrong, or a token out of its place, shows here.
+/// The stylesheets written from the theme (DS-393), pinned to fixtures, so a value the theme holds wrong, or a token out
+/// of its place, shows here. The SVG's moved with DS-490: the playground's look, its colours the playground's palette.
 TEST(TestSvgStyleSheet, ItIsTheStyleSheetTheSvgCarried) {
   const ds::theme::Theme theme;
   EXPECT_EQ(ds::theme::SvgStyleSheet().write(theme), fixture("style.css"));
@@ -70,5 +70,19 @@ TEST(TestPlaygroundVariables, ItWritesThePlaygroundsTokensDarkFirst) {
 }
 
 TEST(TestDesignPageVariables, ItWritesTheDesignPagesTokensLightAndDark) { writesItsPage(ds::theme::DesignPageVariables(), "design-page"); }
+
+}  // namespace
+
+namespace {
+
+/// A drawing's own stylesheet underlines a card's name in its kind's colour, two wide (REQ-00332-1, DS-490).
+TEST(TestDrawnAsThePlayground, ACardsNameIsUnderlinedInItsKindsColour) {
+  const ds::theme::Theme theme;
+  const std::string css = ds::theme::SvgStyleSheet().write(theme);
+  EXPECT_NE(css.find(".pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--pr-badge-class); }"), std::string::npos);
+  EXPECT_NE(css.find(".pr-classifier-interface .pr-header + .pr-sep { stroke: var(--pr-badge-interface); }"), std::string::npos);
+  EXPECT_NE(css.find("--pr-line-requirement: " + theme.token("line-requirement").light), std::string::npos);
+  EXPECT_NE(css.find("--pr-box-fill: " + theme.page("playground")[2].light), std::string::npos);  // the panel
+}
 
 }  // namespace
