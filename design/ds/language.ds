@@ -1807,6 +1807,8 @@ package driftspec@ds {
           tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.EveryCardIsTheDiagramAsRenderDrawsItByteForByte
           tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.APageWithNoWalkthroughCarriesNeitherTheCardsNorTheMode
           tests/integration/ds/api/test_walkthrough_page.cpp::TestWalkthroughPage.AStepLightsARequirementByItsIdentity
+          tests/system/ds/test_walkthrough_cli.cpp::TestWalkthroughCli.TheCommandLinesViewerPageCarriesTheCardsAndIsTheDoorsPage
+          tests/system/ds/test_walkthrough_cli.cpp::TestWalkthroughCli.ADiagramDrawnAloneIsItsCardByteForByte
           tests/integration/viewer/walkthroughs.test.ts::each step comes with its diagram by name and what it lights by identity, in the order written
           tests/integration/viewer/walkthroughs.test.ts::a step that shows a sequence along a scenario names the behaviour the tour replay plays
           tests/integration/viewer/walkthroughs.test.ts::a scene with no walkthrough has none to play
