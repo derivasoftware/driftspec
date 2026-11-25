@@ -21,12 +21,12 @@ std::unique_ptr<ADescription> DescriptionFactory::ir(const render::IrDocument& d
   return std::make_unique<IrDescription>(document);
 }
 
-std::unique_ptr<ADescription> DescriptionFactory::layout(const render::IrText& ir, const theme::Theme& theme, int width) {
-  return std::make_unique<LayoutDescription>(ir, theme, width);
+std::unique_ptr<ADescription> DescriptionFactory::layout(const render::IrDocument& document, const theme::Theme& theme, int width) {
+  return std::make_unique<LayoutDescription>(document, theme, width);
 }
 
-std::unique_ptr<ADescription> DescriptionFactory::cells(const render::IrText& ir, const theme::Theme& theme, int width) {
-  return std::make_unique<CellsDescription>(ir, theme, width);
+std::unique_ptr<ADescription> DescriptionFactory::cells(const render::IrDocument& document, const theme::Theme& theme, int width) {
+  return std::make_unique<CellsDescription>(document, theme, width);
 }
 
 }  // namespace format

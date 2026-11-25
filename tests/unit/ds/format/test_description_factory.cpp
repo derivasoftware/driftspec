@@ -71,9 +71,10 @@ class TestDescriptionFactory : public ::testing::Test {
   };
 
   const ds::theme::Theme theme;
-  const ds::render::IrText diagram{R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
-                                   R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
-                                   R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})"};
+  const ds::render::IrDocument diagram =
+      ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+                                    R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
+                                    R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
   const std::vector<ds::query::Answer> answers{{"class", "p@m::A", "a class"}};
   ds::check::Report report;
   ds::scene::SceneDocument scene;

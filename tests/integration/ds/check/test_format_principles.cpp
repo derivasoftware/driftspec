@@ -121,7 +121,7 @@ TEST_F(TestFormatPrinciples, ADescriptionThatUsesAnotherIsTold) {
 
 TEST_F(TestFormatPrinciples, AWriterThatReadsTheModelIsTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/format.ds", "    class DiagramText : IFormat<render::IrText> {", "      + read(model: model::Model) -> void\n"}});
+      broken({{"ds/format.ds", "    class DiagramText : IFormat<render::IrDocument> {", "      + read(model: model::Model) -> void\n"}});
   EXPECT_TRUE(has(rules, readsNoModel));
   const std::vector<std::string> shared = broken({{"ds/format.ds", "      class Packing {", "        - owns page_: ViewerPage\n"}});
   EXPECT_TRUE(has(shared, commonAlone));

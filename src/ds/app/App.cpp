@@ -196,7 +196,9 @@ struct Render {
         std::cerr << "a render-IR document draws as svg, text, cells or layout; the viewer needs a workspace\n";
         return 2;
       }
-      return emit(output, draw({doc}, false, theme));  // as it came, drawn as -f names
+      if (format == "ir") return emit(output, doc);  // the IR as it came
+      // read once, here where the text arrives (DS-458): what draws it is handed the document
+      return emit(output, draw(ds::render::IrDocument::parse(doc), false, theme));
     }
     // the viewer shows the findings and what every step derives; a drawing, only what it draws (DS-376)
     const bool viewer = format == "html" || format == "json";
@@ -268,15 +270,17 @@ struct Render {
       std::cerr << "no diagram named " << diagram << "\n";
       return 1;
     }
-    const auto sink = ds::emit::SinkFactory::json(false);  // the IR travels compact to the writer -f names (DS-418)
-    ds::format::DescriptionFactory::ir(*document)->describe(*sink);
-    const std::string doc = sink->result();
-    return emit(output, draw({doc}, true, theme) + (format == "ir" ? "\n" : ""));
+    if (format == "ir") {  // the IR itself, indented for a reader (DS-418, DS-458)
+      const auto sink = ds::emit::SinkFactory::json(true);
+      ds::format::DescriptionFactory::ir(*document)->describe(*sink);
+      return emit(output, sink->result() + "\n");
+    }
+    return emit(output, draw(*document, true, theme));  // the document drawn, with no text between (DS-458)
   }
 
   // a diagram is its IR (DS-126): its layout and its cells are described in compact JSON, a line after (DS-398); the
-  // IR, indented when it is a workspace's, and the drawings are written by the writer -f names
-  std::string draw(const ds::render::IrText& ir, bool workspace, const ds::theme::Theme& theme) const {
+  // drawings are written by the writer -f names; each is handed the document (DS-458)
+  std::string draw(const ds::render::IrDocument& ir, bool workspace, const ds::theme::Theme& theme) const {
     const auto sink = ds::emit::SinkFactory::json(false);
     if (format == "layout" || format == "cells") {
       const auto description = format == "layout" ? ds::format::DescriptionFactory::layout(ir, theme, width)
