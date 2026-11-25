@@ -122,6 +122,33 @@ package shelf {
     -> Shelf.show(path) -> title
     return title
   }
+  // an outcome may be the end of a failure (DS-467): what escapes the scenario and an outcome names ends
+  // there, and is no failure undeclared
+  usecase UC-00003-1 {         // ? W-USECASE-UNREALISED
+    title: Read a book, or say why not
+    outcome default: the book
+    outcome unreadable fails LoadError: the file could not be read
+    outcome broken fails ParseError: the file is not a book
+  }
+  sequence UC-00003-1 {        // both escape, and both end in an outcome: nothing to say
+    -> Loader.load(path) -> book
+    return book
+  }
+
+  // a use case that specialises it keeps its outcomes; one it redefines by name is no second end
+  usecase UC-00004-1 : UC-00003-1 {   // ? W-USECASE-UNREALISED
+    title: Read a book from the shelf
+    outcome broken fails ParseError: the shelf holds no such book
+  }
+
+  // what an outcome names must be a failure somewhere; one failure ends in one outcome
+  usecase UC-00005-1 {         // ? W-USECASE-UNREALISED
+    title: Lend a book
+    outcome default: the book is lent
+    outcome lost fails Missing: the book is not there     // ! W-OUTCOME-FAILURE-UNKNOWN: nothing in the workspace is Missing
+    outcome late fails Busy: the files are busy
+    outcome slow fails Busy: the files are busy again      // ! W-OUTCOME-FAILURE-TWICE: late is the end of Busy already
+  }
 }
 
 diagram SEQ_Load {

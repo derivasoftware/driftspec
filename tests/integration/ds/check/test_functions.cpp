@@ -52,7 +52,7 @@ class TestFunctions : public ::testing::Test {
 };
 
 TEST_F(TestFunctions, TheOracleFindingsAndNothingElse) {
-  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);  // describe twice: a function is identified by its name
+  EXPECT_EQ(byCode["E-DUPLICATE-IDENTITY"], 1);  // describe(Task) twice; describe of a vector is an overload (DS-455)
   EXPECT_EQ(byCode["E-MSG-ARITY"], 1);
   EXPECT_EQ(byCode["W-MSG-UNDECLARED"], 0);  // summarise and cache nobody designs: text (DS-18)
   EXPECT_EQ(model.findings().size(), 2u);

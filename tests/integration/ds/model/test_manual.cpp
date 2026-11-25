@@ -127,7 +127,8 @@ TEST_F(TestManual, EveryTopicHasAPageAndAnUnknownOneHasNone) {
 /// query read one source.
 TEST_F(TestManual, TheQuestionsAreTheManualsOneTableAndItsUsageIsWhatTheQueryPageSays) {
   const std::vector<ds::model::Question> questions = ds::model::Manual::questions();
-  ASSERT_EQ(questions.size(), 10u);
+  ASSERT_EQ(questions.size(), 11u);  // walkthroughs the last (DS-471)
+  EXPECT_EQ(questions.front().name, "diagrams");
   for (const auto& q : questions) EXPECT_FALSE(q.takes.empty()) << q.name;
   std::string usage;
   for (const auto& q : questions) usage += (usage.empty() ? "" : " · ") + q.name + (q.subject.empty() ? "" : " " + q.subject);

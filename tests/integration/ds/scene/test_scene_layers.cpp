@@ -49,14 +49,15 @@ TEST_F(TestSceneLayersOfADesign, TheLayersComeInOrderAndEachAddsItsOwnPartOfTheD
   const ds::scene::SceneDocument doc = ds::scene::Scene(model, metamodel).build();
   const ds::scene::Map map(doc.nodes);
   const auto all = ds::scene::LayerFactory::of(model, metamodel, map);
-  ASSERT_EQ(all.size(), 4u);
+  ASSERT_EQ(all.size(), 5u);
   EXPECT_NE(dynamic_cast<ds::scene::StructureLayer*>(all[0].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::BehaviourLayer*>(all[1].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::TraceLayer*>(all[2].get()), nullptr);
   EXPECT_NE(dynamic_cast<ds::scene::RulesLayer*>(all[3].get()), nullptr);
-  EXPECT_FALSE(doc.links.empty());         // structure: A holds B
-  EXPECT_FALSE(doc.behaviours.empty());    // behaviour: A::run
-  EXPECT_FALSE(doc.requirements.empty());  // trace: REQ-00001-1
+  EXPECT_NE(dynamic_cast<ds::scene::WalkthroughLayer*>(all[4].get()), nullptr);  // DS-471
+  EXPECT_FALSE(doc.links.empty());                                               // structure: A holds B
+  EXPECT_FALSE(doc.behaviours.empty());                                          // behaviour: A::run
+  EXPECT_FALSE(doc.requirements.empty());                                        // trace: REQ-00001-1
 }
 
 TEST_F(TestSceneLayersOfADesign, TheSceneBuildsTheSameDocumentEveryTime) {

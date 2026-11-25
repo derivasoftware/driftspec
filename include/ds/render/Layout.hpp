@@ -16,8 +16,9 @@ namespace render {
 /// pixel table; `text()` is the same table in character cells, so the same
 /// layout lands on a terminal grid.
 struct Metrics {
-  int CHAR_W = 0;  ///< the advance of a character: the theme's measures, never written here (DS-393)
-  int LINE_H = 0;  ///< the height of a line: the theme's measures
+  int CHAR_W = 0;   ///< the advance of a character: the theme's measures, never written here (DS-393)
+  int LINE_H = 0;   ///< the height of a line: the theme's measures
+  int SMALL_W = 0;  ///< the advance of a character of small text: the theme's measures (DS-464)
   int PAD_X = 10;
   int PAD_Y = 10;
   int SECTION_GAP = 4;
@@ -37,6 +38,7 @@ struct Metrics {
     Metrics m;
     m.CHAR_W = text.advance;
     m.LINE_H = text.lineHeight;
+    m.SMALL_W = text.smallAdvance;
     return m;
   }
   /// The same table in character cells, its text measures read from the theme.
@@ -44,6 +46,7 @@ struct Metrics {
     Metrics m;
     m.CHAR_W = text.advance;
     m.LINE_H = text.lineHeight;
+    m.SMALL_W = text.smallAdvance;
     m.PAD_X = 2;        // border and one space
     m.PAD_Y = 1;        // border
     m.SECTION_GAP = 1;  // the separator row

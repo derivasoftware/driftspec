@@ -353,6 +353,7 @@ package driftspec@ds {
         @requirement REQ-00260-1
       }
       + coupling() -> std::vector<Answer>
+      + walkthroughs(subject: std::string) -> std::vector<Answer>   // the walkthroughs, or one's steps (DS-471)
       - known(id: std::string) -> bool                       // an entity, or a scope something is declared in
       - nearTo(name: std::string) -> std::vector<std::string> // the identities ending in a name: the hint of an unknown one
       - entityAnswer(entity: model::Entity, detail: std::string) -> Answer

@@ -67,7 +67,8 @@ std::vector<Question> Manual::questions() {
           {"shows", "<diagram>", "a diagram"},
           {"findings", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
           {"coverage", "[file | identity]", "a file, or an identity: the entity and everything it holds"},
-          {"coupling", "", "no subject"}};
+          {"coupling", "", "no subject"},
+          {"walkthroughs", "[walkthrough]", "a walkthrough: its steps in order"}};
 }
 
 std::string Manual::usage() {

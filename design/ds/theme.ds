@@ -43,6 +43,7 @@ package driftspec@ds {
       @requirement REQ-00231-1
       + advance: int
       + lineHeight: int
+      + smallAdvance: int                    // a character of the small text labels are written in (DS-464)
     }
 
     // where a drawing goes: a page, in pixels, or a terminal, in cells

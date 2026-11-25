@@ -161,6 +161,16 @@ package driftspec@ds {
       + withArity(arity: std::size_t) -> Identity {
         @requirement REQ-00029-2
       }
+      + withParameters(types: std::string) -> Identity {   // an overload's identity: name(T1, T2) (DS-455)
+        @requirement REQ-00252-1
+      }
+      + bare() -> Identity {                     // without the parameter list that closes it (DS-455)
+        @requirement REQ-00252-1
+      }
+      // where :: or @ is found outside a parameter list: an overload's types never split its identity (DS-455)
+      + static findOutsideParameters(text: std::string, what: std::string, last: bool) -> std::size_t {
+        @requirement REQ-00252-1
+      }
       + diagramName() -> std::string
       + sequence(scenario: std::string) -> Identity
       + state() -> Identity
@@ -214,6 +224,36 @@ package driftspec@ds {
       + unqualified() -> std::string            // std::vector<model::Entity> is vector<Entity>
       - static inWord(c: char) -> bool
       - static startsName(c: char) -> bool
+    }
+
+    // a walkthrough as written, its steps resolved: built once and written by each document in its own
+    // convention, the export by identity and the scene by index (DS-471)
+    dataclass Walkthrough {
+      @requirement REQ-00243-1
+      + id: std::string
+      + name: std::string
+      + title: std::string
+      + owns many steps: std::vector<WalkStep>
+    }
+
+    dataclass WalkStep {                     // one step of a walkthrough
+      @requirement REQ-00243-1
+      + id: std::string
+      + n: int
+      + title: std::string
+      + show: std::string
+      + diagram: std::string
+      + scenario: std::string
+      + focus: std::vector<std::string>
+      + highlight: std::vector<std::string>
+      + at: std::string
+      + text: std::string
+    }
+
+    // the one place a walkthrough's steps are resolved, from the steps and the relations the linker made (DS-471)
+    class Walkthroughs {
+      @requirement REQ-00243-1
+      + static of(model: Model) -> std::vector<Walkthrough>
     }
 
     // The walks of a model's behaviours (DS-343): which scenarios a behaviour names, the steps the path of one
