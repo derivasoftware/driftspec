@@ -60,6 +60,17 @@ package driftspec@ds {
   module model {
     @requirement REQ-00175-1                 // every operation of the model is a member of a class (DS-365)
 
+    // the other checks name their subject too (DS-478, phase b of DS-426): a verification of its own, beside the
+    // approved one, so REQ-00240-1's text is not touched
+    verification VER-00267-1 {
+      @requirement REQ-00240-1
+      status: draft
+      title: An integration test confirms every check names the entity its finding is about, and one about a file or a word names none
+      method: test
+      tests:
+        tests/integration/ds/check/test_finding_subject.cpp::TestFindingSubjects.EveryCheckNamesTheEntityItsFindingIsAbout
+    }
+
     // the doors attach a finding to its subject (DS-488, phase c of DS-426): one requirement per capability
     requirement REQ-00330-1 {
       tags: finding, subject, editor

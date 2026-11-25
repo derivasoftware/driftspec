@@ -57,7 +57,7 @@ bool Linker::reportAmbiguous(const bind::Reference& reference) {
       "'" + written + "' in " + reference.from + " names " + std::to_string(candidates.size()) +
           (overloads ? " operations of that name: " + names + "; it relates nothing until its parameter types are written"
                      : " classes of its package: " + names + "; it relates nothing until it is qualified"),
-      reference.location));
+      reference.location, reference.from));
   return true;
 }
 
@@ -85,7 +85,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
       context_->report(context_->metamodel().finding(
           model::Code::E_REF_UNPINNED,
           reference.from + " refers to " + reference.target + " without a revision; write " + reference.target + "-<revision>",
-          reference.location));
+          reference.location, reference.from));
       return;
     }
     // the declared revision of that artefact, whatever it is
@@ -94,7 +94,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
       context_->report(context_->metamodel().finding(model::Code::W_REVISION_DRIFT,
                                                      reference.from + " refers to " + reference.target + " but the workspace declares " +
                                                          declaredId + ": the link is behind the artefact",
-                                                     reference.location));
+                                                     reference.location, reference.from));
       model_->relate({reference.relation, reference.from, declaredId, reference.location, reference.multiplicity});
       return;
     }
@@ -127,7 +127,7 @@ void Linker::resolveReference(const bind::Reference& reference) {
       context_->report(context_->metamodel().finding(model::Code::W_REF_UNDECLARED,
                                                      metamodel_->nameOf(expected.kind) + " '" + reference.target + "' is referenced by " +
                                                          reference.from + " but declared nowhere in the workspace",
-                                                     reference.location));
+                                                     reference.location, reference.from));
     }
   }
   if (reference.relation == "part-of") {  // a package reopened by its path: the outer package contains it, as nesting would say
@@ -160,7 +160,7 @@ bool Linker::kindAllowed(const bind::Reference& reference, const std::string& ta
   else if (reference.relation == "inherits" && to->kind == model::Kind::Interface)
     message =
         reference.from + " names the interface " + target + " as its base: a class realises an interface, write @interface " + to->name;
-  context_->report(context_->metamodel().finding(model::Code::E_RELATION_KIND, message, reference.location));
+  context_->report(context_->metamodel().finding(model::Code::E_RELATION_KIND, message, reference.location, reference.from));
   return false;
 }
 
@@ -181,7 +181,7 @@ void Linker::checkTemplateBound(const bind::Reference& reference) {
       context_->report(context_->metamodel().finding(model::Code::E_TEMPLATE_BOUND,
                                                      reference.args[i] + " does not satisfy " + params[i].name + ": " + params[i].type +
                                                          " of " + templateId + " (used by " + reference.from + ")",
-                                                     reference.location));
+                                                     reference.location, reference.from));
     }
   }
 }

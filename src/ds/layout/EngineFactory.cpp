@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "ds/layout/GridEngine.hpp"
 #include "ds/layout/LayeredEngine.hpp"
 #include "ds/layout/PackingEngine.hpp"
 #include "ds/layout/RouterFactory.hpp"
@@ -19,6 +20,8 @@ std::unique_ptr<IEngine> EngineFactory::layered(const Spacing& spacing, std::uni
 std::unique_ptr<ISequenceEngine> EngineFactory::sequence(const SequenceSpacing& spacing) {
   return std::make_unique<StackedEngine>(spacing);
 }
+
+std::unique_ptr<ITableEngine> EngineFactory::table(const TableSpacing& spacing) { return std::make_unique<GridEngine>(spacing); }
 
 }  // namespace layout
 }  // namespace ds

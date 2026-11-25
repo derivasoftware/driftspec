@@ -62,7 +62,7 @@ const Entity& Model::declare(const Entity& entity) {
                                metamodel_->nameOf(member.kind) + " '" + member.id + "' takes the identity of the " +
                                    ((behaviour(entity.kind) ? entity.kind : existing.kind) == Kind::State ? "state machine" : "sequence") +
                                    " written for what holds it: rename the " + metamodel_->nameOf(member.kind),
-                               member.location));
+                               member.location, member.id));
     if (behaviour(entity.kind)) {
       indexEntity(existing, false);
       existing = entity;
@@ -79,7 +79,7 @@ void Model::reportDuplicate(const Entity& entity, const std::string& id, const E
   report(metamodel_->finding(Code::E_DUPLICATE_IDENTITY,
                              metamodel_->nameOf(entity.kind) + " '" + id + "' is declared twice (first at " + first.location.file + ":" +
                                  std::to_string(first.location.line) + ")",
-                             entity.location));
+                             entity.location, id));
 }
 
 const Entity* Model::find(const std::string& id) const {

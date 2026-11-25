@@ -26,13 +26,13 @@ class Grid {
   Cell* at(int x, int y);
 
   /// One glyph at (x, y), in `color`.
-  void put(int x, int y, std::string_view glyph, const std::string& color = "");
+  void put(int x, int y, std::string_view glyph, std::string_view color = {});
 
   /// A text from (x, y) on, one code point per cell.
-  void text(int x, int y, const std::string& s, const std::string& color = "");
+  void text(int x, int y, const std::string& s, std::string_view color = {});
 
   /// An edge segment cell: joins with what another edge already drew.
-  void line(int x, int y, bool horizontal, bool dashed, const std::string& color);
+  void line(int x, int y, bool horizontal, bool dashed, std::string_view color);
 
   /// base64 of u32 little-endian triplets per cell: codepoint, foreground, background
   std::string encode(const std::map<std::string, std::uint32_t>& rgb) const;
@@ -47,7 +47,7 @@ class Grid {
   std::string dump(bool color) const;
 
   /// The border of `r`, its corners rounded or square (a box rounded, a note or a container square).
-  void frame(const Rect& r, bool rounded, const std::string& color);
+  void frame(const Rect& r, bool rounded, std::string_view color);
   /// Blanks `r`: what a box covers is not drawn through.
   void clear(const Rect& r);
 
@@ -57,7 +57,7 @@ class Grid {
   static std::size_t sized(int w, int h);
   static constexpr std::size_t kMaxCells = std::size_t{128} * 1024 * 1024;
   /// The index of `color` in the palette, added the first time it is asked.
-  std::uint8_t paint(const std::string& color);
+  std::uint8_t paint(std::string_view color);
   void setGlyph(Cell& c, std::string_view glyph);
   std::string_view glyphOf(const Cell& c) const;
 
@@ -80,7 +80,7 @@ class Grid {
   return &cells_[static_cast<size_t>(y) * w_ + x];
 }
 
-[[gnu::always_inline]] inline void Grid::put(int x, int y, std::string_view glyph, const std::string& color) {
+[[gnu::always_inline]] inline void Grid::put(int x, int y, std::string_view glyph, std::string_view color) {
   if (Cell* c = at(x, y)) {
     setGlyph(*c, glyph);
     c->colour = paint(color);
@@ -88,7 +88,7 @@ class Grid {
   }
 }
 
-inline void Grid::text(int x, int y, const std::string& s, const std::string& color) {
+inline void Grid::text(int x, int y, const std::string& s, std::string_view color) {
   int col = x;
   for (size_t i = 0; i < s.size();) {
     // one UTF-8 code point per cell
@@ -105,7 +105,7 @@ inline void Grid::text(int x, int y, const std::string& s, const std::string& co
   }
 }
 
-[[gnu::always_inline]] inline void Grid::line(int x, int y, bool horizontal, bool dashed, const std::string& color) {
+[[gnu::always_inline]] inline void Grid::line(int x, int y, bool horizontal, bool dashed, std::string_view color) {
   Cell* c = at(x, y);
   if (!c) return;
   const int bit = horizontal ? 1 : 2;
@@ -120,11 +120,11 @@ inline void Grid::text(int x, int y, const std::string& s, const std::string& co
   c->colour = paint(color);
 }
 
-inline std::uint8_t Grid::paint(const std::string& color) {
+inline std::uint8_t Grid::paint(std::string_view color) {
   for (std::size_t i = 0; i < palette_.size(); ++i)
     if (palette_[i] == color) return static_cast<std::uint8_t>(i);
   if (palette_.size() >= Cell::kLong) throw std::length_error("a text drawing of more than 254 colours");
-  palette_.push_back(color);
+  palette_.emplace_back(color);
   return static_cast<std::uint8_t>(palette_.size() - 1);
 }
 
@@ -147,7 +147,7 @@ inline std::string_view Grid::glyphOf(const Cell& c) const {
   return long_[index];
 }
 
-inline void Grid::frame(const Rect& r, bool rounded, const std::string& color) {
+inline void Grid::frame(const Rect& r, bool rounded, std::string_view color) {
   const char* tl = rounded ? "\xE2\x95\xAD" : "\xE2\x94\x8C";  // ╭ ┌
   const char* tr = rounded ? "\xE2\x95\xAE" : "\xE2\x94\x90";  // ╮ ┐
   const char* bl = rounded ? "\xE2\x95\xB0" : "\xE2\x94\x94";  // ╰ └

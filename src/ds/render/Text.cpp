@@ -14,6 +14,7 @@
 #include "ds/render/Grid.hpp"
 #include "ds/render/Lane.hpp"
 #include "ds/render/SequenceLayout.hpp"
+#include "ds/render/TableLayout.hpp"
 #include "ds/text/Text.hpp"
 #include "ds/theme/Theme.hpp"
 
@@ -355,50 +356,33 @@ bool Text::isSequence(const IrDocument& doc) {
 /// The grid keeps a one-cell margin on each side: the layout gets the rest.
 int Text::contentWidth(int maxWidth) { return maxWidth > 0 ? std::max(10, maxWidth - 2) : 0; }
 
-Grid Text::tableGrid(const IrDocument& doc) const {
+Grid Text::tableGrid(const Figure& figure) const {
   const TextPen& pen = pen_;
   const std::string& kMuted = pen.muted;
   const std::string& kAgainst = pen.against;
-  const IrTable& t = *doc.table;  // drawn as a table only when it has one
-  const auto shown = [](const IrCell& cell) {
-    return cell.kind == "against" ? "! " + cell.text : cell.kind == "none" ? "\xC2\xB7" : cell.text;
+  const IrTable& t = *figure.document().table;  // drawn as a table only when it has one
+  const TableLayout& L = *figure.table;
+  Grid g(0, 0, L.width, L.height);
+  const auto column = [&](std::size_t c, int top, int bottom, const std::vector<std::string>& lines, const std::string& colour) {
+    const int x = L.columnX[c];
+    for (int y = top; y < bottom; ++y) {
+      if (c > 0) g.put(x, y, "\xE2\x94\x82", kMuted);  // │
+    }
+    for (std::size_t l = 0; l < lines.size() && top + static_cast<int>(l) < bottom; ++l)
+      g.text(x + L.padX, top + static_cast<int>(l), lines[l], colour);
   };
-  const auto wide = [](const std::string& s) {  // in cells: one for each UTF-8 code point
-    return static_cast<int>(text::characters(s));
-  };
-  std::vector<int> widths{wide(t.corner)};
-  for (const IrRow& row : t.rows) widths[0] = std::max(widths[0], wide(row.label));
-  for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    int longest = wide(t.columns[c]);
-    for (const IrRow& row : t.rows)
-      if (c < row.cells.size()) longest = std::max(longest, wide(shown(row.cells[c])));
-    widths.push_back(longest);
-  }
-  int width = 1;
-  for (const int w : widths) width += w + 3;
-  Grid g(0, 0, width, static_cast<int>(t.rows.size()) + 2);
-  int x = 1;
-  g.text(x, 0, t.corner);
-  for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    x += widths[c] + 3;
-    g.put(x - 2, 0, "\xE2\x94\x82", kMuted);  // │
-    g.text(x, 0, t.columns[c]);
-  }
-  for (int i = 0; i < width; ++i) g.put(i, 1, "\xE2\x94\x80", kMuted);  // ─
-  x = 1;
-  for (std::size_t c = 0; c < t.columns.size(); ++c) {
-    x += widths[c] + 3;
-    g.put(x - 2, 1, "\xE2\x94\xBC", kMuted);  // ┼
-  }
+  // the headings, a rule under them
+  const int rule = L.headHeight - 1;
+  column(0, 0, rule, L.corner, "");
+  for (std::size_t c = 0; c < t.columns.size(); ++c) column(c + 1, 0, rule, L.headings[c], "");
+  for (int x = 0; x < L.width; ++x) g.put(x, rule, "\xE2\x94\x80", kMuted);                              // ─
+  for (std::size_t c = 1; c < L.columnX.size(); ++c) g.put(L.columnX[c], rule, "\xE2\x94\xBC", kMuted);  // ┼
   for (std::size_t r = 0; r < t.rows.size(); ++r) {
-    const int y = static_cast<int>(r) + 2;
-    x = 1;
-    g.text(x, y, t.rows[r].label);
+    const int top = L.rowY[r], bottom = L.rowY[r] + L.rowHeight[r];
+    column(0, top, bottom, L.labels[r], "");
     for (std::size_t c = 0; c < t.columns.size() && c < t.rows[r].cells.size(); ++c) {
-      x += widths[c] + 3;
-      g.put(x - 2, y, "\xE2\x94\x82", kMuted);  // │
       const IrCell& cell = t.rows[r].cells[c];
-      g.text(x, y, shown(cell), cell.kind == "against" ? kAgainst : cell.kind == "none" ? kMuted : "");
+      column(c + 1, top, bottom, L.cells[r][c], cell.kind == "against" ? kAgainst : cell.kind == "none" ? kMuted : "");
     }
   }
   return g;
@@ -428,18 +412,18 @@ Grid Text::partsGrid(const IrDocument& doc, int maxWidth) const {
 Text::Text(const theme::Theme& theme) : pen_(theme) {}
 
 std::string Text::render(const IrDocument& doc, bool color, int maxWidth) const {
-  if (doc.table && !doc.table->columns.empty()) return tableGrid(doc).dump(color);
+  if (doc.table && !doc.table->columns.empty()) return draw(ComposerFactory::of("table", "text", pen_.M)->compose(doc, 0), color);
   if (!doc.parts.empty()) return partsGrid(doc, maxWidth).dump(color);
   if (isSequence(doc)) return draw(ComposerFactory::of("sequence", "text", pen_.M)->compose(doc, 0), color);
   return draw(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)), color);
 }
 
 std::string Text::draw(const Figure& figure, bool color) const {
-  return (figure.sequence ? sequenceGrid(figure) : classGrid(figure)).dump(color);
+  return (figure.table ? tableGrid(figure) : figure.sequence ? sequenceGrid(figure) : classGrid(figure)).dump(color);
 }
 
 void Text::cells(const IrDocument& doc, int maxWidth, emit::ISink& out_sink) const {
-  const Grid g = doc.table && !doc.table->columns.empty() ? tableGrid(doc)
+  const Grid g = doc.table && !doc.table->columns.empty() ? tableGrid(ComposerFactory::of("table", "text", pen_.M)->compose(doc, 0))
                  : !doc.parts.empty()                     ? partsGrid(doc, maxWidth)
                  : isSequence(doc)                        ? sequenceGrid(ComposerFactory::of("sequence", "text", pen_.M)->compose(doc, 0))
                                    : classGrid(ComposerFactory::of("boxes", "text", pen_.M)->compose(doc, contentWidth(maxWidth)));

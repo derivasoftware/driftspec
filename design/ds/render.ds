@@ -13,6 +13,7 @@ package driftspec@ds {
     @requirement REQ-00214-1                 // every operation of render is a member of a class (DS-372)
     @requirement REQ-00215-1                 // a projector is reached through IProjector, the tour's parts too (DS-372)
     @requirement REQ-00216-1                 // the drawings read the IR alone (DS-372)
+    @requirement REQ-00217-1                 // a drawing places nothing: it draws a figure composed below it (DS-464)
 
     requirement REQ-00006-1 {
       status: approved
@@ -266,6 +267,61 @@ package driftspec@ds {
           tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
           tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ADrawingThatKnowsTheModelIsTold
       }
+    }
+
+    requirement REQ-00217-1 {
+      tags: architecture, render, layout
+      status: draft
+      @refines REQ-00007-1
+      title: A drawing shall place nothing, reaching what places a diagram only through IComposer, from ComposerFactory
+      text:
+        Svg and Text draw a figure composed below them: where each box, route, lane, row and frame lands is the
+        composers' and the layout's engines'. A drawing that knew an engine, the layout's types of placement, render's
+        box projection, the sequence projection or a composer itself would place a part of a diagram on its own, and
+        the two drawings of one diagram would no longer place it alike.
+      rationale:
+        Owner, 2026-11-25 (DS-400, DS-464): figures are composed below and sinks only draw; sequences get one placement
+        engine in the layout, like the structural one.
+      verification VER-00340-1 {
+        status: draft
+        title: Integration tests confirm the design of ds keeps it, and is told when a drawing holds what places
+        method: test
+        tests:
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
+          tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.ADrawingThatPlacesIsTold
+      }
+    }
+
+    // what draws a diagram: the SVG and the terminal drawings (DS-464)
+    definition draws(c) {
+      title: c is one of the drawings, which draw a composed figure
+      if c = driftspec@ds@render::Svg
+      if c = driftspec@ds@render::Text
+    }
+
+    // what places a diagram, below the drawings: a composer, render's box projection, the sequence projection (DS-464)
+    definition places(x) {
+      title: x composes a figure, or projects the IR into what the layout's engines place
+      if x inherits driftspec@ds@render::IComposer
+      if x = driftspec@ds@render::Layout
+      if x = driftspec@ds@render::SequenceProjection
+      if x = driftspec@ds@render::TableProjection
+    }
+
+    rule the-drawings-place-nothing {
+      title: no drawing depends on a composer or a projection, so a drawing reaches what places only through IComposer
+      @requirement REQ-00217-1
+      for class c in driftspec@ds@render, class x in driftspec@ds@render
+      where draws(c), places(x)
+      never depends(c, x)
+    }
+
+    rule the-drawings-know-no-layout {
+      title: no drawing depends on the layout module, so where a diagram's parts land is the engines', below the drawing
+      @requirement REQ-00217-1
+      for class c in driftspec@ds@render
+      where draws(c)
+      never depends(c, x), x in driftspec@ds@layout
     }
 
     // what projects a diagram: the export, the projectors and what they are built of (DS-372)
@@ -594,6 +650,7 @@ package driftspec@ds {
       + refs source: IrDocument              // the document composed from, when it is drawn as it is; it outlives the figure
       + owns layout: LayoutResult
       + owns sequence: std::optional<SequenceLayout>   // a sequence's lanes, rows and frames, when the figure is one
+      + owns table: std::optional<TableLayout>   // a table's columns, rows and lines, when the figure is one
       + Figure()
       + document() -> IrDocument             // the one it was composed from, or the one composing made
     }
@@ -647,6 +704,7 @@ package driftspec@ds {
       local svg: BoxesSvgComposer
       local text: BoxesTextComposer
       local sequence: SequenceComposer
+      local table: TableComposer
       opt boxes drawn in SVG / boxes-svg {
         return svg
       }
@@ -655,6 +713,9 @@ package driftspec@ds {
       }
       opt a sequence, in SVG or in a terminal / sequence {
         return sequence                      // one engine: the sink's metrics make the difference (DS-464)
+      }
+      opt a table, in SVG or in a terminal / table {
+        return table
       }
       fail std::invalid_argument
     }
@@ -675,6 +736,56 @@ package driftspec@ds {
       + blocks() -> std::vector<const IrNode*>
       + laneOf() -> std::map<std::string, std::size_t>   // a lifeline's lane, by its id
       + takeLaneOf() -> std::map<std::string, std::size_t>   // handed over: the projection keeps none after
+    }
+
+    // a table of the render-IR as the layout's table graph: each text as the sink writes it, measured word by word in
+    // characters (DS-466); a sink that marks a cell in its text is measured with its marks (DS-464)
+    class TableProjection {
+      @requirement REQ-00007-1
+      - owns graph_: layout::TableGraph
+      - words_: std::vector<std::vector<std::string>>
+      + TableProjection(doc: IrDocument, marked: bool)
+      + graph() -> layout::TableGraph
+      + words() -> std::vector<std::vector<std::string>>   // each text's words, in the graph's reading order
+      - measured(text: std::string) -> layout::TableText
+    }
+
+    // a table composed for a sink: projected as the sink writes its cells and placed by the layout's table engine
+    // with the sink's metrics, the same proportions in pixels or in cells (DS-464)
+    class TableComposer : IComposer {
+      @requirement REQ-00007-1
+      - owns metrics_: Metrics
+      + TableComposer(metrics: Metrics)
+      + compose(doc: IrDocument, width: int) -> Figure
+    }
+
+    // each text read back in the lines the engine broke it into
+    sequence TableComposer::compose {
+      local projection: TableProjection
+      local engine: layout::ITableEngine
+      -> layout::TableSpacing::of(advance, lineHeight) -> spacing
+      -> layout::EngineFactory::table(spacing) -> made
+      -> engine.place(graph) -> placed
+      return figure
+    }
+
+    // where a table lands, composed for one technology: each column's edge and width, the headings' height, each row's
+    // top and height, and each text in the lines it is written on, as the sink writes it
+    dataclass TableLayout {
+      @requirement REQ-00007-1
+      + columnX: std::vector<int>
+      + columnWidth: std::vector<int>
+      + headHeight: int
+      + rowY: std::vector<int>
+      + rowHeight: std::vector<int>
+      + width: int
+      + height: int
+      + padX: int
+      + lineHeight: int
+      + corner: std::vector<std::string>
+      + headings: std::vector<std::vector<std::string>>
+      + labels: std::vector<std::vector<std::string>>
+      + cells: std::vector<std::vector<std::vector<std::string>>>
     }
 
     // a sequence composed for a sink: projected into the layout's graph and placed by its sequence engine with the
@@ -754,6 +865,7 @@ package driftspec@ds {
       + SEQ_HEAD_LEAST: int                  // the least room a head is drawn in: a terminal's box, 3 rows
       + SEQ_SELF_LEAST: int                  // the least room a message to its own lane is drawn in: a terminal's loop, 3 rows
       + SEQ_FRAME_LEAST: int                 // the least room between a frame's edge and the next: a terminal's row
+      + TABLE_MARKS: int                     // whether a table's cells are marked in their text: a terminal's "! " and "·"
       + PAD_X: int
       + PAD_Y: int
       + SECTION_GAP: int
@@ -817,7 +929,7 @@ package driftspec@ds {
       - static emitEdge(e: IrEdge, route: Route, px: std::string) -> EdgeMarkup
       - static dataAttrs(refs: std::map<std::string, std::string>) -> std::string
       - sequenceSvg(figure: Figure) -> std::string                   // a sequence where its figure placed it
-      - tableSvg(doc: IrDocument) -> std::string                     // a table, drawn cell by cell (DS-251)
+      - tableSvg(figure: Figure) -> std::string                      // a table where its figure placed it (DS-251, DS-464)
       - static besideEachOther(drawings: std::vector<std::pair<std::string, std::string>>, maxWidth: int) -> std::string   // the parts of a drawing (DS-245)
     }
 
@@ -854,7 +966,7 @@ package driftspec@ds {
       - classGrid(figure: Figure) -> Grid                              // the boxes and edges where the figure placed them
       - static isSequence(doc: IrDocument) -> bool                      // a node of it is a lifeline
       - static contentWidth(maxWidth: int) -> int                       // the grid keeps a one-cell margin on each side
-      - tableGrid(doc: IrDocument) -> Grid                              // a row of headings, a rule, a row for each row (DS-251)
+      - tableGrid(figure: Figure) -> Grid                               // a row of headings, a rule, the rows, where its figure placed them
       - partsGrid(doc: IrDocument, maxWidth: int) -> Grid               // the parts one under the other (DS-245)
     }
 
@@ -909,18 +1021,18 @@ package driftspec@ds {
       - kMaxCells: std::size_t               // the most it holds, some 128 million characters (DS-350)
       + Grid(minX: int, minY: int, w: int, h: int)
       + at(x: int, y: int) -> Cell              // none outside the grid
-      + put(x: int, y: int, glyph: std::string_view, color: std::string) -> void   // a glyph read where it is, never copied first
-      + text(x: int, y: int, s: std::string, color: std::string) -> void   // one code point per cell
-      + line(x: int, y: int, horizontal: bool, dashed: bool, color: std::string) -> void   // joins with what another edge drew
+      + put(x: int, y: int, glyph: std::string_view, color: std::string_view) -> void   // a glyph read where it is, never copied first
+      + text(x: int, y: int, s: std::string, color: std::string_view) -> void   // one code point per cell
+      + line(x: int, y: int, horizontal: bool, dashed: bool, color: std::string_view) -> void   // joins with what another edge drew
       + encode(rgb: std::map<std::string, std::uint32_t>) -> std::string
       + columns() -> int
       + rows() -> int
       + paste(other: Grid, row: int) -> void    // another grid copied onto this one, its first row at row
       + dump(color: bool) -> std::string
-      + frame(r: Rect, rounded: bool, color: std::string) -> void
+      + frame(r: Rect, rounded: bool, color: std::string_view) -> void
       + clear(r: Rect) -> void                  // what a box covers is not drawn through
       - static sized(w: int, h: int) -> std::size_t   // a drawing too large to hold as text is refused (DS-350)
-      - paint(color: std::string) -> std::uint8_t     // the colour's index in the palette, added the first time
+      - paint(color: std::string_view) -> std::uint8_t     // the colour's index in the palette, added the first time
       - setGlyph(c: Cell, glyph: std::string_view) -> void
       - glyphOf(c: Cell) -> std::string_view
     }
@@ -948,11 +1060,13 @@ package driftspec@ds {
     // metrics is the pixel table, made from the theme's measures with the Svg. A box diagram is composed below
     // and drawn as it is composed (DS-400); the drawing comes back as a name.
     sequence Svg::render {
+      local composer: IComposer
       opt the document is a table / table-document {
-        -> tableSvg(doc) -> drawing
+        -> ComposerFactory::of(kind, technology, metrics_) -> table       // a table, in SVG (DS-464)
+        -> composer.compose(doc, maxWidth) -> composedTable
+        -> draw(composedTable) -> drawing
         return drawing
       }
-      local composer: IComposer
       opt a node of the document is a lifeline / sequence-document {
         -> ComposerFactory::of(kind, technology, metrics_) -> sequence   // a sequence, in SVG (DS-400)
         -> composer.compose(doc, maxWidth) -> composed
@@ -968,12 +1082,13 @@ package driftspec@ds {
     // metrics is the cell table, the pen's, and width is maxWidth less the grid's margin. A box diagram is composed
     // below and drawn as it is composed (DS-400).
     sequence Text::render {
+      local composer: IComposer
       opt the document is a table / table-document {
-        -> tableGrid(doc) -> grid
-        self -> grid.dump(color) -> drawing
+        -> ComposerFactory::of(kind, technology, pen_.M) -> table         // a table, in text (DS-464)
+        -> composer.compose(doc, width) -> composedTable
+        -> draw(composedTable, color) -> drawing
         return drawing
       }
-      local composer: IComposer
       opt a node of the document is a lifeline / sequence-document {
         -> ComposerFactory::of(kind, technology, pen_.M) -> sequence     // a sequence, in text (DS-400)
         -> composer.compose(doc, width) -> composed
