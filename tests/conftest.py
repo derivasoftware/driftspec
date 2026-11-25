@@ -64,7 +64,8 @@ class Session:
                 headers[key] = value
             self.inbox.put(json.loads(self.p.stdout.read(int(headers["Content-Length"]))))
 
-    def receive(self, timeout=20.0):
+    # a liveness wait (DS-481): it bounds a server that hangs, not its speed, so a loaded machine never trips it
+    def receive(self, timeout=120.0):
         try:
             m = self.inbox.get(timeout=timeout)
         except queue.Empty:

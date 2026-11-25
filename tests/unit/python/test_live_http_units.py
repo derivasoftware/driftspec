@@ -14,6 +14,7 @@ from driftspec.live_http import Handler, browser_open, handler_for, serve
 from driftspec.live_mcp import call
 from driftspec.live_session import CONTRACT, Live
 from live_fixtures import no_browser, session, ws  # noqa: F401 (fixtures)
+from live_helpers import ANSWER
 
 __covers__ = (Handler, handler_for, serve, browser_open)
 
@@ -27,7 +28,7 @@ def request(port, path, data=None, host=None, origin=None):
     req = urllib.request.Request(f"http://127.0.0.1:{port}{path}", data=None if data is None else json.dumps(data).encode(),
                                  method="GET" if data is None else "POST", headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=5) as r:
+        with urllib.request.urlopen(req, timeout=ANSWER) as r:
             return r.status, r.read()
     except urllib.error.HTTPError as e:
         return e.code, e.read()
