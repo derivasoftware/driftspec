@@ -1,7 +1,6 @@
 #include "ds/format/FormatFactory.hpp"
 
 #include "ds/format/DiagramFormats.hpp"
-#include "ds/format/TextFormats.hpp"
 #include "ds/format/ViewerPage.hpp"
 
 namespace ds {
@@ -18,18 +17,6 @@ std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> FormatFactory::d
   out["ir"] = std::make_unique<DiagramIr>();
   out["svg"] = std::make_unique<DiagramSvg>(theme);
   out["text"] = std::make_unique<DiagramText>(theme);
-  return out;
-}
-
-std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> FormatFactory::answers() {
-  std::map<std::string, std::unique_ptr<IFormat<std::vector<query::Answer>>>> out;
-  out["text"] = std::make_unique<AnswersText>();
-  return out;
-}
-
-std::map<std::string, std::unique_ptr<IFormat<check::Report>>> FormatFactory::report() {
-  std::map<std::string, std::unique_ptr<IFormat<check::Report>>> out;
-  out["text"] = std::make_unique<ReportText>();
   return out;
 }
 

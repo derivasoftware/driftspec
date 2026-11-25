@@ -8,9 +8,9 @@
 
 #include "ds/check/Report.hpp"
 #include "ds/emit/JsonSink.hpp"
+#include "ds/emit/TextSink.hpp"
 #include "ds/format/Descriptions.hpp"
 #include "ds/format/DiagramFormats.hpp"
-#include "ds/format/TextFormats.hpp"
 #include "ds/format/ViewerPage.hpp"
 #include "ds/query/Query.hpp"
 #include "ds/scene/Document.hpp"
@@ -156,11 +156,12 @@ TEST(TestViewerPage, APageTitledAsAskedThatCarriesTheScene) {
 
 const std::vector<ds::query::Answer> kAnswers{{"class", "p@m::A", "a class"}, {"class", "p@m::B", ""}};
 
-TEST(TestAnswersText, OneLinePerAnswerKindIdentityAndDetail) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::AnswersText f;
-  EXPECT_EQ(f.name(), "text");
-  const std::string text = f.write(kAnswers, {}, sink);
+TEST(TestAnswersDescription, AsTextOneLinePerAnswerKindIdentityAndDetail) {
+  ds::emit::TextSink sink;  // the presentation half (DS-399)
+  const ds::format::AnswersDescription description(kAnswers);
+  EXPECT_EQ(description.name(), "answers");
+  description.describe(sink);
+  const std::string text = sink.result();
   EXPECT_NE(text.find("p@m::A"), std::string::npos);
   EXPECT_NE(text.find("a class"), std::string::npos);
   EXPECT_EQ(std::count(text.begin(), text.end(), '\n'), 2);
@@ -192,17 +193,19 @@ ds::check::Report aReport() {
   return r;
 }
 
-TEST(TestReportText, EachFindingAtItsPlaceThenTheCounts) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::ReportText f;
-  EXPECT_EQ(f.name(), "text");
-  EXPECT_EQ(f.write(aReport(), {}, sink), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relation · 1 finding\n");
+TEST(TestReportDescription, AsTextEachFindingAtItsPlaceThenTheCounts) {
+  ds::emit::TextSink sink;  // the presentation half (DS-399)
+  const ds::check::Report report = aReport();
+  const ds::format::ReportDescription description(report, "");
+  EXPECT_EQ(description.name(), "report");
+  description.describe(sink);
+  EXPECT_EQ(sink.result(), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relation · 1 finding\n");
 }
 
 TEST(TestReportDescription, TheFindingsAndTheCountsAsJson) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::check::Report report = aReport();
-  ds::format::ReportDescription(report).describe(sink);
+  ds::format::ReportDescription(report, "").describe(sink);
   const auto json = nlohmann::json::parse(sink.result());
   EXPECT_EQ(json["entities"], 3);
   EXPECT_EQ(json["errors"], 0);
@@ -212,7 +215,7 @@ TEST(TestReportDescription, TheFindingsAndTheCountsAsJson) {
 TEST(TestReportDescription, TheReportAsOneValueWhereTheSinkStandsAsItIsWrittenWhole) {
   // the browser carries the report as one field of its answer (DS-397): the same value ds check --json writes whole
   const ds::check::Report report = aReport();
-  const ds::format::ReportDescription description(report);
+  const ds::format::ReportDescription description(report, "");
   ds::emit::JsonSink whole(false, true);
   description.describe(whole);
   const std::string written = whole.result();

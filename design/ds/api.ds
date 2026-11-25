@@ -428,7 +428,7 @@ package driftspec@ds {
     sequence Api::report {
       -> check::Report::of(model, metamodel_) -> report
       -> emit::SinkFactory::json(pretty) -> sink
-      -> format::DescriptionFactory::report(report) -> description
+      -> format::DescriptionFactory::report(report, "") -> description   // no workspace to name: the JSON has no field of it
       -> description.describe(sink)
       -> sink.result() -> json
       return json
@@ -447,7 +447,7 @@ package driftspec@ds {
         -> artefacts(model, out_sink)
         -> diagrams(workspace, width, out_sink)
         -> check::Report::of(model, metamodel_) -> checked
-        -> format::DescriptionFactory::report(checked) -> report   // as ds check --json writes it, one field of the answer
+        -> format::DescriptionFactory::report(checked, "") -> report   // as ds check --json writes it, one field of the answer
         -> report.describe(out_sink)
       }
     }

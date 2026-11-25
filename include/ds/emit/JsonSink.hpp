@@ -16,7 +16,8 @@ namespace emit {
 /// escapes, the two layouts and the numbers are those of nlohmann::json 3.11.3's dump(). It builds no tree: what
 /// is written goes into one text, kept whole until it is taken, so a write that fails leaves nothing written.
 /// The fields of a record are written in the order given, which is byte order (keptBy before kind). A text that
-/// is not UTF-8 is refused, as nlohmann refuses it.
+/// is not UTF-8 is refused, as nlohmann refuses it. It writes the structure and skips the presentation (DS-399): a
+/// paragraph or a table is for a person, and JSON is for a program.
 class JsonSink final : public ISink {
  public:
   /// Indented by two spaces when pretty, else compact. Checked, it refuses with std::logic_error a field out of
@@ -36,6 +37,14 @@ class JsonSink final : public ISink {
   ISink& number(double value) override;
   ISink& boolean(bool value) override;
   ISink& null() override;
+  /// The presentation is skipped: nothing is written.
+  ISink& paragraph(std::string_view text) override;
+  ISink& table(const std::vector<std::string_view>& columns) override;
+  ISink& row(const std::vector<std::string_view>& cells) override;
+  ISink& endTable() override;
+  /// NotImplemented when nothing is written since the last result: JSON writes a byte for every part of the
+  /// structure it accepts, so what it holds says whether it accepted any.
+  ISink& described(std::string_view document) override;
   std::string result() override;
 
  private:

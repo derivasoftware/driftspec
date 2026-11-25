@@ -163,18 +163,13 @@ int check(const ds::model::Metamodel& metamodel, const std::string& dir, bool js
   ds::model::Model model(metamodel);
   if (!loadWorkspace(metamodel, dir, ds::api::Output::Findings, "", &model))
     return 2;  // no workspace to check: the command line is wrong, not the design
-  // the one report of a check (DS-120): with --json its description in the JSON sink, indented as ds check --json has
-  // always printed it (DS-398); else written as text by its writer (DS-126)
+  // the one report of a check (DS-120), described once into the sink of its technology (DS-399): with --json the JSON
+  // sink, indented as ds check --json has always printed it (DS-398), else the text sink; the workspace as it was
+  // given is where the report says the open coverage is listed (DS-431)
   const ds::check::Report report = ds::check::Report::of(model, metamodel);
-  const auto sink = ds::emit::SinkFactory::json(true);
-  if (json) {
-    ds::format::DescriptionFactory::report(report)->describe(*sink);
-    std::cout << sink->result() << "\n";
-    return report.errors ? 1 : 0;
-  }
-  ds::format::FormatOptions options;
-  options.title = dir;  // the workspace as it was given: where the report says the open coverage is listed (DS-431)
-  std::cout << ds::format::FormatFactory::report().at("text")->write(report, options, *sink);
+  const auto sink = ds::emit::SinkFactory::of(json ? "json" : "text", true);
+  ds::format::DescriptionFactory::report(report, dir)->describe(*sink);
+  std::cout << sink->result() << (json ? "\n" : "");
   return report.errors ? 1 : 0;
 }
 
@@ -388,7 +383,7 @@ int run(int argc, char** argv) {
   }
   const ds::query::Query query(model, metamodel);
   const std::vector<ds::query::Answer> answers = query.ask(question, subject);
-  const auto sink = ds::emit::SinkFactory::json(false);
+  const auto sink = ds::emit::SinkFactory::of(json ? "json" : "text", false);
   if (!answers.empty() && answers.front().kind == "error") {
     if (json) {  // asked for JSON, the error is an answer too
       ds::format::DescriptionFactory::answers(answers)->describe(*sink);
@@ -400,13 +395,10 @@ int run(int argc, char** argv) {
     }
     return 1;
   }
-  // the answers (DS-126): with --json their description in the JSON sink (DS-398), else written as text
-  if (json) {
-    ds::format::DescriptionFactory::answers(answers)->describe(*sink);
-    std::cout << sink->result() << "\n";
-    return 0;
-  }
-  std::cout << ds::format::FormatFactory::answers().at("text")->write(answers, {}, *sink);
+  // the answers (DS-126), described once into the sink of their technology (DS-399): with --json the JSON sink
+  // (DS-398), else the text sink
+  ds::format::DescriptionFactory::answers(answers)->describe(*sink);
+  std::cout << sink->result() << (json ? "\n" : "");
   return 0;
 }
 

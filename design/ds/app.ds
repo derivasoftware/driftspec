@@ -51,22 +51,17 @@ package driftspec@ds {
       return true
     }
 
-    // the one report of a check: with --json its description in the sink the command line asks for, indented
-    // (DS-397, DS-398); else written as text by the writer found by name (DS-126)
+    // the one report of a check, described once into the sink of the technology the command line asks for (DS-399):
+    // with --json the JSON sink, indented (DS-397, DS-398), else the text sink; the workspace as it was given is where
+    // the report says its open coverage is listed (DS-431)
     sequence check {
       local model: model::Model
-      local chosen: format::IFormat<check::Report>     // the writer FormatFactory finds by name
       -> loadWorkspace(metamodel, dir, findings, diagram, model) -> found
       -> check::Report::of(model, metamodel) -> report
-      -> emit::SinkFactory::json(true) -> sink
-      alt asked for JSON / json {
-        -> format::DescriptionFactory::report(report) -> description
-        -> description.describe(sink)
-        -> sink.result() -> json
-      } else {
-        -> format::FormatFactory::report() -> writers
-        -> chosen.write(report, options, sink) -> written
-      }
+      -> emit::SinkFactory::of(technology, true) -> sink
+      -> format::DescriptionFactory::report(report, dir) -> description
+      -> description.describe(sink)
+      -> sink.result() -> written
       return 0
     }
 
@@ -221,25 +216,19 @@ package driftspec@ds {
       return 1
     }
 
-    // the answers: with --json their description in the sink the command line asks for (DS-398), else written as
-    // text by the writer found by name (DS-126)
+    // the answers, described once into the sink of the technology the command line asks for (DS-399): with --json
+    // the JSON sink (DS-398), else the text sink
     sequence main / query {
       local metamodel: model::Metamodel
       local model: model::Model
       local query: query::Query
-      local chosen: format::IFormat<std::vector<query::Answer>>   // the writer FormatFactory finds by name
       -> loadWorkspace(metamodel, argv, answers, diagram, model) -> found
       -> query.ask(question, subject) -> answers
-      -> emit::SinkFactory::json(false) -> sink
       attempt {
-        alt asked for JSON / json {
-          -> format::DescriptionFactory::answers(answers) -> description
-          -> description.describe(sink)
-          -> sink.result() -> text
-        } else {
-          -> format::FormatFactory::answers() -> writers
-          -> chosen.write(answers, options, sink) -> text
-        }
+        -> emit::SinkFactory::of(technology, false) -> sink
+        -> format::DescriptionFactory::answers(answers) -> description
+        -> description.describe(sink)
+        -> sink.result() -> text
       } on NotImplemented {
         return 2
       }
