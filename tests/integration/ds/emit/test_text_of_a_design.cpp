@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "IrJson.hpp"
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
 #include "ds/check/Report.hpp"
@@ -124,7 +125,7 @@ TEST_F(TestTextOfADesign, EveryOtherDocumentOfADesignHandedToTheTextSinkFailsNam
   const ds::scene::SceneDocument scene = ds::scene::Scene(loaded.workspace->model(), metamodel()).build();
   const ds::render::IrExport ir(loaded.workspace->model(), metamodel());
   ASSERT_FALSE(ir.diagrams().empty());
-  const ds::render::IrText diagram{ir.render(ir.diagrams().front(), false)};
+  const ds::render::IrText diagram{ds::test::irJson(ir, ir.diagrams().front())};  // the IR as DS-418 writes it
   std::vector<std::unique_ptr<ds::format::ADescription>> others;
   others.push_back(ds::format::DescriptionFactory::scene(scene));
   others.push_back(ds::format::DescriptionFactory::layout(diagram, theme(), 0));
