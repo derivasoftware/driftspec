@@ -120,7 +120,7 @@ package driftspec@ds {
       + boolean(value: bool) -> ISink
       + null() -> ISink
       + result() -> std::string
-      - static checkedByDefault() -> bool
+      - static checkedByDefault() -> bool                 // as DS_JSON_CHECK says, whatever the build (DS-461); else without NDEBUG
       - beforeValue() -> void
       - open(kind: char) -> void
       - close(kind: char) -> void

@@ -2,6 +2,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <string>
@@ -12,6 +13,10 @@ namespace emit {
 JsonSink::JsonSink(bool pretty, bool checked) : pretty_(pretty), checked_(checked) {}
 
 bool JsonSink::checkedByDefault() {
+  // DS_JSON_CHECK says it whatever the build (DS-461): 1 checks, so a Release test run in CI holds the contract
+  // too; 0 does not. Without it, a debug build checks and a release build does not
+  const char* said = std::getenv("DS_JSON_CHECK");
+  if (said && *said) return std::strcmp(said, "0") != 0;
 #ifdef NDEBUG
   return false;
 #else
