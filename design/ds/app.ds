@@ -10,6 +10,7 @@ package driftspec@ds {
     @requirement REQ-00166-1
     @requirement REQ-00205-1
     @requirement REQ-00206-1
+    @consumes driftspec@ds@workspace             // each verb runs its use case through the workspace's interface (DS-459)
 
     requirement REQ-00166-1 {
       status: approved
@@ -348,23 +349,25 @@ package driftspec@ds {
     // sink, indented (DS-397, DS-398), else the text sink; the workspace as it was given is where the report says its
     // open coverage is listed (DS-431). An error is said by the report on stdout, never again on stderr
     sequence CheckCommand::run {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       local output: Output
       -> Disk::whyNoWorkspace(workspace_) -> why
       -> Disk::files(workspace_) -> files
       -> api::Workspace::madeFor(metamodel_, files, findings, diagram) -> workspace
       -> emit::SinkFactory::of(technology, true) -> sink
-      -> workspace.run(checkDesign, request, sink) -> outcome
+      -> loaded.run(checkDesign, request, sink) -> outcome
       -> sink.result() -> report
       -> output.write(report, end) -> written
       return outcome
     }
 
     sequence CheckCommand::run / errors {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       -> Disk::files(workspace_) -> files
       -> api::Workspace::madeFor(metamodel_, files, findings, diagram) -> workspace
-      -> workspace.run(checkDesign, request, sink) -> outcome
+      -> loaded.run(checkDesign, request, sink) -> outcome
       return outcome
     }
 
@@ -375,13 +378,14 @@ package driftspec@ds {
 
     // indented, as ds export has always printed it; written whole or not at all
     sequence ExportCommand::run {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       local output: Output
       -> Disk::whyNoWorkspace(workspace_) -> why
       -> Disk::files(workspace_) -> files
       -> api::Workspace::madeFor(metamodel_, files, whole, diagram) -> workspace
       -> emit::SinkFactory::json(true) -> sink
-      -> workspace.run(handModel, request, sink) -> outcome
+      -> loaded.run(handModel, request, sink) -> outcome
       -> sink.result() -> model
       -> output.write(model, end) -> written
       return outcome
@@ -455,8 +459,9 @@ package driftspec@ds {
     // the scene is the document (DS-126), see-design's, described into the sink of the technology -f names, indented
     // for a reader (DS-398)
     sequence RenderCommand::scene {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       -> emit::SinkFactory::of(format_, true) -> sink
-      -> workspace.run(seeDesign, request, sink) -> outcome
+      -> loaded.run(seeDesign, request, sink) -> outcome
       -> sink.result() -> scene
       -> written(scene, end, outcome) -> outcome
       return outcome
@@ -496,6 +501,7 @@ package driftspec@ds {
     // svg and text (until DS-400) and its IR (see-design does not offer it yet) are door work pending, written by the
     // writer -f names; a diagram is not drawn of what did not read whole (DS-433)
     sequence RenderCommand::diagram {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local ir: render::IrExport
       -> workspace.model() -> model
       -> unread(model) -> why
@@ -504,7 +510,7 @@ package driftspec@ds {
       }
       alt its layout or its cells / described {
         -> emit::SinkFactory::json(false) -> sink
-        -> workspace.run(seeDesign, request, sink) -> outcome
+        -> loaded.run(seeDesign, request, sink) -> outcome
         -> sink.result() -> picture
       } else {
         -> model::Identity::ofDiagram(diagram_) -> id
@@ -520,10 +526,11 @@ package driftspec@ds {
     }
 
     sequence RenderCommand::diagram / no-diagram {   // the diagram named is not in the workspace, or what it reads did not read whole
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local ir: render::IrExport
       -> workspace.model() -> model
       -> unread(model) -> why
-      -> workspace.run(seeDesign, request, sink) -> outcome
+      -> loaded.run(seeDesign, request, sink) -> outcome
       -> ir.document(id) -> made
       return noDiagram
     }
@@ -571,13 +578,14 @@ package driftspec@ds {
     // the answers, described into the sink of the technology asked for (DS-399): with --json the JSON sink (DS-398),
     // else the text sink
     sequence QueryCommand::run {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       local output: Output
       -> Disk::whyNoWorkspace(workspace_) -> why
       -> Disk::files(workspace_) -> files
       -> api::Workspace::madeFor(metamodel_, files, answers, diagram) -> workspace
       -> emit::SinkFactory::of(technology, false) -> sink
-      -> workspace.run(askModel, request, sink) -> outcome
+      -> loaded.run(askModel, request, sink) -> outcome
       -> sink.result() -> answers
       -> output.write(answers, end) -> written
       return outcome
@@ -585,11 +593,12 @@ package driftspec@ds {
 
     // what was wrong with the question is said by the command line; asked for JSON, the error is an answer too
     sequence QueryCommand::run / unknown-question {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       local output: Output
       -> Disk::files(workspace_) -> files
       -> api::Workspace::madeFor(metamodel_, files, answers, diagram) -> workspace
-      -> workspace.run(askModel, request, sink) -> outcome
+      -> loaded.run(askModel, request, sink) -> outcome
       opt asked for JSON / json {
         -> sink.result() -> answers
         -> output.write(answers, end) -> written
@@ -605,20 +614,22 @@ package driftspec@ds {
     // the manual is in the tool: the workspace holds no design, and learn-language reads none; the page as it is
     // printed, in the text sink, or as JSON, indented (DS-397)
     sequence ManualCommand::run {
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       local output: Output
       -> api::Workspace::madeFor(metamodel_, nothing, whole, diagram) -> workspace
       -> emit::SinkFactory::of(technology, true) -> sink
-      -> workspace.run(learnLanguage, request, sink) -> outcome
+      -> loaded.run(learnLanguage, request, sink) -> outcome
       -> sink.result() -> page
       -> output.write(page, end) -> written
       return outcome
     }
 
     sequence ManualCommand::run / no-topic {         // no such page: learn-language lists the topics, the command line says them
+      local loaded: driftspec@ds@workspace   // the workspace's in-process interface (DS-459), not the class behind it
       local workspace: api::Workspace
       -> api::Workspace::madeFor(metamodel_, nothing, whole, diagram) -> workspace
-      -> workspace.run(learnLanguage, request, sink) -> outcome
+      -> loaded.run(learnLanguage, request, sink) -> outcome
       return outcome
     }
   }

@@ -57,58 +57,193 @@ package driftspec@ds {
     }
   }
 
-  // each operation is a verb of the process main starts: the command line parses it, runs its command, and ends in
-  // the exit code the operation names for each outcome, the scenario of main of that code (DS-409)
+  // each operation is its verb's command, run by the command line that main starts (app::main, CommandLine::run): the
+  // command's outcome is the exit code the operation names, and what the command fails with is said, exit 2 (DS-409)
   sequence cli::check {
-    -> app::main(workspace) -> code
+    local check: app::CheckCommand
+    attempt {
+      -> check.run() -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::check / errors {
-    -> app::main(workspace) / failed -> code
+    local check: app::CheckCommand
+    attempt {
+      -> check.run() / errors -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::check / bad-usage {
-    -> app::main(workspace) / bad-usage -> code
+    local check: app::CheckCommand
+    attempt {
+      -> check.run() / bad-usage -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::export {
-    -> app::main(workspace) -> code
+    local exporting: app::ExportCommand
+    attempt {
+      -> exporting.run() -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::export / no-workspace {
-    -> app::main(workspace) / bad-usage -> code
+    local exporting: app::ExportCommand
+    attempt {
+      -> exporting.run() / no-workspace -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::render {
-    -> app::main(input) -> code
+    local render: app::RenderCommand
+    attempt {
+      -> render.run() -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::render / no-diagram {
-    -> app::main(input) / failed -> code
+    local render: app::RenderCommand
+    attempt {
+      -> render.run() / no-diagram -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::render / no-workspace {
-    -> app::main(input) / bad-usage -> code
+    local render: app::RenderCommand
+    attempt {
+      -> render.run() / no-workspace -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::query {
-    -> app::main(workspace) -> code
+    local query: app::QueryCommand
+    attempt {
+      -> query.run() -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::query / unknown-question {
-    -> app::main(workspace) / failed -> code
+    local query: app::QueryCommand
+    attempt {
+      -> query.run() / unknown-question -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::query / no-workspace {
-    -> app::main(workspace) / bad-usage -> code
+    local query: app::QueryCommand
+    attempt {
+      -> query.run() / no-workspace -> outcome
+    } on std::runtime_error {
+      return 2
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::manual {
-    -> app::main(topic) -> code
+    local manual: app::ManualCommand
+    attempt {
+      -> manual.run() -> outcome
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 
   sequence cli::manual / no-topic {
-    -> app::main(topic) / failed -> code
+    local manual: app::ManualCommand
+    attempt {
+      -> manual.run() / no-topic -> outcome
+    } on BadRequest {
+      return 2
+    } on NotImplemented {
+      return 2
+    } on emit::NotImplemented {
+      return 2
+    }
   }
 }
 

@@ -204,12 +204,12 @@ TEST_F(TestEnginePrinciples, AnExporterThatChangesTheModelIsTold) {
   EXPECT_FALSE(has(rules, exporterClasses));
 }
 
-/// Only the Api chooses which steps of the check a load runs (DS-376): a function of the command line or a class of
-/// the drawing that names the selection is told, and so is a behaviour outside the Api that makes the steps itself.
+/// Only the Api chooses which steps of the check a load runs (DS-376): a verb of the command line or a class of the
+/// drawing that names the selection is told, and so is a behaviour outside the Api that makes the steps itself.
 TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
-  const std::vector<std::string> byFunction = broken({{"ds/app.ds", "    - function diagramId(name: std::string) -> std::string",
-                                                       "    - function drawingSteps(format: std::string) -> check::Selection\n"}});
-  EXPECT_TRUE(has(byFunction, apiChooses));
+  const std::vector<std::string> byVerb =
+      broken({{"ds/app.ds", "    class RenderCommand : ICommand {", "      - drawingSteps(format: std::string) -> check::Selection\n"}});
+  EXPECT_TRUE(has(byVerb, apiChooses));
   const std::vector<std::string> byClass = broken({{"ds/render.ds", "    class IrExport {", "      - refs steps_: check::Selection\n"}});
   EXPECT_TRUE(has(byClass, apiChooses));
   EXPECT_FALSE(has(byClass, axisReads));
@@ -217,7 +217,8 @@ TEST_F(TestEnginePrinciples, ASelectionOfStepsNamedOutsideTheApiIsTold) {
 
 TEST_F(TestEnginePrinciples, StepsMadeOutsideTheApiAreTold) {
   const std::vector<std::string> rules =
-      broken({{"ds/app.ds", "      -> parser.parseDirectory(dir) -> files", "      -> check::StepFactory::of(selection) -> steps\n"}});
+      broken({{"ds/app.ds", "      -> api::Workspace::madeFor(metamodel_, files, whole, diagram) -> workspace",
+               "      -> check::StepFactory::of(selection) -> steps\n"}});
   EXPECT_TRUE(has(rules, apiChooses));
   EXPECT_FALSE(has(rules, builtOnce));
 }
