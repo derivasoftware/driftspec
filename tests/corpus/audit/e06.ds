@@ -1,0 +1,23 @@
+// e06: a rule that answers to a constraint (DS-110). A probe of the model audit of 2026-11 (DS-209); the `!` lines are its findings, the `?` lines its coverage.
+package e06shop {
+  constraint CST-00601-1 {
+    category: design
+    title: The store shall never depend on the web
+    status: approved
+  }
+  module web {
+    class Page { }
+  }
+  module store {
+    class Order {
+      + total() -> int
+    }
+    // the constraint is this rule's reason, and the rule its verification: neither is coverage
+    rule store-blind-to-web {
+      title: Nothing in the store holds the web
+      @constraint CST-00601-1
+      for class c in e06shop@store
+      never c owns x, x in e06shop@web
+    }
+  }
+}

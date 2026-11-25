@@ -349,7 +349,7 @@ package driftspec@ds {
         @requirement REQ-00260-1
       }
       + coverage(subject: std::string) -> std::vector<Answer> {
-        @requirement REQ-00124-2
+        @requirement REQ-00124-3
         @requirement REQ-00260-1
       }
       + coupling() -> std::vector<Answer>
