@@ -27,19 +27,26 @@ def workspace(root: str) -> str:
     return ws
 
 
+# liveness waits (DS-481): each bounds a server that hangs or an event that never comes, not their speed, so a
+# loaded machine (CI's tests side by side) never trips them; a test that passes waits no longer for them
+ANSWER = 60  # seconds an HTTP call waits for its answer
+COMES = 60.0  # seconds a wait for something that comes may take
+STREAM = 120  # seconds the event stream may stay silent
+
+
 def get(live, path: str):
-    with urllib.request.urlopen(live.url.rstrip("/") + path, timeout=5) as r:
+    with urllib.request.urlopen(live.url.rstrip("/") + path, timeout=ANSWER) as r:
         return json.loads(r.read())
 
 
 def post(live, path: str, data: dict):
     req = urllib.request.Request(live.url.rstrip("/") + path, data=json.dumps(data).encode(), method="POST",
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=5) as r:
+    with urllib.request.urlopen(req, timeout=ANSWER) as r:
         return json.loads(r.read())
 
 
-def until(check, seconds: float = 8.0):
+def until(check, seconds: float = COMES):
     end = time.time() + seconds
     while time.time() < end:
         got = check()
@@ -54,7 +61,7 @@ class Reader:
 
     def __init__(self, live):
         self.events: queue.Queue = queue.Queue()
-        self.stream = urllib.request.urlopen(live.url.rstrip("/") + "/events", timeout=20)
+        self.stream = urllib.request.urlopen(live.url.rstrip("/") + "/events", timeout=STREAM)
         threading.Thread(target=self.read, daemon=True).start()
 
     def read(self):
@@ -70,7 +77,7 @@ class Reader:
         except Exception:
             pass
 
-    def next(self, kind: str, seconds: float = 8.0):
+    def next(self, kind: str, seconds: float = COMES):
         end = time.time() + seconds
         while time.time() < end:
             try:
