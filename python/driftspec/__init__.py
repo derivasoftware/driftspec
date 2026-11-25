@@ -74,6 +74,7 @@ class Finding:
     severity: str
     message: str
     location: Location
+    subject: str = ""  # the entity it is about, by identity; "" for a file or a word, or not yet said (DS-426)
 
 
 def _location(d: Mapping) -> Location:
@@ -88,7 +89,7 @@ def _location(d: Mapping) -> Location:
 
 
 def _finding(d: Mapping) -> Finding:
-    return Finding(d["code"], d["severity"], d["message"], _location(d.get("location", {})))
+    return Finding(d["code"], d["severity"], d["message"], _location(d.get("location", {})), d.get("subject", ""))
 
 
 @dataclass(frozen=True)

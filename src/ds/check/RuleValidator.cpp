@@ -11,7 +11,7 @@ namespace check {
 using Form = model::LiteralForm;
 
 void RuleValidator::report(model::Code code, const std::string& owner, const std::string& message, const model::Location& at) {
-  found_.push_back(metamodel_.finding(code, owner + " " + message, at));
+  found_.push_back(metamodel_.finding(code, owner + " " + message, at, owner));  // the formula is its subject (DS-426)
 }
 
 std::vector<std::pair<std::string, std::regex>> RuleValidator::takePatterns() {
@@ -148,7 +148,7 @@ void RuleValidator::checkVacuity(const std::string& id, const model::Formula& fo
                                             id + " writes '" + l.terms[0].text + " " + l.name + " " + l.terms[1].text + "', and " + l.name +
                                                 (end == 0 ? " never leaves " : " never reaches ") + metamodel_.nameOf(kind) + " (" +
                                                 l.terms[end].text + "): the literal matches nothing",
-                                            l.location));
+                                            l.location, id));
         break;
       }
     }

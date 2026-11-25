@@ -123,10 +123,11 @@ class Metamodel {
   /// What a severity means: one slot, by its place in Severity.
   const SeveritySpec& severityOf(Severity severity) const { return severities_[static_cast<std::size_t>(severity)]; }
   /// The finding of `code` (DS-379): its printed code and its severity read from the catalogue, so nobody writes a
-  /// severity and a code the catalogue lacks does not compile.
-  Finding finding(Code code, std::string message, Location location) const {
+  /// severity and a code the catalogue lacks does not compile. `subject` is the entity it is about, by identity, or ""
+  /// for a file or a word (DS-426); between two entities, it is the one where it is written.
+  Finding finding(Code code, std::string message, Location location, std::string subject = "") const {
     const CodeSpec& spec = rowOf(code);
-    return {spec.code, spec.severity, std::move(message), std::move(location)};
+    return {spec.code, spec.severity, std::move(message), std::move(location), std::move(subject)};
   }
   /// Every row the manual lists: the annotations that mean something, then any other word and the use case an
   /// operation names after a colon, which only document.

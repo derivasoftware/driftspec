@@ -830,6 +830,7 @@ package driftspec@driftspec {
       + severity: str
       + message: str
       + location: Location
+      + subject: str                         // the entity it is about, by identity; "" when it says none (DS-426)
     }
     dataclass Breach {                         // one binding that breaks a rule, and its answer
       @requirement REQ-00098-1
@@ -1183,9 +1184,6 @@ package driftspec@driftspec {
       + owns watcher: Watcher                  // the .ds files, watched
       + reload() -> bool
       + rules_of(model, findings) -> list[dict] {
-        @requirement REQ-00100-1
-      }
-      + static within(place, span) -> bool {   // a place written inside a declaration's span: a rule's problems by where they are (DS-421)
         @requirement REQ-00100-1
       }
       + state() -> dict
