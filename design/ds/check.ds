@@ -653,7 +653,7 @@ package driftspec@ds {
       - checkScenario(usecase: model::Entity) -> void {   // a use case has no signature: what escapes is said at its scenario (DS-434)
         @requirement REQ-00112-1
       }
-      - outcomesOf(usecase: std::string) -> std::vector<model::Entity> {   // its own, then its bases' it does not redefine (DS-467)
+      - outcomesOf(usecase: std::string) -> std::vector<const model::Entity*> {   // its own, then its bases' it does not redefine (DS-467)
         @requirement REQ-00265-1
       }
       - checkOutcomes(usecase: model::Entity, named: std::set<std::string>) -> void {

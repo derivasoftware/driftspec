@@ -104,7 +104,7 @@ TEST_F(TestCodeSpec, ACodeIsFoundWithItsSeverityItsMeaningAndWhatToDo) {
 
 /// The catalogue holds one row per Code, in its order, each printed as its value is named (DS-379).
 TEST_F(TestCodeSpec, EveryCodeHasItsRowInTheOrderOfCode) {
-  ASSERT_EQ(metamodel.codes().size(), static_cast<std::size_t>(ds::model::Code::W_CST_NO_VERIFICATION) + 1);
+  ASSERT_EQ(metamodel.codes().size(), static_cast<std::size_t>(ds::model::Code::W_OUTCOME_FAILURE_TWICE) + 1);
   for (std::size_t i = 0; i < metamodel.codes().size(); ++i) {
     const auto& c = metamodel.codes()[i];
     EXPECT_EQ(static_cast<std::size_t>(c.id), i) << c.code;
