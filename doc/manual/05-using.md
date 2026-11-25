@@ -109,14 +109,14 @@ artefact is named by its id alone, with no package).
 | Question | Asked of | Answers |
 |---|---|---|
 | `diagrams` | nothing | every diagram, with its kind |
-| `entities <scope>` | a package or a module | what it holds, one level down; ask again to go deeper |
+| `entities [scope]` | a package, module or class, or nothing | what it holds, one level down; `shop@*` lists all it holds at any depth |
 | `relations <id>` | anything | every relation it takes part in, both ways |
 | `artefacts <id>` | a piece of the design | the requirements it satisfies and what verifies them |
 | `behaviours <id>` | an operation | its sequence and each scenario apart |
 | `shows <diagram>` | a diagram | what the diagram draws |
 | `failures <operation>` | an operation | the failures that can escape it, and where from |
-| `findings [file]` | a file, or nothing | the findings, of one file or all |
-| `coverage [id]` | an identity, or nothing | the open items, of that one entity or all |
+| `findings [file \| id]` | a file, an identity, or nothing | the findings in a file, or of an entity and everything it holds |
+| `coverage [file \| id]` | a file, an identity, or nothing | what is still open in a file, or of an entity and everything it holds |
 | `coupling` | nothing | which boxes depend on which, and through what |
 
 In `relations`, `->` means the subject points at the other entity and `<-` that the other

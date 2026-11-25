@@ -39,13 +39,14 @@ package driftspec@ds {
     rationale:
       Owner, 2026-11-24 (DS-402, DS-405): horizontal extension through interfaces; tried on a copy, the rule found
       the exporter reaching a concrete filter (DS-423).
-    verification VER-00218-1 {
+    verification VER-00218-2 {
       status: approved
       title: Integration tests confirm ds's design reaches every family through its interface, and is told when a class outside it names one of its classes
       method: test
       tests:
         tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.TheDesignOfDsKeepsEveryPrinciple
         tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.AConcreteClassOfAFamilyReachedFromOutsideIsTold
+        tests/integration/ds/check/test_engine_principles.cpp::TestEnginePrinciples.OneConcreteNamedByAClassThatIsNoFactoryIsTold
     }
   }
 
