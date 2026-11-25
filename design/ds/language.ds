@@ -1693,6 +1693,31 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00241-1 {
+      tags: language, walkthrough, diagrams
+      status: draft
+      @refines SREQ-00012-1
+      title: A walkthrough shall take a reader through the design in steps, each showing a diagram and naming what it lights and what it says
+      text:
+        A diagram of kind walkthrough has a title and steps, written in order as step <title> { ... }. A step shows a
+        diagram (show: DIAGRAM, or DIAGRAM / scenario for one scenario of the behaviour it draws), focuses and
+        highlights entities by identity (focus:, highlight:), may anchor its callout to one of them (at:) and says a
+        sentence (text:). Each step is an entity of the model, named by its place in the walkthrough, and what it shows
+        and lights are relations of the model: shows, focuses, highlights and points-at, made when the name resolves.
+      rationale:
+        Owner, 2026-11-25 (DS-446, DS-447: "sí, se construye como la v3"): a reader is walked through the design as the
+        playground's coach walks a lesson, and a walkthrough names the design by identity, so it is checked and cannot
+        go stale as prose does.
+      verification VER-00263-1 {
+        status: draft
+        title: Tests confirm a walkthrough's steps are parsed, bound in order with what each shows and lights, and related to what they name
+        method: test
+        tests:
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.AStepIsRelatedToWhatItShowsAndLights
+          tests/integration/ds/check/test_walkthrough.cpp::TestWalkthrough.ANameThatResolvesToNothingIsLeftToTheCheck
+      }
+    }
+
     requirement REQ-00196-1 {
       tags: language, logic, rules, check
       status: approved
@@ -2546,12 +2571,13 @@ package driftspec@ds {
           each column a question, so whatever a rule may range over a table may list: rules,
           requirements, use cases, constraints, classes. Nothing new to learn but the word column.
           Named tables and the cross (rows of one range, columns of another) come after it.
-        verification VER-00170-1 {
-          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, and keeps only the rows its filter reads
-          status: approved
+        verification VER-00170-2 {
+          title: Integration tests confirm a table written with its rows and columns answers a cell for each, heads each row by its first column, says a yes or no, keeps only the rows its filter reads, and measures and wraps a cell by its characters
+          status: draft
           method: test
           tests:
             tests/integration/ds/render/test_table_view.cpp::TestTableView.ATableWrittenWithRowsAndColumnsAnswersEachCell
+            tests/integration/ds/render/test_table_view.cpp::TestTableSvg.ACellIsMeasuredByItsCharactersNotItsBytes
         }
         requirement REQ-00250-1 {
           tags: language, diagrams, table

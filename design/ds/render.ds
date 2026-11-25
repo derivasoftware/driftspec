@@ -138,13 +138,6 @@ package driftspec@ds {
       + static between(from: std::string, to: std::string, kind: std::string) -> IrEdge   // an edge saying nothing else yet (DS-418)
     }
 
-    // a render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads and
-    // another tool may hand ds; the document a diagram's formats write (DS-126)
-    dataclass IrText {
-      @requirement REQ-00106-4
-      + json: std::string
-    }
-
     // a drawing that is a table (DS-251): a corner, the headings of its columns, and its rows; a cell
     // says what it is, and the renderers draw each kind its own way
     dataclass IrCell {

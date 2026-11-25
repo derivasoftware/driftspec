@@ -49,7 +49,8 @@ enum class Kind {
   UseCase,
   Outcome,
   Rule,
-  Definition
+  Definition,
+  Step  ///< one step of a walkthrough (DS-468)
 };
 
 class Metamodel;

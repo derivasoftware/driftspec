@@ -30,9 +30,9 @@ class DescriptionFactory {
   /// A diagram's render-IR (DS-418): the document IrExport made, as plantuml-render's contract writes it.
   static std::unique_ptr<ADescription> ir(const render::IrDocument& document);
   /// Where each node and route of a diagram goes, in cells measured as the theme measures a terminal's text.
-  static std::unique_ptr<ADescription> layout(const render::IrText& ir, const theme::Theme& theme, int width);
+  static std::unique_ptr<ADescription> layout(const render::IrDocument& document, const theme::Theme& theme, int width);
   /// A diagram as the terminal's coloured cells, drawn in the theme.
-  static std::unique_ptr<ADescription> cells(const render::IrText& ir, const theme::Theme& theme, int width);
+  static std::unique_ptr<ADescription> cells(const render::IrDocument& document, const theme::Theme& theme, int width);
 };
 
 }  // namespace format

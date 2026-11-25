@@ -1789,7 +1789,7 @@
       {
         "fields": [
           {
-            "meaning": "class, sequence, state, table, requirement, interface or tour",
+            "meaning": "class, sequence, state, table, requirement, interface, tour or walkthrough",
             "name": "kind",
             "source": "written",
             "type": "name",
@@ -1800,8 +1800,16 @@
               "table",
               "requirement",
               "interface",
-              "tour"
+              "tour",
+              "walkthrough"
             ]
+          },
+          {
+            "meaning": "what a walkthrough is about, in one line (DS-468)",
+            "name": "title",
+            "source": "written",
+            "type": "text",
+            "values": []
           },
           {
             "meaning": "what it shows",
@@ -2012,6 +2020,59 @@
           "class"
         ],
         "top": false
+      },
+      {
+        "fields": [
+          {
+            "meaning": "the diagram it shows, or DIAGRAM / scenario",
+            "name": "show",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "the scenario of the diagram's behaviour it shows, read from show:",
+            "name": "scenario",
+            "source": "syntax",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "what it is about: framed, and the rest dimmed",
+            "name": "focus",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "what it talks to: marked, nothing dimmed",
+            "name": "highlight",
+            "source": "written",
+            "type": "names",
+            "values": []
+          },
+          {
+            "meaning": "what its callout points at; docked beside the drawing without it",
+            "name": "at",
+            "source": "written",
+            "type": "name",
+            "values": []
+          },
+          {
+            "meaning": "what it says, a sentence or two",
+            "name": "text",
+            "source": "written",
+            "type": "text",
+            "values": []
+          }
+        ],
+        "flags": [],
+        "kind": "step",
+        "meaning": "one step of a walkthrough: the diagram it shows, what it lights and the sentence it says",
+        "parents": [
+          "diagram"
+        ],
+        "top": false
       }
     ],
     "relations": [
@@ -2029,7 +2090,8 @@
           "interface",
           "state",
           "sequence",
-          "frame"
+          "frame",
+          "diagram"
         ],
         "kind": "contains",
         "meaning": "the parent holds the child",
@@ -2245,6 +2307,10 @@
           [
             "class",
             "definition"
+          ],
+          [
+            "diagram",
+            "step"
           ]
         ],
         "to": [
@@ -2269,7 +2335,8 @@
           "frame",
           "state",
           "rule",
-          "definition"
+          "definition",
+          "step"
         ]
       },
       {
@@ -2583,6 +2650,40 @@
         "from": [],
         "kind": "refers",
         "meaning": "an annotation the language gives no meaning to",
+        "to": []
+      },
+      {
+        "from": [
+          "step"
+        ],
+        "kind": "shows",
+        "meaning": "a step of a walkthrough shows a diagram",
+        "to": [
+          "diagram"
+        ]
+      },
+      {
+        "from": [
+          "step"
+        ],
+        "kind": "focuses",
+        "meaning": "a step of a walkthrough is about an entity: framed, the rest dimmed",
+        "to": []
+      },
+      {
+        "from": [
+          "step"
+        ],
+        "kind": "highlights",
+        "meaning": "a step of a walkthrough marks an entity it talks to",
+        "to": []
+      },
+      {
+        "from": [
+          "step"
+        ],
+        "kind": "points-at",
+        "meaning": "a step of a walkthrough anchors its callout to an entity",
         "to": []
       }
     ]

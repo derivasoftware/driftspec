@@ -78,4 +78,45 @@ TEST_F(TestDiagramBinder, ADiagramIsDeclaredWithItsFields) {
   EXPECT_EQ(d->field("include"), "p@m::*");
 }
 
+/// A walkthrough's steps (DS-468): each an entity numbered in the order written, its title its name, show: split
+/// into the diagram and the scenario, and what it shows and lights left to the linker as soft references.
+class TestWalkthroughSteps : public TestDiagramBinder {};
+
+TEST_F(TestWalkthroughSteps, EachStepIsAnEntityNumberedInTheOrderWritten) {
+  bindText(
+      "diagram WALK_A {\n"
+      "  kind: walkthrough\n"
+      "  title: A walk\n"
+      "  step The promise {\n"
+      "    show: REQ_A\n"
+      "    focus: REQ-00001-1, p@m::C\n"
+      "    text: It promises.\n"
+      "  }\n"
+      "  step When it fails {\n"
+      "    show: SEQ_A / refused\n"
+      "    highlight: p@m::C::run\n"
+      "    at: p@m::C::run\n"
+      "    text: It answers 1.\n"
+      "  }\n"
+      "}\n");
+  const ds::model::Entity* first = model.find("diagram:WALK_A::1");
+  const ds::model::Entity* second = model.find("diagram:WALK_A::2");
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  EXPECT_EQ(first->kind, ds::model::Kind::Step);
+  EXPECT_EQ(first->name, "The promise");
+  EXPECT_EQ(first->field("show"), "REQ_A");
+  EXPECT_EQ(first->field("text"), "It promises.");
+  EXPECT_EQ(second->field("show"), "SEQ_A");  // the diagram, and the scenario apart
+  EXPECT_EQ(second->field("scenario"), "refused");
+  EXPECT_EQ(model.find("diagram:WALK_A")->field("title"), "A walk");
+  EXPECT_TRUE(related("contains", "diagram:WALK_A", "diagram:WALK_A::2"));
+  EXPECT_TRUE(refers("diagram:WALK_A::1", "diagram:REQ_A", "shows"));
+  EXPECT_TRUE(refers("diagram:WALK_A::1", "REQ-00001-1", "focuses"));
+  EXPECT_TRUE(refers("diagram:WALK_A::1", "p@m::C", "focuses"));
+  EXPECT_TRUE(refers("diagram:WALK_A::2", "p@m::C::run", "highlights"));
+  EXPECT_TRUE(refers("diagram:WALK_A::2", "p@m::C::run", "points-at"));
+  for (const auto& r : notes.references) EXPECT_TRUE(r.soft) << r.target;  // the check says what names nothing (DS-469)
+}
+
 }  // namespace

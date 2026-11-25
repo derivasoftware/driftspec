@@ -161,22 +161,26 @@ package driftspec@ds {
       local theme: theme::Theme             // the style, made once where the command starts (DS-393)
       local model: model::Model
       local ir: render::IrExport
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
+      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name
       -> loadWorkspace(metamodel, argv, drawing, diagram, model) -> found
       -> diagramId(diagram) -> id
-      -> ir.document(id) -> made
+      -> ir.document(id) -> document
       -> emit::SinkFactory::json(false) -> sink
       attempt {
-        -> format::DescriptionFactory::ir(made) -> irDescription   // the IR, compact, for the writer -f names (DS-418)
-        -> irDescription.describe(sink)
-        -> sink.result() -> document
-        alt its layout / layout {
-          -> format::DescriptionFactory::layout(document, theme, width) -> description
-          -> description.describe(sink)
-          -> sink.result() -> picture
+        alt the IR itself, indented / ir {           // described by the door, not read back (DS-458)
+          -> emit::SinkFactory::json(true) -> indented
+          -> format::DescriptionFactory::ir(document) -> irDescription
+          -> irDescription.describe(indented)
+          -> indented.result() -> picture
         } else {
-          -> format::FormatFactory::diagram(theme) -> writers
-          -> chosen.write(document, options, sink) -> picture
+          alt its layout / layout {
+            -> format::DescriptionFactory::layout(document, theme, width) -> description
+            -> description.describe(sink)
+            -> sink.result() -> picture
+          } else {
+            -> format::FormatFactory::diagram(theme) -> writers
+            -> chosen.write(document, options, sink) -> picture
+          }
         }
       } on NotImplemented {
         return 2
@@ -187,9 +191,9 @@ package driftspec@ds {
 
     sequence main / render-document {
       local theme: theme::Theme
-      local chosen: format::IFormat<render::IrText>   // the writer FormatFactory finds by name
-      local document: render::IrText       // the text read, as the IR document the format draws
+      local chosen: format::IFormat<render::IrDocument>   // the writer FormatFactory finds by name
       -> readFile(argv) -> text
+      -> render::IrDocument::parse(text) -> document   // read once, where the text arrives (DS-458)
       -> emit::SinkFactory::json(false) -> sink
       attempt {
         alt its cells / cells {

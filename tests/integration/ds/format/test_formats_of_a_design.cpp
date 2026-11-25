@@ -76,11 +76,11 @@ TEST_F(TestSceneFormatsOfADesign, ThePageOfTheDesignIsAFrameCarryingItWholeWhenA
   EXPECT_NE(frame.find("srcdoc=\""), std::string::npos);
 }
 
-/// A diagram the design declares, in each of its five formats: three writers and two descriptions (DS-398).
+/// A diagram the design declares, in each of its five formats: two writers and three descriptions (DS-398, DS-458).
 class TestDiagramFormatsOfADesign : public TestFormatsOfADesign {};
 
 TEST_F(TestDiagramFormatsOfADesign, EveryFormatFoundByItsNameDrawsTheDiagramTheDesignDeclares) {
-  ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 3u);  // ir, svg, text; layout and cells are descriptions
+  ASSERT_EQ(ds::format::FormatFactory::diagram(kTheme).size(), 2u);  // svg, text; the IR, layout and cells are descriptions
   const ds::api::Workspace workspace = ds::api::Workspace::madeFor(metamodel, files);
   std::set<std::string> drawn;
   for (const char* format : {"cells", "ir", "layout", "svg", "text"}) {
@@ -99,12 +99,8 @@ TEST_F(TestDiagramFormatsOfADesign, EachDrawingFormatDrawsTheSameDiagramItsIrDes
   const std::string text = ds::api::Api(metamodel).render(files, "CL_Hola", "ir", 0);
   const auto ir = nlohmann::json::parse(text);
   ASSERT_FALSE(ir["nodes"].empty());
-  const ds::render::IrText diagram{text};
+  const ds::render::IrDocument diagram = ds::render::IrDocument::parse(text);  // read once, as a door reads an IR file
   const auto formats = ds::format::FormatFactory::diagram(kTheme);
-  EXPECT_EQ(formats.at("ir")->write(diagram, {}, sink), text);  // as it came
-  ds::format::FormatOptions indented;
-  indented.pretty = true;
-  EXPECT_EQ(formats.at("ir")->write(diagram, indented, sink), ir.dump(2));
   const std::string svg = formats.at("svg")->write(diagram, {}, sink);
   EXPECT_NE(svg.find("<svg"), std::string::npos);
   EXPECT_NE(svg.find("Greeter"), std::string::npos);

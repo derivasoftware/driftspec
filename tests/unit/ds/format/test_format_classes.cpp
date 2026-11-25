@@ -24,23 +24,15 @@ const ds::theme::Theme kTheme;
 /// Each writer and each description on its own (DS-186, DS-398): a writer's name and what it writes from the
 /// document it is given; what a description writes into the sink it is lent.
 
-const ds::render::IrText kDiagram{R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
+const ds::render::IrDocument kDiagram =
+    ds::render::IrDocument::parse(R"({"ir":1,"title":"T","nodes":[{"id":"p@m::A","kind":"box","label":"A","classifier":"class"},)"
                                   R"({"id":"p@m::B","kind":"box","label":"B","classifier":"class"}],)"
-                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})"};
+                                  R"("edges":[{"from":"p@m::A","to":"p@m::B","kind":"dependency"}]})");
 
 ds::format::FormatOptions wide(int width) {
   ds::format::FormatOptions o;
   o.width = width;
   return o;
-}
-
-TEST(TestDiagramIr, TheIrAsItCameOrIndented) {
-  ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
-  const ds::format::DiagramIr f;
-  EXPECT_EQ(f.name(), "ir");
-  ds::format::FormatOptions pretty;
-  pretty.pretty = true;
-  EXPECT_EQ(nlohmann::json::parse(f.write(kDiagram, pretty, sink)), nlohmann::json::parse(kDiagram.json));
 }
 
 /// A diagram's render-IR written once (DS-418): every record's keys in byte order (the sink's check would throw

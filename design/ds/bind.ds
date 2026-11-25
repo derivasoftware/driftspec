@@ -447,6 +447,9 @@ package driftspec@ds {
       + bind(node: TSNode, ctx: BindContext) -> void {
         @requirement REQ-00048-1
       }
+      - bindSteps(node: TSNode, ctx: BindContext, diagram: model::Entity) -> void {   // a walkthrough's steps, numbered in order (DS-468)
+        @requirement REQ-00241-1
+      }
     }
     class EnumBinder : INodeBinder {         // an enum and its values (DS-356)
       - refs annotations_: AnnotationBinder

@@ -6,14 +6,20 @@
 #define Py_LIMITED_API 0x030A0000
 #include <Python.h>
 
+#include <cstdint>
 #include <exception>
+#include <map>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "ds/api/Api.hpp"
 #include "ds/api/Workspace.hpp"
 #include "ds/emit/NotImplemented.hpp"
+#include "ds/emit/Sink.hpp"
 #include "ds/model/Metamodel.hpp"
+#include "ds/service/UseCase.hpp"
 
 namespace {
 
@@ -234,6 +240,168 @@ PyObject* ask3(PyObject* self, PyObject* args) {
   return run([self, x, y, n] { return (held(self).*Q)(x, y, n); });
 }
 
+// ---- a use case described as Python objects (DS-459) ----------------------------------------------
+
+// The interim sink of the driftdomain seam (DS-44): it builds the Python objects a description writes, a record a
+// dict (its fields in the order written, the order json.loads gave them), a list a list, a text a str, an integer an
+// int, a number a float (None when it is not finite, as the JSON sink writes null), a boolean a bool and no value
+// None. Nothing is written as text to be parsed back. It is used with the GIL held.
+class PySink : public ds::emit::ISink {
+ public:
+  ~PySink() override { Py_XDECREF(root_); }
+  ds::emit::ISink& beginRecord() override { return open(PyDict_New()); }
+  ds::emit::ISink& endRecord() override { return close(); }
+  ds::emit::ISink& field(std::string_view name) override {
+    key_ = std::string(name);
+    return *this;
+  }
+  ds::emit::ISink& beginList() override { return open(PyList_New(0)); }
+  ds::emit::ISink& endList() override { return close(); }
+  ds::emit::ISink& value(std::string_view text) override {
+    return put(PyUnicode_DecodeUTF8(text.data(), static_cast<Py_ssize_t>(text.size()), "strict"));
+  }
+  ds::emit::ISink& integer(std::int64_t value) override { return put(PyLong_FromLongLong(value)); }
+  ds::emit::ISink& number(double value) override {
+    if (value != value || value - value != 0) return null();  // not finite: null, as the JSON sink writes it
+    return put(PyFloat_FromDouble(value));
+  }
+  ds::emit::ISink& boolean(bool value) override { return put(PyBool_FromLong(value ? 1 : 0)); }
+  ds::emit::ISink& null() override {
+    Py_INCREF(Py_None);
+    return put(Py_None);
+  }
+  // the presentation (DS-399) is the text sink's: a document of records, lists and values takes none of it, as the
+  // JSON sink takes none (DS-475)
+  ds::emit::ISink& paragraph(std::string_view) override { return *this; }
+  ds::emit::ISink& table(const std::vector<std::string_view>&) override { return *this; }
+  ds::emit::ISink& row(const std::vector<std::string_view>&) override { return *this; }
+  ds::emit::ISink& endTable() override { return *this; }
+  /// The description of `document` ends: one that built nothing here fails NotImplemented, as the JSON sink does.
+  ds::emit::ISink& described(std::string_view document) override {
+    if (!root_) throw ds::emit::NotImplemented(std::string(document), "python", {});
+    return *this;
+  }
+  /// A text is no document of this sink: what it built is taken with take().
+  std::string result() override { return ""; }
+  /// The object built, handed over (a new reference); None when nothing was written.
+  PyObject* take() {
+    PyObject* out = root_ ? root_ : (Py_INCREF(Py_None), Py_None);
+    root_ = nullptr;
+    open_.clear();
+    return out;
+  }
+
+ private:
+  // a value where the sink stands: the document, an element of the open list or the field named of the open record
+  ds::emit::ISink& put(PyObject* value) {
+    if (!value) throw std::runtime_error("a Python object could not be made");
+    if (open_.empty()) {
+      Py_XDECREF(root_);
+      root_ = value;
+      return *this;
+    }
+    PyObject* at = open_.back();
+    const int failed = PyList_Check(at) ? PyList_Append(at, value) : PyDict_SetItemString(at, key_.c_str(), value);
+    Py_DECREF(value);
+    if (failed) throw std::runtime_error("a Python object could not be made");
+    return *this;
+  }
+  ds::emit::ISink& open(PyObject* container) {
+    if (container) Py_INCREF(container);  // held while open; the place it is put in holds it after
+    put(container);
+    open_.push_back(container);
+    Py_DECREF(container);
+    return *this;
+  }
+  ds::emit::ISink& close() {
+    open_.pop_back();
+    return *this;
+  }
+
+  PyObject* root_ = nullptr;
+  std::vector<PyObject*> open_;  ///< the record or list being written, innermost last (borrowed: their parent holds them)
+  std::string key_;
+};
+
+// a request as a use case reads it: its arguments by name, each a text
+bool requestOf(PyObject* dict, ds::service::Request* out) {
+  if (!PyDict_Check(dict)) {
+    PyErr_SetString(PyExc_TypeError, "a request is a dict of name -> text");
+    return false;
+  }
+  PyObject *key = nullptr, *value = nullptr;
+  Py_ssize_t at = 0;
+  while (PyDict_Next(dict, &at, &key, &value)) {
+    Py_ssize_t klen = 0, vlen = 0;
+    const char* k = PyUnicode_AsUTF8AndSize(key, &klen);
+    const char* v = k ? PyUnicode_AsUTF8AndSize(value, &vlen) : nullptr;
+    if (!v) return false;
+    out->arguments[std::string(k, klen)] = std::string(v, vlen);
+  }
+  return true;
+}
+
+// run(name, request) -> (outcome, object): the use case of that name over the design the workspace holds (DS-459).
+// The model is loaded with the GIL released, then the use case describes its document as Python objects, holding it;
+// a request that is not the use case's is ValueError, what the sink cannot write NotImplementedError as elsewhere
+PyObject* workspaceRun(PyObject* self, PyObject* args) {
+  const char* name = nullptr;
+  PyObject* dict = nullptr;
+  ds::service::Request request;
+  if (!PyArg_ParseTuple(args, "sO", &name, &dict) || !requestOf(dict, &request)) return nullptr;
+  const std::string use(name);
+  ds::api::Workspace* workspace = reinterpret_cast<WorkspaceObject*>(self)->workspace;
+  std::string failure, document, technology;
+  enum class Failed { none, request, notImplemented, other } failed = Failed::none;
+  const auto said = [&](const std::exception& e, Failed kind) {
+    failure = e.what();
+    failed = kind;
+  };
+  Py_BEGIN_ALLOW_THREADS try { workspace->prepare(use, request); } catch (const ds::service::BadRequest& e) {
+    said(e, Failed::request);
+  } catch (const ds::emit::NotImplemented& e) {
+    said(e, Failed::notImplemented);
+    document = e.document();
+    technology = e.technology();
+  } catch (const std::exception& e) {
+    said(e, Failed::other);
+  }
+  Py_END_ALLOW_THREADS PySink sink;
+  ds::service::Outcome outcome;
+  if (failed == Failed::none) {
+    try {
+      outcome = workspace->run(use, request, sink);
+    } catch (const ds::service::BadRequest& e) {
+      said(e, Failed::request);
+    } catch (const ds::emit::NotImplemented& e) {
+      said(e, Failed::notImplemented);
+      document = e.document();
+      technology = e.technology();
+    } catch (const std::exception& e) {
+      said(e, Failed::other);
+    }
+  }
+  if (failed == Failed::request) {
+    PyErr_SetString(PyExc_ValueError, failure.c_str());
+    return nullptr;
+  }
+  if (failed == Failed::notImplemented) {
+    PyObject* raised = Py_BuildValue("(sss)", failure.c_str(), document.c_str(), technology.c_str());
+    if (raised) {
+      PyErr_SetObject(PyExc_NotImplementedError, raised);
+      Py_DECREF(raised);
+    }
+    return nullptr;
+  }
+  if (failed == Failed::other) {
+    if (!PyErr_Occurred()) PyErr_SetString(PyExc_RuntimeError, failure.c_str());
+    return nullptr;
+  }
+  PyObject* built = sink.take();
+  PyObject* out = Py_BuildValue("(sN)", outcome.name.c_str(), built);
+  return out;
+}
+
 // reload(files): the workspace loaded again from the files given, in place (DS-420)
 PyObject* workspaceReload(PyObject* self, PyObject* args) {
   PyObject* dict = nullptr;
@@ -281,6 +449,7 @@ PyMethodDef kWorkspaceMethods[] = {
     {"render", ask3<&ds::api::Workspace::render>, METH_VARARGS, "render(diagram, format, width) -> str: '' when none"},
     {"page", workspacePage, METH_VARARGS, "page(title, focus) -> str: the viewer, framed on the identities given"},
     {"reload", workspaceReload, METH_VARARGS, "reload(files) -> None: loaded again from the files given, in place"},
+    {"run", workspaceRun, METH_VARARGS, "run(name, request) -> (outcome, object): a use case, described as Python objects"},
     {nullptr, nullptr, 0, nullptr}};
 
 PyType_Slot kWorkspaceSlots[] = {

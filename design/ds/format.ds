@@ -270,10 +270,10 @@ package driftspec@ds {
     // ds render -f layout: where each node and route goes, in cells, for hosts that draw themselves
     class LayoutDescription : ADescription {
       @requirement REQ-00106-4
-      - refs ir_: render::IrText
+      - refs document_: render::IrDocument   // the diagram as a document (DS-458): no text read back
       - owns metrics_: render::Metrics
       - width_: int
-      + LayoutDescription(ir: render::IrText, theme: theme::Theme, width: int)   // measured as the theme measures text in a terminal (DS-393)
+      + LayoutDescription(document: render::IrDocument, theme: theme::Theme, width: int)   // measured as the theme measures text in a terminal (DS-393)
       + name() -> std::string
       - say(out_sink: emit::ISink) -> void           // structure alone
       - placed(document: render::IrDocument, part: std::string, out_sink: emit::ISink) -> void   // a part names itself
@@ -282,10 +282,10 @@ package driftspec@ds {
     // ds render -f cells: the terminal's coloured cells
     class CellsDescription : ADescription {
       @requirement REQ-00106-4
-      - refs ir_: render::IrText
+      - refs document_: render::IrDocument
       - owns text_: render::Text
       - width_: int
-      + CellsDescription(ir: render::IrText, theme: theme::Theme, width: int)    // drawn in the theme (DS-393)
+      + CellsDescription(document: render::IrDocument, theme: theme::Theme, width: int)    // drawn in the theme (DS-393)
       + name() -> std::string
       - say(out_sink: emit::ISink) -> void           // structure alone
     }
@@ -299,8 +299,8 @@ package driftspec@ds {
       + static report(report: check::Report, workspace: std::string) -> std::unique_ptr<ADescription>   // the workspace as the door was given it; "" by default, for a door that has none
       + static answers(answers: std::vector<query::Answer>) -> std::unique_ptr<ADescription>
       + static ir(document: render::IrDocument) -> std::unique_ptr<ADescription>   // a diagram's render-IR (DS-418)
-      + static layout(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
-      + static cells(ir: render::IrText, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
+      + static layout(document: render::IrDocument, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
+      + static cells(document: render::IrDocument, theme: theme::Theme, width: int) -> std::unique_ptr<ADescription>
     }
 
     // ---- what is no description yet: writers found by name ----------------------------------
@@ -342,7 +342,7 @@ package driftspec@ds {
     class FormatFactory {
       @requirement REQ-00106-4
       + static scene() -> std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>>   // html
-      + static diagram(theme: theme::Theme) -> std::map<std::string, std::unique_ptr<IFormat<render::IrText>>>   // ir, svg, text
+      + static diagram(theme: theme::Theme) -> std::map<std::string, std::unique_ptr<IFormat<render::IrDocument>>>   // svg, text: the IR is a description (DS-458)
     }
 
     // ds render -f html: the viewer as one page, or that page as an iframe when options.embed asks. It is no
@@ -360,29 +360,22 @@ package driftspec@ds {
       - static frame(page: std::string, title: std::string, height: int) -> std::string
     }
 
-    // ds render -f ir: the IR as it came, indented when asked
-    class DiagramIr : IFormat<render::IrText> {
-      @requirement REQ-00106-4
-      + name() -> std::string
-      + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
-    }
-
     // ds render -f svg
-    class DiagramSvg : IFormat<render::IrText> {
+    class DiagramSvg : IFormat<render::IrDocument> {
       @requirement REQ-00106-4
       - owns svg_: render::Svg
       + DiagramSvg(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
-      + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
+      + write(document: render::IrDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
 
     // ds render -f text: boxes in characters for a terminal
-    class DiagramText : IFormat<render::IrText> {
+    class DiagramText : IFormat<render::IrDocument> {
       @requirement REQ-00106-4
       - owns text_: render::Text
       + DiagramText(theme: theme::Theme)            // drawn in the theme (DS-393)
       + name() -> std::string
-      + write(document: render::IrText, options: FormatOptions, out_sink: emit::ISink) -> std::string
+      + write(document: render::IrDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
     }
 
     // ---- what each factory makes (DS-451: a factory names its products) -----------------------
@@ -422,7 +415,6 @@ package driftspec@ds {
     }
 
     sequence FormatFactory::diagram {
-      local ir: DiagramIr
       local svg: DiagramSvg
       local text: DiagramText
       return writers

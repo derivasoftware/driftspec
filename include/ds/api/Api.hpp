@@ -42,6 +42,8 @@ class Api {
   /// The second half: the model checked with the steps chosen, what only echoes a broken file withdrawn, the findings
   /// in file and line order. load is bound, then checked with the steps its output reads.
   model::Model checked(Bound bound, const check::Selection& selection) const;
+  /// A use case run over the files given, its document described into a compact JSON sink (DS-459).
+  std::string described(const std::string& useCase, const Files& files) const;
   /// The steps of the check a load runs for what it is to give, over the model as bound: the one place that
   /// chooses them (DS-376). Every step, but for a drawing: the relations the linker makes, the calls behaviour
   /// typing makes and the stereotypes derivation makes, and the rules when the diagram is a table written as

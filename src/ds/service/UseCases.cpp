@@ -61,16 +61,13 @@ Outcome SeeDesign::run(const model::Model& model, const Request& request, emit::
     return {"default"};
   }
   if (format != "layout" && format != "cells")  // the IR and the drawings are writers, not descriptions, until DS-399
-    throw emit::NotImplemented("diagram as " + format, "", {"json", "layout", "cells"});
+    throw emit::NotImplemented("diagram", format, {"json", "layout", "cells"});
   const std::optional<render::IrDocument> document = diagram(model, request.get("diagram"));
   if (!document) return {"no-diagram"};
-  // the layout and the cells read the IR as text until DS-458: it is described into the sink lent, taken, and the
-  // sink, empty again, is the drawing's (DS-418)
-  format::DescriptionFactory::ir(*document)->describe(sink);
-  const render::IrText ir{sink.result()};
+  // the layout and the cells are handed the document (DS-458): the sink lent receives the drawing alone, never read back
   const int width = number(request, "width", "0");
-  const auto description =
-      format == "layout" ? format::DescriptionFactory::layout(ir, theme_, width) : format::DescriptionFactory::cells(ir, theme_, width);
+  const auto description = format == "layout" ? format::DescriptionFactory::layout(*document, theme_, width)
+                                              : format::DescriptionFactory::cells(*document, theme_, width);
   description->describe(sink);
   return {"default"};
 }

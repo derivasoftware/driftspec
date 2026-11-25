@@ -12,9 +12,8 @@ std::map<std::string, std::unique_ptr<IFormat<scene::SceneDocument>>> FormatFact
   return out;
 }
 
-std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> FormatFactory::diagram(const theme::Theme& theme) {
-  std::map<std::string, std::unique_ptr<IFormat<render::IrText>>> out;
-  out["ir"] = std::make_unique<DiagramIr>();
+std::map<std::string, std::unique_ptr<IFormat<render::IrDocument>>> FormatFactory::diagram(const theme::Theme& theme) {
+  std::map<std::string, std::unique_ptr<IFormat<render::IrDocument>>> out;
   out["svg"] = std::make_unique<DiagramSvg>(theme);
   out["text"] = std::make_unique<DiagramText>(theme);
   return out;

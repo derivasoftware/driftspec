@@ -99,8 +99,8 @@ TEST_F(TestJsonOfADesign, EveryWriterLentACheckedSinkWritesWhatNlohmannWrote) {
     }
     const ds::render::IrExport ir(model, metamodel());
     for (const auto& id : ir.diagrams()) {
-      const ds::render::IrText diagram{ds::test::irJson(ir, id)};
-      if (diagram.json.size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
+      if (ds::test::irJson(ir, id).size() > 64 * 1024) continue;  // a large drawing lays out slowly in a debug build; the goldens hold one
+      const ds::render::IrDocument diagram = *ir.document(id);
       for (const char* format : {"layout", "cells"}) {
         (std::string(format) == "layout" ? ds::format::DescriptionFactory::layout(diagram, kTheme, 0)
                                          : ds::format::DescriptionFactory::cells(diagram, kTheme, 0))

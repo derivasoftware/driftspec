@@ -20,6 +20,9 @@ class DiagramBinder : public INodeBinder {
   void bind(TSNode node, const BindContext& ctx) const override;
 
  private:
+  /// A walkthrough's steps, each an entity numbered in the order written, with what it shows and lights (DS-468).
+  void bindSteps(TSNode node, const BindContext& ctx, const model::Entity& diagram) const;
+
   const FieldBinder& fields_;
   const FormulaBinder& formulas_;
 };

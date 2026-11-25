@@ -122,10 +122,20 @@ std::string Api::report(const model::Model& model, bool pretty) const {
   return sink->result();
 }
 
-// the text functions of the command line's contract: a workspace loaded for one question (DS-173)
-std::string Api::check(const Files& files) const { return Workspace::madeFor(metamodel_, files, Output::Findings).report(); }
+// the text functions of the command line's contract: a workspace loaded for one question (DS-173), its use case run
+// into the JSON sink taken here (DS-459); the drawings and the page are writers, not descriptions, until DS-400
+std::string Api::check(const Files& files) const { return described("check-design", files); }
 
-std::string Api::exportModel(const Files& files) const { return Workspace::madeFor(metamodel_, files, Output::Model).exportModel(); }
+std::string Api::exportModel(const Files& files) const { return described("hand-model", files); }
+
+std::string Api::described(const std::string& useCase, const Files& files) const {
+  const service::UseCaseFactory useCases(metamodel_);
+  Workspace workspace(useCases);
+  workspace.reload(files);
+  const auto sink = emit::SinkFactory::json(false);
+  workspace.run(useCase, {}, *sink);
+  return sink->result();
+}
 
 std::string Api::render(const Files& files, const std::string& diagram, const std::string& format, int width) const {
   // the format named, as the workspace draws it: svg, text, cells, layout or the IR, and NotImplemented for any other

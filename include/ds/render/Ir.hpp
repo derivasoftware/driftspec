@@ -99,12 +99,6 @@ struct IrDocument {
   IrDocument bundled() const;
 };
 
-/// A render-IR document as its contract writes it (JSON): what ds emits, plantuml-render reads, and
-/// another tool may hand ds to draw. The document the formats of a diagram write (DS-126).
-struct IrText {
-  std::string json;
-};
-
 }  // namespace render
 }  // namespace ds
 

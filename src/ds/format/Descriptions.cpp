@@ -90,8 +90,8 @@ void AnswersDescription::say(emit::ISink& out_sink) const {
   out_sink.endTable();
 }
 
-LayoutDescription::LayoutDescription(const render::IrText& ir, const theme::Theme& theme, int width)
-    : ir_(ir), metrics_(render::Metrics::text(theme.measures(theme::Sink::text))), width_(width) {}
+LayoutDescription::LayoutDescription(const render::IrDocument& document, const theme::Theme& theme, int width)
+    : document_(document), metrics_(render::Metrics::text(theme.measures(theme::Sink::text))), width_(width) {}
 
 // The placed rectangles and routes of one drawing, in cells; of a drawing made of parts, those of each part. A
 // part is named after the fields its drawing gives: part before parts, nodes before part before routes.
@@ -126,13 +126,14 @@ void LayoutDescription::placed(const render::IrDocument& document, const std::st
 
 std::string LayoutDescription::name() const { return "layout"; }
 
-void LayoutDescription::say(emit::ISink& out_sink) const { placed(render::IrDocument::parse(ir_.json), nullptr, out_sink); }
+void LayoutDescription::say(emit::ISink& out_sink) const { placed(document_, nullptr, out_sink); }
 
-CellsDescription::CellsDescription(const render::IrText& ir, const theme::Theme& theme, int width) : ir_(ir), text_(theme), width_(width) {}
+CellsDescription::CellsDescription(const render::IrDocument& document, const theme::Theme& theme, int width)
+    : document_(document), text_(theme), width_(width) {}
 
 std::string CellsDescription::name() const { return "cells"; }
 
-void CellsDescription::say(emit::ISink& out_sink) const { text_.cells(render::IrDocument::parse(ir_.json), width_, out_sink); }
+void CellsDescription::say(emit::ISink& out_sink) const { text_.cells(document_, width_, out_sink); }
 
 }  // namespace format
 }  // namespace ds
