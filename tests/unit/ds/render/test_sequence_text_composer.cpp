@@ -75,6 +75,7 @@ TEST(TestSequenceTextComposer, TheLanesRowsAndFramesAreComposedInCells) {
   EXPECT_EQ(s.rows[0].bottom - s.rows[0].top, 2);  // a call: its label and its arrow
   EXPECT_EQ(s.rows[1].bottom - s.rows[1].top, 3);  // a call to its own lane loops back below
   EXPECT_EQ(s.lanes[0].headW, static_cast<int>(std::string("Caller").size()) + 4);
+  EXPECT_EQ(s.headHeight, 3);  // a head's border, its name, its border
 }
 
 }  // namespace

@@ -137,6 +137,7 @@ Figure SequenceTextComposer::compose(const IrDocument& input, int) const {
   s.messages = std::move(messages);
   s.width = width;
   s.height = rows;
+  s.headHeight = 3;  // a head is a box of three rows: its border, its name, its border
   figure.sequence = std::move(s);
   return figure;
 }

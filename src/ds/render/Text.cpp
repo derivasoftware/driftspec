@@ -253,9 +253,9 @@ Grid Text::sequenceGrid(const Figure& figure) const {
   // lifelines
   for (const Lane& l : s.lanes) {
     const int x0 = l.cx - l.headW / 2;
-    g.frame(Rect{x0, 0, l.headW, 3}, true, "");
+    g.frame(Rect{x0, 0, l.headW, s.headHeight}, true, "");
     g.text(x0 + 2, 1, l.node->label, kName);
-    for (int y = 3; y < rows; ++y) g.put(l.cx, y, "\xE2\x94\x86", kMuted);  // ┆
+    for (int y = s.headHeight; y < rows; ++y) g.put(l.cx, y, "\xE2\x94\x86", kMuted);  // ┆
   }
   // frames, where they were placed
   for (const SequenceFrame& f : s.frames) {
