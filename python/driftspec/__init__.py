@@ -237,6 +237,8 @@ class Answer:
     kind: str
     id: str
     detail: str
+    source: str = ""  # a relation's two ends, as the model holds them; "" for every other answer (DS-445)
+    target: str = ""
 
 
 @dataclass(frozen=True)
@@ -342,10 +344,10 @@ class Workspace:
 
     def ask(self, question: str, subject: str = "") -> list[Answer]:
         """A question of ds query, answered as ds query --json does."""
-        return [Answer(a["kind"], a["id"], a["detail"]) for a in json.loads(self._native.ask(question, subject))]
+        return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in json.loads(self._native.ask(question, subject))]
 
     def shows(self, diagram: str) -> list[Answer]:
-        return [Answer(a["kind"], a["id"], a["detail"]) for a in json.loads(self._native.shows(diagram))]
+        return [Answer(a["kind"], a["id"], a["detail"], a.get("from", ""), a.get("to", "")) for a in json.loads(self._native.shows(diagram))]
 
     def render(self, diagram: str, format: str = "text", width: int = 0) -> str:
         """A diagram drawn (svg, text, cells, ir, layout), wrapped to a width; "" when there is no such diagram."""
