@@ -413,7 +413,7 @@ package driftspec@ds {
     }
 
     requirement REQ-00074-2 {
-      status: draft
+      status: approved
       @refines SREQ-00013-1
       title: The scene shall write each behaviour once and name its nodes by index, so the page of a design stays small
       text:
@@ -437,7 +437,7 @@ package driftspec@ds {
     }
 
     verification VER-00083-5 {
-      status: draft
+      status: approved
       @requirement REQ-00074-2
       title: Integration tests confirm ds's design writes each behaviour once, a caller adds to the page its call and not the steps it replays, and a behaviour written once is replayed by every tour that calls it
       method: test

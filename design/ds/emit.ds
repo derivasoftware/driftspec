@@ -12,7 +12,7 @@ package driftspec@ds {
     // ---- what emit is, as requirements and the rules that hold them (DS-397) --------------------------------------
     requirement REQ-00202-1 {
       tags: architecture, emit, format
-      status: draft
+      status: approved
       @refines REQ-00106-2
       title: A sink of emit shall be made only by emit's SinkFactory, for the doors that ask for an output, and every other module shall reach it through its interface
       text:
@@ -26,7 +26,7 @@ package driftspec@ds {
         doors ask SinkFactory for the sink rather than build it; the catalogue of formats will take that over when
         it names the technologies (DS-398), and a use case is lent one by its door (DS-406).
       verification VER-00223-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of ds names a sink of emit only in emit, and is told when a door, a format, the exporter or the render does
         method: test
         tests:
@@ -40,7 +40,7 @@ package driftspec@ds {
 
     requirement REQ-00203-1 {
       tags: architecture, emit
-      status: draft
+      status: approved
       @refines REQ-00106-2
       title: The emit module shall depend on no other module of the engine
       text:
@@ -50,7 +50,7 @@ package driftspec@ds {
         Owner, 2026-11-24 (DS-394): emit is a bottom module that knows no document, as text is; a dependence on
         another module would make it know what it writes.
       verification VER-00224-1 {
-        status: draft
+        status: approved
         title: Integration tests confirm the design of emit depends on no other module of the engine, and is told when a sink does
         method: test
         tests:

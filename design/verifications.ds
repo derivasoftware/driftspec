@@ -18,7 +18,7 @@ package driftspec {
   }
 
   verification SVER-00002-6 {
-    status: draft
+    status: approved
     @requirement SREQ-00002-1
     title: System tests confirm every incoherence is a finding with code, severity and location, a file that is not UTF-8 among them, and a path that is no workspace is bad usage
     text:
