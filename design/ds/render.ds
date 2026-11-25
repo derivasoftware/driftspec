@@ -202,11 +202,11 @@ package driftspec@ds {
       return out
     }
 
-    class IrExport {                         // the projection: takes what the query's filter of a diagram takes, decides what to print, writes the IR
+    // the projection (DS-369): the projector of a diagram's kind draws its body, from what the query's filter of the
+    // diagram takes; this one chooses the projector, heads the document and writes it
+    class IrExport {
       @requirement REQ-00198-1
-      @requirement REQ-00234-1               // a machine's start, its ends and its states as capsules (DS-442)
       @requirement REQ-00006-1
-      @requirement REQ-00121-1
       - refs model_: model::Model
       - refs metamodel_: model::Metamodel     // the language of the model: the kinds it draws by name (DS-351)
       + IrExport(model: model::Model, metamodel: model::Metamodel)
@@ -214,40 +214,7 @@ package driftspec@ds {
       + render(diagramId: std::string, pretty: bool) -> std::string {
         @requirement REQ-00057-1
       }
-      - closeBoxes(ir: std::string, cut: axis::Cut, pretty: bool) -> std::string {
-        @requirement REQ-00064-5
-        @requirement REQ-00126-1
-        @requirement REQ-00137-1
-        @requirement REQ-00155-1
-      }
-      - renderState(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00062-1
-        @requirement REQ-00144-1
-        @requirement REQ-00146-1
-      }
-      // a machine as a table: what machine::Table says, written as the table of the IR
-      - renderTable(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00006-1
-      }
-      - renderSequence(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00049-3
-        @requirement REQ-00056-1
-        @requirement REQ-00129-1
-        @requirement REQ-00130-1
-        @requirement REQ-00134-1
-      }
-      // the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut (DS-245)
-      - renderTour(tour: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00139-1
-      }
-      // a class diagram: the boxes a diagram takes, and the cut it is lifted onto
-      - renderBoxes(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00057-1
-      }
-      - renderRequirements(diagram: model::Entity, pretty: bool) -> std::string {
-        @requirement REQ-00050-1
-        @requirement REQ-00131-1
-      }
+      - static documentHead(diagram: model::Entity) -> nlohmann::json   // what every document opens with: the contract and its title
     }
 
     sequence IrExport::diagrams {
@@ -256,47 +223,81 @@ package driftspec@ds {
       return out
     }
 
-    // The kind written in the diagram picks the scenario. The default is a class diagram
-    // with no open: field, told by its main steps. What comes back is the JSON dumped,
-    // so a name for it, not a checked value.
+    // The kind written in the diagram picks the projector; whatever it draws is headed and written here, pretty-printed
+    // when asked. What comes back is the JSON dumped, so a name for it, not a checked value.
     sequence IrExport::render {
-      local filter: query::IFilter
+      local projector: IProjector
       self -> model_.find(diagramId) -> diagram
       opt there is no such diagram / no-diagram {
         return ""
       }
+      -> ProjectorFactory::of(kind, model_, metamodel_) -> made
+      -> projector.project(diagram) -> body
+      -> documentHead(diagram) -> head
+      return ir
+    }
+
+    // what draws one kind of diagram (DS-369): a diagram of the model in, the body of its render-IR out
+    class IProjector {
+      @requirement REQ-00006-1
+      + ~IProjector()
+      + abstract project(diagram: model::Entity) -> nlohmann::json
+    }
+
+    // the one place that names the projectors, by the kind of diagram they draw: a class diagram for any other kind
+    class ProjectorFactory {
+      @requirement REQ-00006-1
+      + static of(kind: std::string, model: model::Model, metamodel: model::Metamodel) -> std::unique_ptr<IProjector>
+    }
+
+    sequence ProjectorFactory::of {
+      local sequence: SequenceProjector
+      local tour: TourProjector
+      local requirements: RequirementProjector
+      local state: StateProjector
+      local table: TableProjector
+      local boxes: ClassProjector
       opt it is a sequence diagram / sequence-diagram {
-        -> renderSequence(diagram, pretty) -> ir
-        return ir
-      }
-      opt it is a requirement diagram / requirement-diagram {
-        -> renderRequirements(diagram, pretty) -> ir
-        return ir
-      }
-      opt it is a state diagram / state-diagram {
-        -> renderState(diagram, pretty) -> ir
-        return ir
-      }
-      opt it is a table / table-diagram {
-        -> renderTable(diagram, pretty) -> ir
-        return ir
+        return sequence
       }
       opt it is a tour / tour {
-        -> renderTour(diagram, pretty) -> ir
-        return ir
+        return tour
       }
-      -> renderBoxes(diagram, pretty) -> ir
-      return ir
+      opt it is a requirement diagram / requirement-diagram {
+        return requirements
+      }
+      opt it is a state diagram / state-diagram {
+        return state
+      }
+      opt it is a table / table-diagram {
+        return table
+      }
+      return boxes
     }
 
-    // a tour: the sequence of the same fields, and who takes part in it drawn as boxes on the same cut
-    sequence IrExport::renderTour {
-      -> renderSequence(tour, pretty) -> sequence
-      -> renderBoxes(boxes, pretty) -> drawn
-      return ir
+    // a class diagram: the boxes a diagram takes, and the cut it is lifted onto
+    class ClassProjector : IProjector {
+      @requirement REQ-00121-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + ClassProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00057-1
+      }
+      - closeBoxes(doc: nlohmann::json, cut: axis::Cut) -> nlohmann::json {
+        @requirement REQ-00064-5
+        @requirement REQ-00126-1
+        @requirement REQ-00137-1
+        @requirement REQ-00155-1
+      }
+      - static isBox(e: model::Entity) -> bool                        // a class, an enum, an interface or a function of a module
+      - static displayName(e: model::Entity) -> std::string            // a template with its params
+      - static memberLine(m: model::Entity) -> std::string
+      - static classifierOf(e: model::Entity) -> std::string           // what a box is drawn as (DS-244)
+      - static edgeKind(relation: std::string) -> std::string
     }
 
-    sequence IrExport::renderBoxes {
+    sequence ClassProjector::project {
       local filter: query::IFilter
       -> query::FilterFactory::of(metamodel_, diagram) -> made
       -> filter.boxes(model_) -> selected
@@ -322,10 +323,111 @@ package driftspec@ds {
       self -> all.all() -> relations
       opt a cut is written / open-boxes {
         self -> all.ofKinds(coupling) -> behaviourCoupling
-        -> closeBoxes(ir, cut, pretty) -> closed
+        -> closeBoxes(out, cut) -> closed
         return closed
       }
-      return ir
+      return out
+    }
+
+    // a sequence diagram: the lifelines a behaviour stands on and its messages, followed as deep as it says
+    class SequenceProjector : IProjector {
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + SequenceProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00049-3
+        @requirement REQ-00056-1
+        @requirement REQ-00129-1
+        @requirement REQ-00130-1
+        @requirement REQ-00134-1
+      }
+    }
+
+    sequence SequenceProjector::project {
+      local builder: SequenceBuilder
+      -> query::SequenceFilter::levelsOf(diagram) -> depth
+      -> builder.emit(seq, self, caller, path, depth, stack) -> emitted
+      return out
+    }
+
+    // what a sequence diagram is built of, behaviour by behaviour: its lifelines and messages, as the sequence projector
+    // follows the calls
+    class SequenceBuilder {
+      @requirement REQ-00049-3
+      + nodes: nlohmann::json                  // the lifelines, in the order they are met
+      + edges: nlohmann::json                  // the messages, each with its order
+      + order: int                             // the order the next message takes
+      - refs model_: model::Model
+      - refs cut_: axis::Cut                   // the cut the lifelines stand on, and the calls it follows (DS-231)
+      - lifelineOf_: std::map<std::string, std::string>
+      - boxLines_: std::set<std::string>       // the lifelines that are closed boxes
+      + SequenceBuilder(model: model::Model, cut: axis::Cut)
+      + closedAround(typeId: std::string) -> std::string
+      + boxLine(box: std::string) -> std::string
+      + lineOf(typeId: std::string, name: std::string, behaviour: std::string) -> std::string
+      + followed(behaviour: std::string, depth: int) -> bool
+      + lifeline(key: std::string, label: std::string, classifier: std::string, typeId: std::string) -> std::string
+      + shortName(id: std::string) -> std::string
+      + emit(seq: model::Entity, selfLine: std::string, backLine: std::string, path: std::string, depth: int, stack: std::set<std::string>) -> void
+    }
+
+    // a tour (DS-245): the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut,
+    // each drawn by its own projector
+    class TourProjector : IProjector {
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + TourProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00139-1
+      }
+    }
+
+    // the sequence of the same fields, and who takes part in it drawn as boxes on the same cut, each from the
+    // projector of its kind
+    sequence TourProjector::project {
+      local sequences: IProjector
+      local classes: IProjector
+      -> ProjectorFactory::of(kind, model_, metamodel_) -> sequenceProjector
+      -> sequences.project(tour) -> sequence
+      -> query::SequenceFilter::levelsOf(tour) -> depth
+      -> ProjectorFactory::of(kind, model_, metamodel_) -> classProjector
+      -> classes.project(boxes) -> drawn
+      return out
+    }
+
+    // a state diagram: each state with the rule that computes it, and the jumps between them
+    class StateProjector : IProjector {
+      @requirement REQ-00234-1
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + StateProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00062-1
+        @requirement REQ-00144-1
+        @requirement REQ-00146-1
+      }
+    }
+
+    // a machine as a table: what machine::Table says, written as the table of the IR
+    class TableProjector : IProjector {
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + TableProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00006-1
+      }
+    }
+
+    // a requirement diagram: the requirements and what answers to each
+    class RequirementProjector : IProjector {
+      - refs model_: model::Model
+      - refs metamodel_: model::Metamodel
+      + RequirementProjector(model: model::Model, metamodel: model::Metamodel)
+      + project(diagram: model::Entity) -> nlohmann::json {
+        @requirement REQ-00050-1
+        @requirement REQ-00131-1
+      }
+      - static isArtefact(e: model::Entity) -> bool                   // a requirement, a constraint or a verification
     }
 
     // ---- the layout: geometry the two drawings share ----

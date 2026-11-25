@@ -1,6 +1,7 @@
 #include "ds/text/Text.hpp"
 
 #include <cstring>
+#include <sstream>
 
 namespace ds {
 namespace text {
@@ -115,6 +116,22 @@ std::string escapeXml(const std::string& text) {
     }
   }
   return out;
+}
+
+std::vector<std::string> wrap(const std::string& text, std::size_t width) {
+  std::vector<std::string> lines;
+  std::string line;
+  std::stringstream in(text);
+  std::string word;
+  while (in >> word) {
+    if (!line.empty() && line.size() + 1 + word.size() > width) {
+      lines.push_back(line);
+      line.clear();
+    }
+    line += (line.empty() ? "" : " ") + word;
+  }
+  if (!line.empty()) lines.push_back(line);
+  return lines;
 }
 
 std::size_t characters(const std::string& text) {

@@ -76,4 +76,11 @@ TEST(TestCharacters, EachCodePointCountsOnceWhateverItsBytes) {
   EXPECT_EQ(ds::text::characters("\xE2\x86\x92 int"), 5u);         // an arrow, three bytes, then four more
 }
 
+TEST(TestWrap, TheWordsFillLinesNoLongerThanTheWidthAndALongWordTakesALineOfItsOwn) {
+  EXPECT_EQ(ds::text::wrap("a bb ccc dddd", 6), (std::vector<std::string>{"a bb", "ccc", "dddd"}));
+  EXPECT_EQ(ds::text::wrap("unbreakable word", 4), (std::vector<std::string>{"unbreakable", "word"}));
+  EXPECT_EQ(ds::text::wrap("  spaced   out  ", 20), (std::vector<std::string>{"spaced out"}));
+  EXPECT_TRUE(ds::text::wrap("", 10).empty());
+}
+
 }  // namespace

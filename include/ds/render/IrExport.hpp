@@ -1,11 +1,11 @@
 #ifndef DRIFTSPEC_RENDER_IREXPORT_HPP
 #define DRIFTSPEC_RENDER_IREXPORT_HPP
 
-#include <set>
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 #include <vector>
 
-#include "ds/axis/Cut.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -14,7 +14,7 @@ namespace render {
 /// Projects one `diagram` of the model onto plantuml-render's render-IR
 /// (schema/render-ir.schema.json, contract v1). What the diagram takes is the query's filter of it
 /// (DS-127); this decides how it is drawn (`show`, `hide`, and the cut of `open`, `close` and `cut`): if the model changes, the drawing
-/// follows.
+/// follows. Each kind of diagram is drawn by its own projector (DS-369); this chooses it and writes what it gives.
 class IrExport {
  public:
   /// Draws the diagrams of `model`, written in `metamodel`, which names the kinds it draws (DS-351).
@@ -27,16 +27,8 @@ class IrExport {
   std::string render(const std::string& diagramId, bool pretty) const;
 
  private:
-  std::string renderSequence(const model::Entity& diagram, bool pretty) const;
-  /// A tour (DS-245): the boxes that take part in a behaviour and its sequence, two parts of one drawing on one cut.
-  std::string renderTour(const model::Entity& tour, bool pretty) const;
-  /// A class diagram: the boxes a diagram takes, and the cut it is lifted onto.
-  std::string renderBoxes(const model::Entity& diagram, bool pretty) const;
-  std::string closeBoxes(const std::string& ir, const axis::Cut& cut, bool pretty) const;
-  std::string renderState(const model::Entity& diagram, bool pretty) const;
-  /// A machine as a table (DS-251): what ds::machine::Table says, as the table of the IR.
-  std::string renderTable(const model::Entity& diagram, bool pretty) const;
-  std::string renderRequirements(const model::Entity& diagram, bool pretty) const;
+  /// What every render-IR document opens with, whatever its kind: the contract it is written in and its title.
+  static nlohmann::json documentHead(const model::Entity& diagram);
 
   const model::Model& model_;
   const model::Metamodel& metamodel_;

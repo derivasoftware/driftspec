@@ -56,6 +56,9 @@ struct Behaviour {
 /// one is the box that stands for it.
 class SequenceFilter : public IFilter {
  public:
+  /// How deep a diagram follows the calls: `depth: n`, `*` for every level (the guard against recursion is what ends
+  /// it), none when it is not written or is no number (a finding). A sequence and a tour read it alike (DS-369).
+  static int levelsOf(const model::Entity& diagram);
   /// `cutOf` is the identity of the diagram whose cut it applies; empty for none. The cut is read in `metamodel`,
   /// the language of the models it is handed (DS-351).
   SequenceFilter(const model::Metamodel& metamodel, std::vector<std::string> include, int depth, std::string cutOf = "");

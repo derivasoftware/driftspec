@@ -79,6 +79,12 @@ std::set<std::string> ClassFilter::select(const model::Model& model) const {
 SequenceFilter::SequenceFilter(const model::Metamodel& metamodel, std::vector<std::string> include, int depth, std::string cutOf)
     : metamodel_(metamodel), include_(std::move(include)), depth_(depth), cutOf_(std::move(cutOf)) {}
 
+int SequenceFilter::levelsOf(const model::Entity& diagram) {
+  if (diagram.field("depth") == "*") return 1000;
+  int levels = 0;
+  return diagram.number("depth", levels) ? levels : 0;
+}
+
 std::vector<Behaviour> SequenceFilter::behaviours(const model::Model& model) const {
   const model::Paths paths(model);
   std::vector<Behaviour> out;

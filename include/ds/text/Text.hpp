@@ -38,6 +38,9 @@ std::string fromBase64(const std::string& text);
 /// `text` with the characters XML gives a meaning written as entities: & < > ".
 std::string escapeXml(const std::string& text);
 
+/// The words of `text` in lines no longer than `width`, a word longer than that on a line of its own (DS-369).
+std::vector<std::string> wrap(const std::string& text, std::size_t width);
+
 /// How many characters `text` holds as UTF-8: each code point once, whatever bytes it takes (DS-390).
 std::size_t characters(const std::string& text);
 
