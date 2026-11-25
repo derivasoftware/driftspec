@@ -70,8 +70,13 @@ variables:
 cpp-evidence:
   extends: [.ccache]
 
+# The tests run the Release engine with the JSON sink's checks on (DS-461): fields in byte order, one document, no
+# result taken with nothing written. A Release build leaves them off by default, so a broken contract passed CI while a
+# debug build failed. Measured on the whole suite: 67.4 s off, 67.6-69.3 s on; cpp-test is not on the critical path.
 cpp-test:
   extends: [.ccache]
+  variables:
+    DS_JSON_CHECK: "1"
   artifacts:
     when: always
     paths:
@@ -202,6 +207,8 @@ viewer-js:
   extends: [.on-mr]
   stage: test
   needs: [cpp-test]
+  variables:
+    DS_JSON_CHECK: "1"  # the scenes ds writes, checked as they are written (DS-461)
   script:
     - node --version
     - npm ci --no-audit --no-fund
@@ -220,6 +227,8 @@ golden:
   extends: [.on-mr]
   stage: test
   needs: [cpp-test]
+  variables:
+    DS_JSON_CHECK: "1"  # every document ds writes, checked as it is written (DS-461); 25.8 s off, 25.6 s on
   script:
     - python3 -m venv .golden && . .golden/bin/activate
     - pip install -q pytest
