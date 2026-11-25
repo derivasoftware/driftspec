@@ -16,9 +16,9 @@ namespace {
 using ds::model::Entity;
 using ds::model::Kind;
 
-/// The walkthroughs of the scene (DS-471): each step names its diagram as the scene's diagrams do, lands what it lights
-/// on the nodes drawn, and a step that shows a sequence carries the behaviour it replays along its scenario.
-TEST(TestWalkthroughLayer, EachStepIsLandedOnTheNodesDrawnAndASequenceStepNamesItsBehaviour) {
+/// The walkthroughs of the scene (DS-471): each step names its diagram as the scene's diagrams do, keeps what it lights
+/// by identity (DS-470), and a step that shows a sequence carries the behaviour it replays along its scenario.
+TEST(TestWalkthroughLayer, EachStepKeepsWhatItLightsByIdentityAndASequenceStepNamesItsBehaviour) {
   const ds::model::Metamodel metamodel;
   ds::model::Model model{metamodel};
   const auto declare = [&model](Kind kind, const std::string& id, std::map<std::string, std::string> fields) {

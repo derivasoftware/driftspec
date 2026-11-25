@@ -1,6 +1,7 @@
 #ifndef DRIFTSPEC_FORMAT_FORMAT_HPP
 #define DRIFTSPEC_FORMAT_FORMAT_HPP
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,9 @@ struct FormatOptions {
   int height = 640;                     ///< the height of that frame, in pixels
   int width = 0;                        ///< wrap a drawing: columns for text and cells, pixels for svg; 0 lets it be
   bool color = false;                   ///< text for a terminal that shows colour
+  /// The diagrams a page's walkthroughs open, by name, each as render draws it in svg (DS-470); empty for a page
+  /// with no walkthrough, which is written as it was.
+  std::map<std::string, std::string> drawings = {};
 };
 
 /// A writer of one kind of document that is no description yet (DS-126, DS-398): a drawing in svg or text (until

@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "ds/api/Api.hpp"
+#include "ds/api/Drawings.hpp"
 #include "ds/check/Report.hpp"
 #include "ds/emit/NotImplemented.hpp"
 #include "ds/emit/SinkFactory.hpp"
@@ -213,6 +214,7 @@ std::string Workspace::render(const std::string& diagram, const std::string& for
     description->describe(*sink);
     return sink->result() + "\n";
   }
+  if (format == "svg") return Drawings::svg(model_, metamodel_, theme_, diagram, width);  // the one path to a drawing (DS-470)
   format::FormatOptions options;
   options.width = width;
   return chosen->second->write(*document, options, *sink);
@@ -222,8 +224,10 @@ std::string Workspace::page(const std::string& title, const std::vector<std::str
   format::FormatOptions options;
   options.title = title;
   options.focus = focus;
+  const scene::SceneDocument document = scene::Scene(model_, metamodel_).build();
+  if (!document.walkthroughs.empty()) options.drawings = Drawings::of(model_, metamodel_, theme_);  // the cards (DS-470)
   const auto sink = emit::SinkFactory::json(false);  // the scene and the focus travel compact inside the page
-  return format::FormatFactory::scene().at("html")->write(scene::Scene(model_, metamodel_).build(), options, *sink);
+  return format::FormatFactory::scene().at("html")->write(document, options, *sink);
 }
 
 std::string Identity::qualify(const std::string& scope, const std::string& name) { return model::Scope(scope).qualify(name).text(); }

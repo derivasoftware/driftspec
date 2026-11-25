@@ -10,7 +10,8 @@ namespace format {
 
 // the viewer as one self-contained page with the scene inside, titled after the workspace
 std::string ViewerPage::page(const scene::SceneDocument& document, const std::string& title, const std::string& css,
-                             const std::vector<std::string>& focus, emit::ISink& out_sink) {
+                             const std::vector<std::string>& focus, const std::map<std::string, std::string>& drawings,
+                             emit::ISink& out_sink) {
   DescriptionFactory::scene(document)->describe(out_sink);
   const std::string json =
       common::Packing::pack(out_sink.result());  // base64 holds no quote and no tag: nothing closes the script, nothing to escape
@@ -52,13 +53,24 @@ std::string ViewerPage::page(const scene::SceneDocument& document, const std::st
     own = out.substr(styleFrom + styleOpen.size(), styleTo - styleFrom - styleOpen.size());
     out.erase(styleFrom, styleTo + styleClose.size() - styleFrom);
   }
+  // a page whose scene has a walkthrough carries the mode that plays it, inside the viewer's code, and every
+  // diagram drawn as render draws it, packed beside the scene; any other page is written as it was (DS-470)
+  std::string drawn;
+  if (!document.walkthroughs.empty() && !drawings.empty()) {
+    const size_t end = code.rfind("})();");
+    if (end != std::string::npos) code.insert(end, walkTemplate() + "\n");
+    out_sink.beginRecord();
+    for (const auto& d : drawings) out_sink.field(d.first).value(d.second);  // a std::map: in byte order
+    out_sink.endRecord();
+    drawn = "const DRAWINGS='" + common::Packing::pack(out_sink.result()) + "';\n";
+  }
   const size_t codeFrom = out.find(open, out.find("<body>")), codeTo = out.rfind(close);
   const std::string inflate =
       "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
       ".pipeThrough(new DecompressionStream('deflate'))).text();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\nconst STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" + common::Packing::pack(code) +
-      "';\n(async()=>{try{" + inflate +
+      "\n" + mark + "\n" + aim + "\n" + drawn + "const STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" +
+      common::Packing::pack(code) + "';\n(async()=>{try{" + inflate +
       "const st=document.createElement('style');st.textContent=await "
       "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"
       "const t=await inflate(VIEWER);"
@@ -84,7 +96,7 @@ std::string ViewerPage::frame(const std::string& page, const std::string& title,
 std::string ViewerPage::name() const { return "html"; }
 
 std::string ViewerPage::write(const scene::SceneDocument& document, const FormatOptions& options, emit::ISink& out_sink) const {
-  const std::string written = page(document, options.title, options.css, options.focus, out_sink);
+  const std::string written = page(document, options.title, options.css, options.focus, options.drawings, out_sink);
   return options.embed ? frame(written, options.title, options.height) : written;
 }
 

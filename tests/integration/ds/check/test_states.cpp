@@ -46,11 +46,23 @@ class TestStates : public ::testing::Test {
 TEST_F(TestStates, AStateIsWrittenWithTheRuleThatComputesItOverWhatItsSubjectHolds) {
   const ds::model::Entity* machine = model.find("shop@order::Order::state");
   ASSERT_NE(machine, nullptr);
-  const std::string rules = machine->field("rules");
-  // an enum value, a boolean turned round by `not`, and a difference; the jumps beside them, as they were
-  EXPECT_NE(rules.find("Open|status=Open,!cancelled|"), std::string::npos) << rules;
-  EXPECT_NE(rules.find("Cancelled|cancelled,status!=Shipped|"), std::string::npos) << rules;
-  EXPECT_NE(machine->field("transitions").find("Open>Paid>pay"), std::string::npos);
+  // records, one per rule and per transition (DS-384): an enum value, a boolean turned round by `not`, and a difference
+  const auto rule = [&](const std::string& state) {
+    for (const auto& r : machine->rules)
+      if (r.state == state) return &r;
+    return static_cast<const ds::model::WrittenRule*>(nullptr);
+  };
+  ASSERT_NE(rule("Open"), nullptr);
+  ASSERT_EQ(rule("Open")->literals.size(), 2u);
+  EXPECT_EQ(rule("Open")->literals[0].left, "status");
+  EXPECT_EQ(rule("Open")->literals[0].op, "=");
+  EXPECT_EQ(rule("Open")->literals[0].right, "Open");
+  EXPECT_TRUE(rule("Open")->literals[1].negated);
+  EXPECT_EQ(rule("Open")->literals[1].left, "cancelled");
+  ASSERT_NE(rule("Cancelled"), nullptr);
+  EXPECT_EQ(rule("Cancelled")->literals[1].op, "!=");
+  EXPECT_TRUE(std::any_of(machine->transitions.begin(), machine->transitions.end(),
+                          [](const ds::model::WrittenTransition& t) { return t.from == "Open" && t.to == "Paid" && t.event == "pay"; }));
   // nothing is said of the rules of the three machines whose rules exclude each other
   for (const std::string code : {"W-STATE-OVERLAP", "W-STATE-VALUE", "W-STATE-UNDECLARED", "W-STATE-IMPOSSIBLE"}) {
     EXPECT_FALSE(says(code, "Order")) << code;

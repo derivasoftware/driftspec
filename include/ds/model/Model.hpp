@@ -62,6 +62,32 @@ struct Param {
   std::string type;
 };
 
+/// One transition of a state machine as it is written (DS-384): from a state to another on an event, with the guard
+/// that may stop it and the action it sends, each as written; "" when it has none.
+struct WrittenTransition {
+  std::string from;
+  std::string to;
+  std::string event;
+  std::string guard;   ///< the condition between [ ], without them
+  std::string action;  ///< the event it sends: / action
+  Location location;
+};
+
+/// One literal of a state's rule as it is written: a name of the context, alone or compared with a value; not turns it.
+struct RuleLiteral {
+  bool negated = false;
+  std::string left;
+  std::string op;  ///< "=", "!=", or "" for a name alone
+  std::string right;
+};
+
+/// A state a rule computes, as it is written (DS-249, DS-384): the state and the literals that all hold in it.
+struct WrittenRule {
+  std::string state;
+  std::vector<RuleLiteral> literals;
+  Location location;
+};
+
 struct Entity {
   Kind kind = Kind::Package;
   std::string id;     ///< identity: qualified name, or the artefact id
@@ -72,6 +98,10 @@ struct Entity {
       flags;  ///< modifiers with semantics (R19): abstract, static, const, owns, refs, shares, many, optional, dataclass, constructor
   std::vector<Param> params;      ///< read once from the syntax: an operation's parameters, a template's parameters
   std::vector<std::string> args;  ///< read once from the syntax: a message's arguments, as written
+  /// read once from the syntax, a state machine's: its transitions and its rules, one record each, in the order written
+  /// (DS-384); never joined into a field and split again
+  std::vector<WrittenTransition> transitions;
+  std::vector<WrittenRule> rules;
   Location location;
   bool expected = false;  ///< referenced somewhere but declared nowhere
 

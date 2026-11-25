@@ -653,7 +653,7 @@ package driftspec@ds {
       + sequences: std::vector<std::string>
     }
 
-    dataclass WalkStepView {                 // one step of a walkthrough, landed on the nodes drawn (DS-471)
+    dataclass WalkStepView {                 // one step of a walkthrough: what it lights by identity (DS-471, DS-470)
       @requirement REQ-00243-1
       + title: std::string
       + diagram: std::string                 // the shown diagram's name, as DiagramView names it
@@ -926,8 +926,7 @@ package driftspec@ds {
     class WalkthroughLayer : ILayer {
       @requirement REQ-00243-1
       - refs model_: model::Model
-      - refs map_: Map
-      + WalkthroughLayer(model: model::Model, map: Map)
+      + WalkthroughLayer(model: model::Model, map: Map)   // the map as every layer is given it; a step lights by identity
       + decorate(out_document: SceneDocument) -> void
     }
 

@@ -75,13 +75,9 @@ IrDocument StateProjector::project(const model::Entity& diagram) const {
       nodes.push_back(dot);
       edges.push_back(IrEdge::between(start, box(initial), "association"));
     }
-    std::stringstream first(state->field("transitions"));
-    for (std::string move; std::getline(first, move);) {  // in the order written: the first jumps go down
-      const auto cut = move.find('>');
-      if (cut == std::string::npos) continue;
-      box(move.substr(0, cut));
-      const auto end = move.find('>', cut + 1);
-      if (end != std::string::npos) box(move.substr(cut + 1, end - cut - 1));
+    for (const model::WrittenTransition& move : state->transitions) {  // in the order written: the first jumps go down
+      box(move.from);
+      box(move.to);
     }
     for (const std::string& name : written.states()) box(name);  // a state a rule computes is drawn though no jump names it
     for (const std::string& name : written.finals()) {           // each final state ends in a bullseye (DS-442)
@@ -98,22 +94,19 @@ IrDocument StateProjector::project(const model::Entity& diagram) const {
       const model::Entity& view = *model_.find(member);
       if (view.kind == model::Kind::View) box(view.name);
     }
-    std::stringstream moves(state->field("transitions"));
-    for (std::string move; std::getline(moves, move);) {
-      const auto arrow = move.find('>');
-      const auto second = move.find('>', arrow + 1);
-      if (arrow == std::string::npos || second == std::string::npos) continue;
-      // a jump says the behaviours that call its event (DS-250): the label stays as it is written
-      const std::string label = move.substr(second + 1);
-      const std::string event = label.substr(0, label.find_first_of(" ["));
+    for (const model::WrittenTransition& move : state->transitions) {
+      // a jump says the behaviours that call its event (DS-250): the label is the transition as it is written
+      const std::string label =
+          move.event + (move.guard.empty() ? "" : " [" + move.guard + "]") + (move.action.empty() ? "" : " / " + move.action);
+      const std::string& event = move.event;
       std::vector<std::string> callers;
       for (const machine::Call& call : calls)
         if (call.event == event && std::find(callers.begin(), callers.end(), call.behaviour) == callers.end())
           callers.push_back(call.behaviour);
       std::string in;
       for (const std::string& caller : callers) in += (in.empty() ? "" : ", ") + caller;
-      const std::string from = box(move.substr(0, arrow));
-      IrEdge edge = IrEdge::between(from, box(move.substr(arrow + 1, second - arrow - 1)), "association");
+      const std::string from = box(move.from);
+      IrEdge edge = IrEdge::between(from, box(move.to), "association");
       edge.label = label;
       if (!in.empty()) edge.title = event + " is called in " + in;  // one nobody calls says nothing
       edges.push_back(edge);
