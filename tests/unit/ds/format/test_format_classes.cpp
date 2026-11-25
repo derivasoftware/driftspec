@@ -158,7 +158,7 @@ TEST(TestReportText, EachFindingAtItsPlaceThenTheCounts) {
   ds::emit::JsonSink sink(false, true);  // lent as a door lends it, checked (DS-397)
   const ds::format::ReportText f;
   EXPECT_EQ(f.name(), "text");
-  EXPECT_EQ(f.write(aReport(), {}, sink), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relations · 1 findings\n");
+  EXPECT_EQ(f.write(aReport(), {}, sink), "a.ds:2:1  W-Y  odd\n3 entities · 0 expected · 1 relation · 1 finding\n");
 }
 
 TEST(TestReportJson, TheFindingsAndTheCountsAsJson) {
