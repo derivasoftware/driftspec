@@ -1,6 +1,7 @@
 #include "ds/check/Variables.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace ds {
 namespace check {
@@ -17,6 +18,30 @@ Variables::Variables(const model::Formula& formula) {
   }
   std::sort(names_.begin(), names_.end());
   names_.erase(std::unique(names_.begin(), names_.end()), names_.end());
+  // every body of the formula compiled once, now its names are known (DS-507)
+  const auto keep = [this](const std::vector<model::Literal>& body) { bodies_.emplace(&body, compile(body)); };
+  keep(formula.where);
+  for (const auto& c : formula.claims) keep(c);
+  for (const auto& c : formula.cases) keep(c);
+  for (const auto& column : formula.columns) keep(column.body);
+}
+
+Variables::Slots Variables::compile(const std::vector<model::Literal>& body) const {
+  Slots out;
+  out.reserve(body.size());
+  for (const auto& l : body) {
+    std::vector<int> slots;
+    slots.reserve(l.terms.size());
+    for (const auto& t : l.terms) slots.push_back(t.variable ? slotOf(t.text) : -1);
+    out.push_back(std::move(slots));
+  }
+  return out;
+}
+
+const Variables::Slots& Variables::slotsOf(const std::vector<model::Literal>& body) const {
+  const auto it = bodies_.find(&body);
+  if (it != bodies_.end()) return it->second;
+  return bodies_.emplace(&body, compile(body)).first->second;
 }
 
 void Variables::collect(const std::vector<model::Literal>& body) {

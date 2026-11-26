@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -31,10 +32,23 @@ class Variables {
   /// A binding as (name, text) pairs, its bound slots in the order of the names.
   std::vector<std::pair<std::string, std::string>> pairs(const std::vector<const std::string*>& bindings) const;
 
+  /// A body's terms as slots, read once (DS-507): for each literal, the slot of each of its terms, -1 for a term that is
+  /// no variable or a variable the formula does not write. The solver reads a term's slot here at every step, never by
+  /// its name.
+  using Slots = std::vector<std::vector<int>>;
+  /// The slots of a body: one of the formula's, compiled when the variables were made; any other the first time it
+  /// is asked.
+  const Slots& slotsOf(const std::vector<model::Literal>& body) const;
+
  private:
   void collect(const std::vector<model::Literal>& body);
+  /// The slots of a body's terms, each found by its name once.
+  Slots compile(const std::vector<model::Literal>& body) const;
 
   std::vector<std::string> names_;  ///< sorted, each once
+  /// The compiled bodies, by the body's address alone, never read through: the formula's bodies do not move while it
+  /// is evaluated
+  mutable std::unordered_map<const void*, Slots> bodies_;
 };
 
 }  // namespace check

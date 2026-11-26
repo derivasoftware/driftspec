@@ -258,11 +258,12 @@ package driftspec@ds {
       + solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>
       + static compares(form: model::LiteralForm) -> bool
       // one working binding, bound, continued and undone: nothing copied per answer (DS-401)
-      - solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
-      - ready(literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> bool
-      - answers<Next>(owner: std::string, literal: model::Literal, variables: Variables, work: std::vector<const std::string*>, next: Next) -> bool
-      - value(owner: std::string, term: model::Term, variables: Variables, bindings: std::vector<const std::string*>) -> std::string
-      - unify(owner: std::string, term: model::Term, variables: Variables, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
+      // each term read by the slot its body was compiled with, never by its name (DS-507)
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, slots: Variables::Slots, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
+      - static ready(literal: model::Literal, slots: std::vector<int>, bindings: std::vector<const std::string*>) -> bool
+      - answers<Next>(owner: std::string, literal: model::Literal, slots: std::vector<int>, work: std::vector<const std::string*>, next: Next) -> bool
+      - value(owner: std::string, term: model::Term, slot: int, bindings: std::vector<const std::string*>) -> std::string
+      - unify(owner: std::string, term: model::Term, slot: int, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
       - text(text: std::string) -> std::string
       - static number(text: std::string, out_number: double) -> bool
       - static literal(text: std::string) -> bool
@@ -272,13 +273,16 @@ package driftspec@ds {
     class Variables {                        // a formula's variables, each given a fixed slot once, in the order of their names (DS-381)
       @requirement REQ-00096-1
       - owns many names_: std::vector<std::string>
-      + Variables(formula: model::Formula)
+      - bodies_: std::unordered_map<const void*, Slots>   // each body's slots, by its address alone, never read through (DS-507)
+      + Variables(formula: model::Formula)    // its names sorted, then every body of the formula compiled once
       + size() -> std::size_t
       + slotOf(name: std::string) -> int
       + name(slot: std::size_t) -> std::string
       + before(a: std::vector<const std::string*>, b: std::vector<const std::string*>) -> bool   // as a map of name to text would sort them
       + pairs(bindings: std::vector<const std::string*>) -> std::vector<std::pair<std::string, std::string>>
+      + slotsOf(body: std::vector<model::Literal>) -> Slots   // for each literal, each term's slot: -1 for no variable (DS-507)
       - collect(body: std::vector<model::Literal>) -> void
+      - compile(body: std::vector<model::Literal>) -> Slots
     }
 
     // Read-only questions about the model: what a name means where it is written, what a type inherits
