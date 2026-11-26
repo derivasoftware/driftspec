@@ -256,20 +256,31 @@ package driftspec@ds {
       @requirement REQ-00192-1
       - refs facts_: Facts
       - owns texts_: std::unordered_set<std::string>   // what it binds from outside the facts, each once; an element never moves (DS-381)
+      - compiled_: std::unordered_map<const void*, CompiledBody>   // each body compiled once, by its address alone (DS-507)
       + Solver(facts: Facts)
       + solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>
       + static compares(form: model::LiteralForm) -> bool
       // one working binding, bound, continued and undone: nothing copied per answer (DS-401)
-      // each term read by the slot its body was compiled with, never by its name (DS-507)
-      - solveFrom(owner: std::string, body: std::vector<model::Literal>, slots: Variables::Slots, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
+      // each term read by the slot and the constant its body was compiled with, never by its name (DS-507)
+      - compiled(owner: std::string, body: std::vector<model::Literal>, variables: Variables) -> CompiledBody
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, compiled: CompiledBody, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
       - static ready(literal: model::Literal, slots: std::vector<int>, bindings: std::vector<const std::string*>) -> bool
-      - answers<Next>(owner: std::string, literal: model::Literal, slots: std::vector<int>, work: std::vector<const std::string*>, next: Next) -> bool
-      - value(owner: std::string, term: model::Term, slot: int, bindings: std::vector<const std::string*>) -> std::string
-      - unify(owner: std::string, term: model::Term, slot: int, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
+      - answers<Next>(owner: std::string, literal: model::Literal, compiled: CompiledBody, at: std::size_t, work: std::vector<const std::string*>, next: Next) -> bool
+      - value(term: model::Term, slot: int, constant: std::string, bindings: std::vector<const std::string*>) -> std::string
+      - unify(term: model::Term, slot: int, constant: std::string, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
       - text(text: std::string) -> std::string
       - static number(text: std::string, out_number: double) -> bool
       - static literal(text: std::string) -> bool
       - static compare(form: model::LiteralForm, a: std::string, z: std::string) -> bool
+    }
+
+    // a body of a formula as the solver reads it (DS-507): each term's slot, as Variables compiled it, and what its
+    // constants stand for and the definition each call applies, resolved in the facts once, the first time it is solved
+    dataclass CompiledBody {
+      @requirement REQ-00096-1
+      + slots: std::vector<std::vector<int>>              // per literal and term: its slot, as Variables compiled it
+      + constants: std::vector<std::vector<const std::string*>>   // per literal and term; null for a variable or a value
+      + calls: std::vector<const std::string*>                     // per literal; null for none
     }
 
     class Variables {                        // a formula's variables, each given a fixed slot once, in the order of their names (DS-381)
