@@ -48,6 +48,14 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .tools .persp button{border:0;border-radius:0;border-right:1px solid var(--line)} .tools .persp button:last-child{border-right:0}
 .tools .persp button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
 .tools #tours,.tools #reqs,.tools [data-fam]{display:none}
+/* the relation kinds drawn at rest (DS-504): one line each, its swatch drawn in its own stroke, its name */
+.rels{position:relative;display:inline-flex}
+.relmenu{position:absolute;right:0;top:40px;z-index:6;min-width:168px;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:0 10px 30px var(--shadow-pop);display:flex;flex-direction:column;gap:2px}
+.relmenu[hidden]{display:none}
+.relmenu label{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:7px;font:12.5px var(--mono);color:var(--fg);cursor:pointer;white-space:nowrap}
+.relmenu label:hover{background:var(--soft)}
+.relmenu input{margin:0;accent-color:var(--accent)}
+.relmenu svg{flex:none;overflow:visible}
 .crumbs{position:absolute;left:10px;top:10px;right:260px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-family:var(--mono);font-size:12px;pointer-events:none;z-index:2}
 .crumbs button{pointer-events:auto;font:inherit;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:3px 8px;cursor:pointer}
 .crumbs span{color:var(--muted);padding:0 2px}
@@ -182,7 +190,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button><button id="mode" title="Theme">◐</button></div>
+  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button><span class="rels"><button id="rels" aria-haspopup="true" aria-expanded="false" title="Relations">⤳</button><div class="relmenu" id="relmenu" role="menu" hidden></div></span><button id="mode" title="Theme">◐</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
@@ -375,6 +383,17 @@ const STATIC={owns:1,refs:1,shares:1,uses:1,consumes:1,inherits:1,realises:1};  
 const STYLE={depends:{dash:[],end:'open'},breaks:{dash:[6,4],end:'arrow',bad:true},consumes:{dash:[5,4],end:'open',accent:true},inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{dash:[],start:'diamond'},shares:{dash:[],start:'hollow'},
   refs:{dash:[],end:'open'},uses:{dash:[5,4],end:'open',muted:true},calls:{dash:[],end:'arrow',accent:true},'*':{dash:[],end:'arrow',muted:true}};
 let drawn=[];
+// ---- relations at rest, decided (tests/integration/viewer runs this part as it is: keep it free of the page) ----
+// the relation kinds a reader can draw at rest, in the order the list shows them; inheritance is on unless turned off,
+// and the choice is the reader's, kept by the viewer as the list of the kinds on (DS-504)
+const REL_KINDS=['inherits','realises','depends','owns','shares','refs','uses','calls','consumes','breaks'];
+function relationsOn(saved){const on={}; REL_KINDS.forEach(k=>{on[k]=k==='inherits'||k==='realises';});
+  let kept=null; try{kept=JSON.parse(saved||'null');}catch(e){} if(Array.isArray(kept)) REL_KINDS.forEach(k=>{on[k]=kept.includes(k);}); return on;}
+// the kind a relation is drawn as at rest: across two boxes in structure, what is not inheritance is the boxes' dependency
+function restKindOf(kind,perspective,inOneBox){return perspective==='structure'&&kind!=='inherits'&&kind!=='realises'&&kind!=='breaks'&&!inOneBox?'depends':kind;}
+// ---- relations at rest, decided: end ----
+const REL_ON=relationsOn((()=>{try{return localStorage.getItem('ds-viewer-relations');}catch(e){return null;}})());
+const restKind=(l,inBox)=>restKindOf(l.kind,PERSP,inBox(l));
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
   const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
@@ -382,17 +401,21 @@ function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: on
   const inBox=l=>boxOf(l.from)===boxOf(l.to);
   const shown=l=>PERSP==='structure'?((FAMILY[l.kind]&&FAM.inheritance&&inBox(l))||(OWNED[l.kind]&&inBox(l))||(STATIC[l.kind]&&!inBox(l)))
     :PERSP==='behaviour'?(l.kind==='calls'||l.kind==='consumes'):false;
-  const list=LINKS.filter(l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l))&&isoBoth(l)).concat(PERSP==='logic'?RLINKS.filter(isoBoth):[]);
+  // at rest only the kinds the reader turned on, inheritance by default, in every perspective; what the selection
+  // touches lights as it always did (DS-504)
+  const before=l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l));
+  const on=l=>REL_ON[restKind(l,inBox)];
+  const list=LINKS.filter(l=>((touched(l)&&before(l))||on(l))&&isoBoth(l)).concat(RLINKS.filter(l=>(PERSP==='logic'||REL_ON.breaks)&&on(l)&&isoBoth(l)));
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
     let A=repOf(keepRows&&inSel(l.from)?l.from:unitOf(l.from)), B=repOf(keepRows&&inSel(l.to)?l.to:unitOf(l.to)); if(!A||!B) return;
     // structure: what crosses two boxes is one dependency between the boxes, as a component diagram draws it
-    const cross=PERSP==='structure'&&!inBox(l)&&!(SEL&&touched(l));
+    const cross=PERSP==='structure'&&!inBox(l)&&!(SEL&&touched(l))&&!FAMILY[l.kind];  // inheritance stays inheritance (DS-504)
     const coarse=cross||(!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind)));
     if(coarse){const a=boxOf(l.from), b=boxOf(l.to); if(!a||!b||a===b) return; A=N[a]; B=N[b];}  // far away: one arrow per pair of boxes
     if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
-    const kind=cross?'depends':coarse&&!KEEP[l.kind]?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
+    const kind=cross?'depends':coarse&&!KEEP[l.kind]&&!FAMILY[l.kind]?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
     if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
   // each perspective has its stroke: structure is built at right angles, behaviour flows in curves
   const flow=PERSP==='behaviour';
@@ -784,6 +807,19 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
   const t0=performance.now(); lanim=now=>{let k=Math.min(1,(now-t0)/450); k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
     moves.forEach(([n,a,b])=>{if(!b) return; n.x=a[0]+(b[0]-a[0])*k; n.y=a[1]+(b[1]-a[1])*k; n.w=a[2]+(b[2]-a[2])*k; n.h=a[3]+(b[3]-a[3])*k;});
     if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; ROUTES=new Map(); if(SEL) select(SEL); return false;} return true;}; loop();};
+// the relation kinds drawn at rest: a list of them, each its swatch in its own stroke and end (DS-504)
+{const menu=document.getElementById('relmenu'), btn=document.getElementById('rels');
+  const tone=st=>st.bad?'var(--bad)':st.accent?'var(--accent)':st.muted?'var(--muted)':'var(--rule)';
+  const tip=(st,c)=>st.end==='tri'?`<path d="M40 5 L31 1 L31 9 Z" fill="var(--panel)" stroke="${c}"/>`:st.end==='arrow'?`<path d="M40 5 L33 1.5 L33 8.5 Z" fill="${c}"/>`:
+    st.end==='open'?`<path d="M33 1.5 L40 5 L33 8.5" fill="none" stroke="${c}"/>`:'';
+  const tail=(st,c)=>st.start==='diamond'?`<path d="M0 5 L5 2 L10 5 L5 8 Z" fill="${c}" stroke="${c}"/>`:st.start==='hollow'?`<path d="M0 5 L5 2 L10 5 L5 8 Z" fill="var(--panel)" stroke="${c}"/>`:'';
+  const swatch=k=>{const st=STYLE[k], c=tone(st); return `<svg width="40" height="10" viewBox="0 0 40 10" aria-hidden="true"><line x1="${st.start?10:0}" y1="5" x2="${st.end==='tri'?31:38}" y2="5" stroke="${c}" stroke-width="1.2"${st.dash.length?` stroke-dasharray="${st.dash.join(' ')}"`:''}/>${tail(st,c)}${tip(st,c)}</svg>`;};
+  menu.innerHTML=REL_KINDS.map(k=>`<label><input type="checkbox" data-rel="${k}"${REL_ON[k]?' checked':''}>${swatch(k)}<span>${k}</span></label>`).join('');
+  btn.onclick=e=>{e.stopPropagation(); menu.hidden=!menu.hidden; btn.setAttribute('aria-expanded',String(!menu.hidden));};
+  menu.addEventListener('click',e=>e.stopPropagation());
+  menu.addEventListener('change',e=>{const k=e.target.dataset.rel; if(!k) return; REL_ON[k]=e.target.checked; FAM.inheritance=REL_ON.inherits||REL_ON.realises;
+    try{localStorage.setItem('ds-viewer-relations',JSON.stringify(REL_KINDS.filter(x=>REL_ON[x])));}catch(err){} ROUTES=new Map(); loop();});
+  document.addEventListener('click',()=>{if(!menu.hidden){menu.hidden=true; btn.setAttribute('aria-expanded','false');}});}
 // light or dark, as the playground switches it; kept by the viewer (the colours follow at once: css() watches data-theme)
 document.getElementById('mode').onclick=()=>{const r=document.documentElement; r.dataset.theme=r.dataset.theme==='light'?'dark':'light';
   try{localStorage.setItem('ds-viewer-theme',r.dataset.theme);}catch(e){}};
