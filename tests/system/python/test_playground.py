@@ -66,3 +66,23 @@ class TestPlayground:
             assert set(lesson["title"]) == {"en", "es"}, folder.name
             for step in lesson["steps"]:
                 assert set(step["text"]) == {"en", "es"}, folder.name
+
+    def test_the_small_lessons_come_before_the_tour_of_a_whole_design(self) -> None:
+        # the page lists the small lessons first, then those that walk a whole workspace, the tour among them (DS-510)
+        spec = importlib.util.spec_from_file_location("build", ROOT / "playground" / "build.py")
+        build = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(build)
+        lessons = build.examples()
+        walks = [bool(e["lesson"].get("workspace")) for e in lessons]
+        assert lessons[0]["id"] == "01-a-class" and lessons[-1]["id"] == "00-a-tour"
+        assert walks == sorted(walks), "a lesson that walks a whole workspace comes after every small one"
+
+    def test_the_home_page_plays_the_live_clip_and_the_clip_can_be_made_again(self) -> None:
+        # the home page's live section shows a recorded clip (DS-510); what records it is kept beside the page
+        page = (ROOT / "playground" / "web" / "index.html").read_text()
+        for clip in ("live/live.webm", "live/live.mp4"):
+            assert f'src="{clip}"' in page, clip
+            assert (ROOT / "playground" / "web" / clip).stat().st_size > 100_000, clip
+        recorder = ROOT / "playground" / "live"
+        for name in ("make_clip.sh", "record.mjs", "rec.html", "shop.before.ds", "shop.after.ds", "README.md"):
+            assert (recorder / name).is_file(), name

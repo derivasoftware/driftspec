@@ -102,6 +102,37 @@ package driftspec@playground {
     }
   }
 
+  requirement REQ-00336-1 {
+    title: A first visit to the editor shall open the tour with its load shown, and the home page shall show the live viewer in a recorded clip
+    status: draft
+    text:
+      With no example named and none chosen before, the editor opens on the tour of DriftSpec's own design, and only
+      once the editor shows: never behind the home page. While a design that large is read, checked and drawn, the
+      page shows an animation; the coach's card that talks about the loaded design then says how long it took, what
+      that time bought (files read, rules and checks over how many entities, diagrams drawn) and what PlantUML takes
+      only to draw as many (measured). Only an example the reader chose is remembered. The small lessons are listed
+      first and the tour after them. The home page shows the live viewer beside an editor in a recorded clip, made
+      again by playground/live/make_clip.sh; the home page alone loads no large design.
+    rationale:
+      Owner, 2026-11-26 (DS-510): "consolida el playground como está ahora, consolida también lo del visor como está
+      en el home", after the spike seen in the browser.
+
+    verification VER-00386-1 {
+      status: draft
+      title: System tests confirm the small lessons come before the tour, and the home page plays the live clip whose recorder is kept beside the page
+      method: test
+      tests:
+        tests/system/python/test_playground.py::TestPlayground::test_the_small_lessons_come_before_the_tour_of_a_whole_design
+        tests/system/python/test_playground.py::TestPlayground::test_the_home_page_plays_the_live_clip_and_the_clip_can_be_made_again
+    }
+
+    verification VER-00387-1 {
+      status: draft
+      title: Inspection confirms a first visit to the editor opens the tour with its loading animation and the coach's timing line, and the home page plays the clip and loads no large design (playground/first_visit_check.cjs)
+      method: inspection
+    }
+  }
+
   requirement REQ-00156-1 {
     title: The page shall say, beside a box or a use pointed at, the interfaces that use goes through
     status: approved

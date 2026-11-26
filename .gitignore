@@ -33,3 +33,5 @@ AGENTS.md
 
 # the viewer's test dependencies, installed by npm ci from package-lock.json (DS-329)
 node_modules/
+# a node_modules link (a symlink is a file, so the directory pattern above misses it)
+/node_modules

@@ -304,6 +304,16 @@ package driftspec {
       tests/system/python/test_playground.py::TestPlayground::test_the_example_of_the_home_page_draws_and_has_the_one_error_it_shows
   }
 
+  verification SVER-00032-1 {
+    status: draft
+    @requirement SREQ-00019-1
+    title: System tests confirm the small lessons come before the tour of a whole design, and the home page plays the live clip whose recorder is kept beside the page
+    method: test
+    tests:
+      tests/system/python/test_playground.py::TestPlayground::test_the_small_lessons_come_before_the_tour_of_a_whole_design
+      tests/system/python/test_playground.py::TestPlayground::test_the_home_page_plays_the_live_clip_and_the_clip_can_be_made_again
+  }
+
   verification SVER-00022-1 {
     status: approved
     @requirement SREQ-00018-2

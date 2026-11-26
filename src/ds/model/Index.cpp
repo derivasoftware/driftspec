@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "ds/model/Identity.hpp"
+#include "ds/model/Metamodel.hpp"
 #include "ds/model/Model.hpp"
 
 namespace ds {
@@ -108,6 +109,9 @@ void Index::tree() const {
   if (!indexed.treeStale) return;
   indexed.parent.clear();
   indexed.children.clear();
+  // what was read from the tree before is dropped with it: the intervals and the chains are numbered again when asked
+  indexed.span.clear();
+  indexed.holders.clear();
   const auto above = [&indexed](const std::string& start, const std::string& id) {
     std::set<std::string> seen;
     for (auto it = indexed.parent.find(start); it != indexed.parent.end() && seen.insert(it->first).second;
@@ -146,6 +150,66 @@ std::vector<std::string> Index::children(const std::string& id) const {
   tree();
   const auto found = model_.indexed_.children.find(id);
   return found == model_.indexed_.children.end() ? std::vector<std::string>{} : found->second;
+}
+
+std::vector<std::string> Index::childrenOfKind(const std::string& id, const std::string& kind) const {
+  tree();
+  std::vector<std::string> out;
+  const auto found = model_.indexed_.children.find(id);
+  if (found == model_.indexed_.children.end()) return out;
+  for (const std::string& child : found->second) {
+    const Entity* e = model_.find(child);
+    if (e && model_.metamodel_->nameOf(e->kind) == kind) out.push_back(child);
+  }
+  return out;
+}
+
+// Every node of the tree numbered once, in pre-order from each top: entering a node, then its children in the order
+// the tree holds them, then leaving it. A node's descendants are those entered after it and left no later.
+void Index::spans() const {
+  tree();
+  Indexed& indexed = model_.indexed_;
+  if (!indexed.span.empty() || indexed.children.empty()) return;
+  std::size_t clock = 0;
+  std::vector<std::pair<const std::string*, std::size_t>> stack;  // a node and the next of its children to enter
+  for (const auto& top : indexed.children) {
+    if (indexed.parent.count(top.first)) continue;  // not a top: entered from what holds it
+    indexed.span[top.first].first = clock++;
+    stack.push_back({&top.first, 0});
+    while (!stack.empty()) {
+      auto& [node, next] = stack.back();
+      const auto held = indexed.children.find(*node);
+      if (held != indexed.children.end() && next < held->second.size()) {
+        const std::string& child = held->second[next++];
+        indexed.span[child].first = clock++;
+        stack.push_back({&child, 0});
+      } else {
+        indexed.span[*node].second = clock++;
+        stack.pop_back();
+      }
+    }
+  }
+}
+
+bool Index::descends(const std::string& id, const std::string& ancestor) const {
+  if (id == ancestor) return false;
+  spans();
+  const auto& span = model_.indexed_.span;
+  const auto inner = span.find(id);
+  const auto outer = span.find(ancestor);
+  if (inner == span.end() || outer == span.end()) return false;
+  return outer->second.first < inner->second.first && inner->second.second < outer->second.second;
+}
+
+const std::vector<std::string>& Index::holders(const std::string& id) const {
+  tree();
+  Indexed& indexed = model_.indexed_;
+  const auto kept = indexed.holders.find(id);
+  if (kept != indexed.holders.end()) return kept->second;
+  std::vector<std::string> chain;
+  for (auto up = indexed.parent.find(id); up != indexed.parent.end(); up = indexed.parent.find(up->second))
+    chain.push_back(up->second);  // the tree has no cycle: every walk up ends
+  return indexed.holders.emplace(id, std::move(chain)).first->second;
 }
 
 }  // namespace model

@@ -48,11 +48,9 @@ bool Solver::compare(Form form, const std::string& a, const std::string& z) {
   }
 }
 
-const std::string* Solver::value(const std::string& owner, const model::Term& term, const Variables& variables,
-                                 const Bindings& bindings) const {
+const std::string* Solver::value(const model::Term& term, int slot, const std::string* constant, const Bindings& bindings) const {
   if (term.value) return text(term.text);
   if (term.variable) {
-    const int slot = variables.slotOf(term.text);
     if (slot < 0 || !bindings[slot]) return nullptr;
     if (term.field.empty() && term.property.empty()) return bindings[slot];
     std::string field = term.property.empty() ? facts_.fieldOf(*bindings[slot], term.field)  // a field of what it is bound to (DS-268)
@@ -61,23 +59,30 @@ const std::string* Solver::value(const std::string& owner, const model::Term& te
     if (!number(field, ignored)) field = "\"" + field + "\"";  // a text compares with a string as written
     return text(field);
   }
-  const std::string* constant = facts_.constantOf(owner, term.text);
-  return constant ? constant : text("");
+  return constant;  // what the constant stands for, resolved once when its body was compiled (DS-507)
 }
 
 // a literal can be answered once what it tests is bound: a negation or != needs every term, in and =
 // one side; a relation, a kind or a definition generates what it does not have
-bool Solver::ready(const model::Literal& literal, const Variables& variables, const Bindings& bindings) const {
-  const auto known = [&](const model::Term& t) {
-    if (!t.variable) return true;
-    const int slot = variables.slotOf(t.text);
-    return slot >= 0 && bindings[slot] != nullptr;
+bool Solver::ready(const model::Literal& literal, const std::vector<int>& slots, const Bindings& bindings) {
+  const std::size_t n = literal.terms.size();
+  const auto known = [&](std::size_t i) {
+    if (!literal.terms[i].variable) return true;
+    return slots[i] >= 0 && bindings[slots[i]] != nullptr;
   };
-  if (literal.negated || compares(literal.form)) return std::all_of(literal.terms.begin(), literal.terms.end(), known);
+  if (literal.negated || compares(literal.form)) {
+    for (std::size_t i = 0; i < n; ++i)
+      if (!known(i)) return false;
+    return true;
+  }
   // name(x) reads what x is bound to: it waits for x, and never binds it (DS-403)
-  for (const auto& t : literal.terms)
-    if (!t.property.empty() && !known(t)) return false;
-  if (literal.form == Form::In || literal.form == Form::Equal) return std::any_of(literal.terms.begin(), literal.terms.end(), known);
+  for (std::size_t i = 0; i < n; ++i)
+    if (!literal.terms[i].property.empty() && !known(i)) return false;
+  if (literal.form == Form::In || literal.form == Form::Equal) {
+    for (std::size_t i = 0; i < n; ++i)
+      if (known(i)) return true;
+    return false;
+  }
   return true;
 }
 
@@ -87,23 +92,47 @@ std::vector<Bindings> Solver::solve(const std::string& owner, const std::vector<
   facts_.reading();  // a binding points into the facts: they do not grow while it is made
   std::vector<bool> done(body.size(), false);
   Bindings work = bindings;
-  solveFrom(owner, body, variables, done, work, first, out);
+  solveFrom(owner, body, compiled(owner, body, variables), done, work, first, out);  // compiled once (DS-507)
   facts_.done();
   return out;
 }
 
-bool Solver::solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables,
+const CompiledBody& Solver::compiled(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables) const {
+  const auto it = compiled_.find(&body);
+  if (it != compiled_.end()) return it->second;
+  // each constant looked up in the facts once: the facts record them all before the first solve (DS-507)
+  CompiledBody c;
+  c.slots = &variables.slotsOf(body);
+  for (const auto& l : body) {
+    std::vector<const std::string*> constants;
+    for (const auto& t : l.terms) {
+      const std::string* constant = nullptr;
+      if (!t.variable && !t.value) {
+        constant = facts_.constantOf(owner, t.text);
+        if (!constant) constant = text("");
+      }
+      constants.push_back(constant);
+    }
+    c.constants.push_back(std::move(constants));
+    c.calls.push_back(l.form == Form::Call ? facts_.constantOf(owner, "call:" + l.name) : nullptr);
+  }
+  return compiled_.emplace(&body, std::move(c)).first->second;
+}
+
+bool Solver::solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const CompiledBody& compiled,
                        std::vector<bool>& done, Bindings& bindings, bool first, std::vector<Bindings>& out_answers) const {
   if (first && !out_answers.empty()) return false;
+  const Variables::Slots& slots = *compiled.slots;
   // the most bound ready literal first: tests prune before generators multiply
   int best = -1;
   std::size_t bestKnown = 0;
   for (std::size_t i = 0; i < body.size(); ++i) {
-    if (done[i] || !ready(body[i], variables, bindings)) continue;
+    if (done[i] || !ready(body[i], slots[i], bindings)) continue;
     std::size_t known = 0;
-    for (const auto& t : body[i].terms) {
-      const int slot = t.variable ? variables.slotOf(t.text) : -1;
-      known += (!t.variable || (slot >= 0 && bindings[slot])) ? 1 : 0;
+    const auto& terms = body[i].terms;
+    for (std::size_t k = 0; k < terms.size(); ++k) {
+      const int slot = slots[i][k];
+      known += (!terms[k].variable || (slot >= 0 && bindings[slot])) ? 1 : 0;
     }
     if (body[i].negated) known += body[i].terms.size() + 1;
     if (best < 0 || known > bestKnown) {
@@ -120,27 +149,31 @@ bool Solver::solveFrom(const std::string& owner, const std::vector<model::Litera
   bool go = true;
   if (l.negated) {
     bool any = false;
-    answers(owner, l, variables, bindings, [&any]() {
+    answers(owner, l, compiled, static_cast<std::size_t>(best), bindings, [&any]() {
       any = true;
       return false;  // one answer is enough to know it is not empty
     });
-    if (!any) go = solveFrom(owner, body, variables, done, bindings, first, out_answers);
+    if (!any) go = solveFrom(owner, body, compiled, done, bindings, first, out_answers);
   } else {
-    go = answers(owner, l, variables, bindings, [&]() { return solveFrom(owner, body, variables, done, bindings, first, out_answers); });
+    go = answers(owner, l, compiled, static_cast<std::size_t>(best), bindings,
+                 [&]() { return solveFrom(owner, body, compiled, done, bindings, first, out_answers); });
   }
   done[best] = false;
   return go;
 }
 
-bool Solver::unify(const std::string& owner, const model::Term& term, const Variables& variables, const std::string* entity,
+bool Solver::unify(const model::Term& term, int slot, const std::string* constant, const std::string* entity,
                    Bindings& out_bindings) const {
-  if (const std::string* have = value(owner, term, variables, out_bindings)) return have == entity || *have == *entity;
-  out_bindings[variables.slotOf(term.text)] = entity;
+  if (const std::string* have = value(term, slot, constant, out_bindings)) return have == entity || *have == *entity;
+  out_bindings[slot] = entity;
   return true;
 }
 
 template <class Next>
-bool Solver::answers(const std::string& owner, const model::Literal& l, const Variables& variables, Bindings& bindings, Next&& next) const {
+bool Solver::answers(const std::string& owner, const model::Literal& l, const CompiledBody& compiled, std::size_t at, Bindings& bindings,
+                     Next&& next) const {
+  const std::vector<int>& slots = (*compiled.slots)[at];
+  const std::vector<const std::string*>& constants = compiled.constants[at];
   // bind the terms to these texts in place, continue, and undo what was bound: the slots it filled, no more (DS-401)
   int touched[4];
   const auto offer = [&](std::initializer_list<std::pair<std::size_t, const std::string*>> values) {
@@ -148,9 +181,9 @@ bool Solver::answers(const std::string& owner, const model::Literal& l, const Va
     bool fits = true;
     for (const auto& v : values) {
       const model::Term& t = l.terms[v.first];
-      const int slot = t.variable && t.field.empty() && t.property.empty() ? variables.slotOf(t.text) : -1;
+      const int slot = t.variable && t.field.empty() && t.property.empty() ? slots[v.first] : -1;
       const bool open = slot >= 0 && !bindings[slot];
-      if (!unify(owner, t, variables, v.second, bindings)) {
+      if (!unify(t, slots[v.first], constants[v.first], v.second, bindings)) {
         fits = false;
         break;
       }
@@ -161,8 +194,8 @@ bool Solver::answers(const std::string& owner, const model::Literal& l, const Va
     return go;
   };
   const std::string* empty = text("");
-  const std::string* a = l.terms.empty() ? nullptr : value(owner, l.terms[0], variables, bindings);
-  const std::string* z = l.terms.size() > 1 ? value(owner, l.terms[1], variables, bindings) : nullptr;
+  const std::string* a = l.terms.empty() ? nullptr : value(l.terms[0], slots[0], constants[0], bindings);
+  const std::string* z = l.terms.size() > 1 ? value(l.terms[1], slots[1], constants[1], bindings) : nullptr;
   const bool hasA = a != nullptr;
   const bool hasZ = z != nullptr;
   switch (l.form) {
@@ -257,7 +290,7 @@ bool Solver::answers(const std::string& owner, const model::Literal& l, const Va
       break;
     }
     case Form::Call: {
-      const std::string* definition = facts_.constantOf(owner, "call:" + l.name);
+      const std::string* definition = compiled.calls[at];  // resolved once (DS-507)
       const std::set<std::vector<std::string>>* ext = facts_.derived(definition ? *definition : std::string());
       if (!ext) break;
       // what the bindings already fix is tested before anything is copied, and a fixed first argument visits only
@@ -265,7 +298,7 @@ bool Solver::answers(const std::string& owner, const model::Literal& l, const Va
       // them (DS-338)
       std::vector<std::pair<std::size_t, const std::string*>> fixed;
       for (std::size_t i = 0; i < l.terms.size(); ++i)
-        if (const std::string* v = value(owner, l.terms[i], variables, bindings)) fixed.push_back({i, v});
+        if (const std::string* v = value(l.terms[i], slots[i], constants[i], bindings)) fixed.push_back({i, v});
       const bool byFirst = !fixed.empty() && fixed.front().first == 0;
       auto tuple = byFirst ? ext->lower_bound({*fixed.front().second}) : ext->begin();
       for (; tuple != ext->end(); ++tuple) {
@@ -277,9 +310,9 @@ bool Solver::answers(const std::string& owner, const model::Literal& l, const Va
         std::vector<int> set;
         for (std::size_t i = 0; i < tuple->size() && fits; ++i) {
           const model::Term& t = l.terms[i];
-          const int slot = t.variable && t.field.empty() && t.property.empty() ? variables.slotOf(t.text) : -1;
+          const int slot = t.variable && t.field.empty() && t.property.empty() ? slots[i] : -1;
           const bool open = slot >= 0 && !bindings[slot];
-          fits = unify(owner, t, variables, &(*tuple)[i], bindings);
+          fits = unify(t, slots[i], constants[i], &(*tuple)[i], bindings);
           if (fits && open && bindings[slot]) set.push_back(slot);
         }
         const bool go = fits ? next() : true;

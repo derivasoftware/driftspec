@@ -12,7 +12,8 @@ namespace check {
 std::string Resolver::resolve(const std::string& name, const std::string& scope) const {
   // a bare name is looked for from the innermost scope outward first: a class Cart beside its user wins over
   // a root package named Cart (DS-224); a qualified name, an artefact or a root package is found as written
-  if (!model::Identity(name).isQualified() && !model::ArtefactName::matches(name)) {
+  const bool walkedFirst = !model::Identity(name).isQualified() && !model::ArtefactName::matches(name);
+  if (walkedFirst) {
     for (std::string s = scope; !s.empty(); s = model::Scope(s).outer().text()) {
       const std::string candidate = model::Scope(s).qualify(name).text();
       if (candidate != name && model_.find(candidate)) return candidate;
@@ -22,9 +23,13 @@ std::string Resolver::resolve(const std::string& name, const std::string& scope)
   const std::string bare = model::ArtefactName(name).withoutRevision().text();
   if (bare != name && model_.find(bare)) return bare;
   if (model::Identity(name).isAbsolute()) return "";  // absolute, and nobody declares it
-  for (std::string s = scope; !s.empty(); s = model::Scope(s).outer().text()) {
-    const std::string candidate = model::Scope(s).qualify(name).text();
-    if (model_.find(candidate)) return candidate;
+  // a bare name was walked already, every candidate but the name itself, which was tried just above: walked again it
+  // finds nothing, so only a qualified name or an artefact walks here (DS-506)
+  if (!walkedFirst) {
+    for (std::string s = scope; !s.empty(); s = model::Scope(s).outer().text()) {
+      const std::string candidate = model::Scope(s).qualify(name).text();
+      if (model_.find(candidate)) return candidate;
+    }
   }
   // a bare name that no scope on the way declares: the class of that name in the same package, as the code
   // imports it from a sibling module (`Plan` written in cli for plan::Plan). Two classes of the name: none,

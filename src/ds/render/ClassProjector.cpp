@@ -32,10 +32,15 @@ IrDocument ClassProjector::project(const model::Entity& entity) const {
   IrDocument out;
   std::set<std::string> placed;
 
+  const model::Index tree = model_.index();
   auto parentOf = [&](const model::Entity& e) -> std::string {
     std::string s = model::Scope(e.scope).box().text();  // a package scope (app@core@) names the package app@core
-    for (; !s.empty(); s = up(s)) {
+    // up the model's tree where it holds the box; by the text where it holds none, as for an interface written in a
+    // package, which the tree leaves without a holder (DS-506)
+    while (!s.empty()) {
       if (containers.count(s)) return s;
+      const std::string held = tree.parent(s);
+      s = held.empty() ? up(s) : held;
     }
     return "";
   };
@@ -200,7 +205,6 @@ IrDocument ClassProjector::project(const model::Entity& entity) const {
 }
 
 IrDocument ClassProjector::closeBoxes(IrDocument doc, const axis::Cut& cut) const {
-  auto outerOf = [](const std::string& id) { return model::Scope(model::Scope(id).outer().text()).box().text(); };  // the box outside
   // which boxes close and what stands for an id are the query's, as for what the diagram shows (DS-127)
   auto visible = [&](const std::string& id) { return cut.standsFor(id); };
 
@@ -209,16 +213,21 @@ IrDocument ClassProjector::closeBoxes(IrDocument doc, const axis::Cut& cut) cons
     const std::string id = n.id;
     if (visible(id) != id) continue;
     if (cut.closed(id)) {
-      // closed: a box that shows only what it offers, its public children
+      // closed: a box that shows only what it offers, its public children, as the model's tree holds them (DS-506)
       std::vector<const model::Entity*> children;
-      for (const auto& pair : model_.entities()) {
-        const model::Entity& e = pair.second;
-        if (outerOf(e.id) != id || e.expected) continue;
-        if (e.kind != model::Kind::Interface && e.kind != model::Kind::Module && e.kind != model::Kind::Package &&
-            e.kind != model::Kind::Class && e.kind != model::Kind::Enum && e.kind != model::Kind::Function) {
-          continue;
-        }
-        if (e.field("visibility") != "-") children.push_back(&e);
+      const model::Index index = model_.index();
+      std::set<std::string> taken;
+      const auto take = [&](const std::string& child) {
+        const model::Entity& e = *model_.find(child);
+        if (!e.expected && e.field("visibility") != "-" && taken.insert(child).second) children.push_back(&e);
+      };
+      for (const char* kind : {"interface", "module", "package", "class", "enum", "function"})
+        for (const std::string& child : index.childrenOfKind(id, kind)) take(child);
+      // an interface written in a package hangs from no box in the tree: it is found where it is declared, in the
+      // package's scope, as its identity says (DS-506)
+      for (const std::string& member : index.members(model::Scope::inside(model::Identity(id)).text())) {
+        const model::Entity* e = model_.find(member);
+        if (e && e->kind == model::Kind::Interface && index.parent(member).empty()) take(member);
       }
       // grouped by what they are, in one order for every box, and each group by name: a closed box reads as a
       // class does, a compartment for each kind of thing it offers (DS-244)

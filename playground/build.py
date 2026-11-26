@@ -34,9 +34,12 @@ def lesson_files(folder: pathlib.Path, lesson: dict) -> dict[str, str]:
 
 
 def examples() -> list[dict]:
-    """The lessons the page offers, in their order."""
+    """The lessons the page offers, in their order: the small ones first, then those that walk a whole workspace,
+    the tour among them (DS-510)."""
     out = []
-    for folder in sorted(p for p in (HERE / "lessons").iterdir() if (p / "lesson.json").exists()):
+    folders = sorted(p for p in (HERE / "lessons").iterdir() if (p / "lesson.json").exists())
+    walks = lambda folder: bool(json.loads((folder / "lesson.json").read_text()).get("workspace"))
+    for folder in sorted(folders, key=lambda folder: (walks(folder), folder.name)):
         lesson = json.loads((folder / "lesson.json").read_text())
         out.append({"name": lesson["title"]["en"], "id": folder.name, "files": lesson_files(folder, lesson), "lesson": lesson})
     return out
