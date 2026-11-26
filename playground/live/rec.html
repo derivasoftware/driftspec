@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- the live clip's stage (DS-510): the file being edited, the live viewer of 127.0.0.1 at the port it is given, the agent's calls; driven by record.mjs --><style>
+:root{--bg:#111214;--panel:#18191c;--line:#2a2c31;--fg:#e8e6e3;--muted:#8d8d94;--acc:#b49cf0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Figtree,system-ui,sans-serif;color:var(--fg);width:1440px;height:810px;display:grid;grid-template-columns:500px 1fr;gap:14px;padding:18px}
+.p{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
+.bar{display:flex;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line);font:12.5px ui-monospace,'JetBrains Mono',monospace;color:var(--muted)}
+.bar b{color:var(--fg)}.saved{margin-left:auto;color:var(--acc);opacity:0;transition:opacity .25s}.saved.on{opacity:1}
+pre{margin:0;padding:16px 18px;font:14.5px/1.75 ui-monospace,'JetBrains Mono',monospace;white-space:pre;flex:1}
+.kw{color:#c792ea}.an{color:#f2b36b}.ty{color:#7fd1c7}.id{color:#9bb8ff}.cm{color:#6b6f78}.op{color:#9a9aa0}.ref{color:#e0e0e0}
+.new{background:rgba(180,156,240,.16);display:inline-block;min-width:100%}
+.caret{display:inline-block;width:8px;height:1.1em;vertical-align:text-bottom;background:var(--acc)}
+.dots i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line);margin-right:5px}
+iframe{border:0;width:100%;flex:1;background:var(--bg)}
+.agent{position:absolute;left:36px;bottom:34px;width:464px;border:1px solid var(--line);border-radius:12px;background:#1d1e22;padding:10px 14px;font:13px/1.5 ui-monospace,'JetBrains Mono',monospace;color:var(--muted);opacity:0;transform:translateY(8px);transition:all .35s}
+.agent.on{opacity:1;transform:none}.agent b{color:var(--acc);font-weight:600}
+</style></head><body>
+<div class="p"><div class="bar"><b>shop.ds</b><span class="saved" id="saved">saved</span></div><pre id="code"></pre></div>
+<div class="p"><div class="bar"><span class="dots"><i></i><i></i><i></i></span>localhost:4747</div><iframe id="f"></iframe></div>
+<div class="agent" id="agent"></div>
+<script>
+// the live viewer at the port make_clip.sh gives (?live=4791 by default)
+document.getElementById("f").src=`http://127.0.0.1:${new URLSearchParams(location.search).get("live")||4791}/`;
+const esc=x=>x.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const KW=/\b(package|module|class|dataclass|interface|sequence|rule|requirement|for|never|in|uses|opt|return|self|refs|owns|many|local|operation|title|status|kind)\b/g;
+function hl(src){
+ const rx=/(\/\/.*$)|(@[a-z]+)|\b((?:S?REQ)-\d+-\d+)\b|\b([a-z_]+@[a-z_@]+(?:::[A-Za-z_]+)*|std::\w+|int|bool|string)\b|\b(package|module|class|dataclass|interface|sequence|rule|requirement|for|never|in|uses|opt|return|self|refs|owns|many|local|operation)\b|(->|[{}])/g;
+ const cls=[null,"cm","an","id","ty","kw","op"];
+ return src.split("\n").map(l=>{let out="",last=0,m; rx.lastIndex=0;
+  while((m=rx.exec(l))){out+=esc(l.slice(last,m.index)); const g=m.findIndex((x,k)=>k>0&&x!==undefined); out+=`<span class="${cls[g]}">${esc(m[0])}</span>`; last=rx.lastIndex;}
+  return out+esc(l.slice(last));}).join("\n");}
+const head=`package sales {
+  module desk {
+    class Desk {
+      @requirement REQ-00001-1
+      - refs counter: shop@warehouse@counter
+`, tail=`      + sell(item: std::string) -> int
+    }
+
+    sequence Desk::sell {
+      self -> counter.take(item) -> held
+      opt the warehouse does not hold it {
+        return 1
+      }
+      return 0
+    }
+
+    rule sales-knows-no-shelf {
+      for class c in shop@sales
+      never m in c, m uses x,
+        x in shop@warehouse@stock
+    }
+  }
+}`;
+const line="      - refs shelf: shop@warehouse@stock::Shelf";
+const code=document.getElementById("code");
+const draw=(t,c)=>{code.innerHTML=hl(head)+(t!==null?`<span class="new">${hl(t)}${c?'<span class="caret"></span>':''}</span>\n`:"")+hl(tail);};
+draw(null); window.phase="idle";
+window.go=async()=>{const s=ms=>new Promise(r=>setTimeout(r,ms));window.phase="typing";
+ for(let i=0;i<=line.length;i++){draw(line.slice(0,i),true);await s(50);} await s(350); draw(line,false);
+ document.getElementById("saved").classList.add("on"); window.phase="saved";};
+// a click inside the live viewer, whatever frame holds it (recording only: the browser runs without web security)
+window.clickText=(re,not)=>{const docs=[];const walk=w=>{try{docs.push(w.document);for(const f of w.frames)walk(f);}catch(e){}};walk(window);
+ const all=[];for(const d of docs)for(const e of d.querySelectorAll("*")){const t=(e.textContent||"").trim(); if(new RegExp(re).test(t)&&!(not&&new RegExp(not).test(t))&&e.getClientRects().length) all.push([t.length,e]);}
+ all.sort((a,b)=>a[0]-b[0]); const el=all[0]&&(all[0][1].closest("button,a,li,summary,[role=button],[onclick]")||all[0][1]); if(!el) return "none";
+ el.dispatchEvent(new MouseEvent("click",{bubbles:true})); return el.tagName+" "+(el.className||"")+" :: "+(el.textContent||"").trim().slice(0,40);};
+window.say=(t)=>{const a=document.getElementById("agent"); a.innerHTML=t; a.classList.toggle("on",!!t);};
+</script></body></html>
