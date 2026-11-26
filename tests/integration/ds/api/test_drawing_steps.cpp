@@ -64,7 +64,9 @@ class TestDrawingSteps : public ::testing::Test {
     return ds::test::irJson(ds::render::IrExport(model, metamodel), "diagram:" + diagram);
   }
 
-  /// DriftSpec's design with a table of its rules, written as rows and columns: whether each holds.
+  /// DriftSpec's design with a table of its rules, written as rows and columns: whether each holds; and two views as
+  /// wide as a step reaches, the test's own since the design's diagrams are each one question (DS-505): every class
+  /// of check, whose stereotypes derivation gives, and every ds module closed, whose arrows behaviour typing gives.
   static ds::api::Files designWithTable() {
     ds::api::Files files = filesOf("design");
     files["tables.ds"] =
@@ -73,6 +75,16 @@ class TestDrawingSteps : public ::testing::Test {
         "  for rule r in driftspec@ds\n"
         "  column rule: r.title\n"
         "  column model: r.holds\n"
+        "}\n"
+        "diagram T_DrawnClasses {\n"
+        "  kind: class\n"
+        "  include: driftspec@ds@check::*\n"
+        "  show: ownership\n"
+        "}\n"
+        "diagram T_DrawnModules {\n"
+        "  kind: class\n"
+        "  include: driftspec@ds@*\n"
+        "  open: driftspec@ds\n"
         "}\n";
     return files;
   }
@@ -81,7 +93,8 @@ class TestDrawingSteps : public ::testing::Test {
 TEST_F(TestDrawingSteps, EveryKindOfDiagramOfTheDesignIsDrawnAsAfterTheWholeCheck) {
   // classes (with relations and derived stereotypes), the HLD (with what behaviours call), an interface, a requirement
   // tree, a sequence, and a table written as rows and columns, whose cells are the rules' answers
-  expectDrawnAlike(designWithTable(), {"CL_CheckNamespace", "HLD_Ds", "IF_Cli", "REQ_Language", "SEQ_Render", "T_DrawnRules"});
+  expectDrawnAlike(designWithTable(), {"how-a-rule-is-checked", "engine-modules", "the-command-line", "REQ_Language",
+                                       "how-a-diagram-is-drawn", "T_DrawnRules"});
 }
 
 TEST_F(TestDrawingSteps, AStateMachineAndItsTableAreDrawnAsAfterTheWholeCheck) {
@@ -106,8 +119,8 @@ TEST_F(TestDrawingSteps, AStepADrawingReadsChangesItWhenItIsLeftOut) {
   const Selection every = Selection::every();
   EXPECT_EQ(irWith(files, "T_DrawnRules", drawing.with(Step::Rules)), irWith(files, "T_DrawnRules", every));
   EXPECT_NE(irWith(files, "T_DrawnRules", drawing), irWith(files, "T_DrawnRules", every));
-  EXPECT_NE(irWith(files, "CL_CheckNamespace", Selection::of({Step::Linker, Step::Behaviour})), irWith(files, "CL_CheckNamespace", every));
-  EXPECT_NE(irWith(files, "HLD_Ds", Selection::of({Step::Linker, Step::Derivation})), irWith(files, "HLD_Ds", every));
+  EXPECT_NE(irWith(files, "T_DrawnClasses", Selection::of({Step::Linker, Step::Behaviour})), irWith(files, "T_DrawnClasses", every));
+  EXPECT_NE(irWith(files, "T_DrawnModules", Selection::of({Step::Linker, Step::Derivation})), irWith(files, "T_DrawnModules", every));
 }
 
 }  // namespace

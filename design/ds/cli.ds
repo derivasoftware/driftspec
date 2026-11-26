@@ -252,38 +252,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram IF_Cli {
-  kind: interface
-  include: driftspec@ds@cli
-}
-
-diagram SEQ_Check {
-  kind: sequence
-  include: driftspec@ds@cli::check
-  depth: *
-}
-
-diagram SEQ_CheckSyntaxError {
-  kind: sequence
-  include: driftspec@ds@cli::check / errors
-  depth: 2
-}
-
-diagram SEQ_Render {
-  kind: sequence
-  include: driftspec@ds@cli::render
-  depth: 2
-}
-
-diagram SEQ_Query {
-  kind: sequence
-  include: driftspec@ds@cli::query
-  depth: 2
-}
-
-diagram HLD_Ds {                     // every box closed: who depends on whom, derived
-  kind: class
-  include: driftspec@ds@*
-  open: driftspec@ds
-}

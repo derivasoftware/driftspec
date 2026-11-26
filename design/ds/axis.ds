@@ -110,8 +110,3 @@ package driftspec@ds {
 
   }
 }
-
-diagram CL_AxisNamespace {
-  kind: class
-  include: driftspec@ds@axis::*
-}

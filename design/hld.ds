@@ -52,18 +52,3 @@ package driftspec {
     // no code argos reads: its design is this box and SVER-00008-1 over its queries
   }
 }
-
-diagram CL_Python {                             // the Python face: the library, the extension, the server, and the engine it links
-  kind: class
-  include: driftspec@driftspec@*
-  include: driftspec@driftspec@python
-  include: driftspec@driftspec@editor
-  include: driftspec@ds@engine
-  include: driftspec@ds@api::Api
-}
-
-diagram CL_Ds {                             // the rollup of the ds box: every class of every namespace, names only
-  kind: class
-  include: driftspec@ds@*
-  hide: fields, methods
-}

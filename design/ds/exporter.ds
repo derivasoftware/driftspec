@@ -161,8 +161,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_ExporterNamespace {
-  kind: class
-  include: driftspec@ds@exporter::*
-}

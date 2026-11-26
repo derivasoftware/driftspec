@@ -635,10 +635,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_BindNamespace {
-  kind: class
-  include: driftspec@ds@bind::*
-  show: ownership
-  hide: methods
-}

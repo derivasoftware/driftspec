@@ -1261,30 +1261,3 @@ package driftspec@ds {
 
   }
 }
-
-diagram SEQ_CheckerRun {
-  kind: sequence
-  include: driftspec@ds@check::Checker::run
-}
-
-diagram SEQ_Load {                         // a load as the command line opens a workspace (DS-409), two levels down: parse, then the Api's steps (DS-383)
-  kind: sequence
-  include: driftspec@ds@api::Workspace::reload
-  depth: 2
-}
-
-diagram CL_CheckNamespace {
-  kind: class
-  include: driftspec@ds@check::*
-  show: ownership
-}
-
-diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage
-}
-
-diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
-}
