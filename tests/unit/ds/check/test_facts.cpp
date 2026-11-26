@@ -108,4 +108,35 @@ TEST_F(TestFacts, WhileASolveReadsTheFactsRefuseToGrow) {
   EXPECT_TRUE(facts.derive("p@m::d", {"p@m::A"}));
 }
 
+TEST_F(TestFacts, AScopedRangeReadsWhatItsScopeHoldsInTheOrderAndStorageOfItsKind) {
+  declare(Kind::Module, "p@n", "p");
+  declare(Kind::Class, "p@n::C", "p@n");
+  ds::check::Facts facts(model, metamodel);
+  facts.index();
+  const std::vector<std::string>& all = *facts.ofKind("class");
+  ASSERT_EQ(all, (std::vector<std::string>{"p@m::A", "p@m::B", "p@n::C"}));
+  const auto& inM = facts.ofKindIn("class", "p@m");
+  ASSERT_EQ(inM.size(), 2u);
+  EXPECT_EQ(inM[0], &all[0]);  // the very strings ofKind keeps: a binding points where it did (DS-503)
+  EXPECT_EQ(inM[1], &all[1]);
+  ASSERT_EQ(facts.ofKindIn("class", "p").size(), 3u);  // a package holds its modules' classes
+  EXPECT_EQ(&facts.ofKindIn("class", "p@m"), &inM);    // read once, kept
+  EXPECT_TRUE(facts.ofKindIn("interface", "p@m").empty());
+}
+
+TEST_F(TestFacts, AnArtefactIsInTheBoxItWasWrittenInForAScopedRange) {
+  ds::model::Entity req;  // no box holds it by contains: it is in the one it was written in (DS-268)
+  req.kind = Kind::Requirement;
+  req.id = "REQ-00001-1";
+  req.name = "REQ-00001-1";
+  req.scope = "p@m";
+  model.declare(req);
+  ds::check::Facts facts(model, metamodel);
+  facts.index();
+  const auto& inM = facts.ofKindIn("requirement", "p@m");
+  ASSERT_EQ(inM.size(), 1u);
+  EXPECT_EQ(*inM[0], "REQ-00001-1");
+  EXPECT_EQ(facts.ofKindIn("requirement", "p").size(), 1u);
+}
+
 }  // namespace

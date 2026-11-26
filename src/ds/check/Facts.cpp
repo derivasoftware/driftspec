@@ -8,6 +8,7 @@ namespace check {
 // The joins a rule asks for: its relations by their ends, and the declared entities of each kind.
 // What holds what is the model's own index (DS-171).
 void Facts::index() {
+  inScope_.clear();  // what a scope holds is read again with the facts
   for (const auto& r : model_.index().all()) {
     forward_[r.kind].insert({r.from, r.to});
     backward_[r.kind].insert({r.to, r.from});
@@ -78,6 +79,17 @@ bool Facts::flagged(const std::string& id, const std::string& flag) const {
 bool Facts::holds(const std::string& rule) const {
   const auto broken = model_.breaches().find(rule);
   return broken == model_.breaches().end() || broken->second.empty();
+}
+
+const std::vector<const std::string*>& Facts::ofKindIn(const std::string& kind, const std::string& scope) const {
+  const auto key = std::make_pair(kind, scope);
+  const auto found = inScope_.find(key);
+  if (found != inScope_.end()) return found->second;
+  std::vector<const std::string*> inside;
+  if (const std::vector<std::string>* all = ofKind(kind))
+    for (const std::string& entity : *all)
+      if (contains(scope, entity)) inside.push_back(&entity);
+  return inScope_.emplace(key, std::move(inside)).first->second;
 }
 
 bool Facts::contains(const std::string& outer, const std::string& inner) const {
