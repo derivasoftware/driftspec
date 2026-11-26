@@ -37,6 +37,11 @@ class Facts {
     const auto it = byKind_.find(kind);
     return it == byKind_.end() ? nullptr : &it->second;
   }
+  /// The declared entities of a kind inside a scope, by contains (DS-268 kept), in ofKind's order and as pointers into
+  /// ofKind's own storage, so a binding points where it did when it walked ofKind (DS-503). Built from contains on
+  /// the first ask for that kind and scope and kept while the facts last: a scoped range, nested or not, walks only
+  /// what its scope holds instead of every entity of its kind again for each binding of the ranges before it.
+  const std::vector<const std::string*>& ofKindIn(const std::string& kind, const std::string& scope) const;
   /// A relation's pairs from its source to its target; nullptr when the model has none of it.
   const std::multimap<std::string, std::string>* forward(const std::string& relation) const {
     const auto it = forward_.find(relation);
@@ -143,7 +148,9 @@ class Facts {
   std::map<std::string, std::set<std::vector<std::string>>> extension_;      ///< what each definition holds for
   std::unordered_map<std::string, std::string> parent_;                      ///< what holds each entity, copied from the index
   std::unordered_map<std::string, std::vector<std::string>> children_;       ///< what each entity holds, in the index's order
-  mutable std::size_t readers_ = 0;                                          ///< solves reading now
+  /// kind and scope, to the entities of that kind the scope holds (DS-503); a new entry never moves the others
+  mutable std::map<std::pair<std::string, std::string>, std::vector<const std::string*>> inScope_;
+  mutable std::size_t readers_ = 0;  ///< solves reading now
 };
 
 }  // namespace check

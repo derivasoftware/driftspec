@@ -90,14 +90,17 @@ void Evaluator::tabulate(const std::string& id, const model::Formula& formula) {
     const model::Range& r = formula.ranges[i];
     std::string scope;
     if (!r.scope.empty()) facts_.constant(id, r.scope, scope);
-    const std::vector<std::string>* entities = facts_.ofKind(r.kind);
-    if (!entities) return;
     const int slot = variables.slotOf(r.variable);
-    for (const auto& entity : *entities) {
-      if (!scope.empty() && !facts_.contains(scope, entity)) continue;
+    // a scoped range walks only what its scope holds, read once for the evaluation (DS-503)
+    const auto bind = [&](const std::string* entity) {
       Bindings next = b;
-      next[slot] = &entity;
+      next[slot] = entity;
       range(i + 1, next);
+    };
+    if (!scope.empty()) {
+      for (const std::string* entity : facts_.ofKindIn(r.kind, scope)) bind(entity);
+    } else if (const std::vector<std::string>* entities = facts_.ofKind(r.kind)) {
+      for (const auto& entity : *entities) bind(&entity);
     }
   };
   range(0, Bindings(variables.size(), nullptr));
@@ -203,15 +206,18 @@ void Evaluator::evaluateRule(const std::string& id, const model::Formula& formul
     const model::Range& r = formula.ranges[i];
     std::string scope;
     if (!r.scope.empty()) facts_.constant(id, r.scope, scope);
-    const std::vector<std::string>* entities = facts_.ofKind(r.kind);
-    if (!entities) return;
     const int slot = variables.slotOf(r.variable);
-    for (const auto& entity : *entities) {
-      if (!scope.empty() && !facts_.contains(scope, entity)) continue;
-      if (b[slot] && *b[slot] != entity) continue;
+    // a scoped range walks only what its scope holds, read once for the evaluation (DS-503)
+    const auto bind = [&](const std::string* entity) {
+      if (b[slot] && *b[slot] != *entity) return;
       Bindings next = b;
-      next[slot] = &entity;
+      next[slot] = entity;
       range(i + 1, next);
+    };
+    if (!scope.empty()) {
+      for (const std::string* entity : facts_.ofKindIn(r.kind, scope)) bind(entity);
+    } else if (const std::vector<std::string>* entities = facts_.ofKind(r.kind)) {
+      for (const auto& entity : *entities) bind(&entity);
     }
   };
   range(0, Bindings(variables.size(), nullptr));

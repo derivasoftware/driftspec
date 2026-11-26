@@ -4,24 +4,37 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>/*TITLE*/ · DriftSpec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 /* theme: viewer, written from the theme (DS-393): tools/theme.py --write */
 :root{
-  --bg:#f6f4ef;--panel:#fffdf8;--fg:#1d1c1a;--muted:#6b675f;--line:#d6d0c3;--soft:#ece8de;
-  --accent:#2f5d8a;--accent-soft:#d6e4f2;--req:#8a4b2f;--req-soft:#f3e3d8;
-  --priv:#8c8579;--pkg:#efe9dc;--mod:#f8f5ee;--ifc:#e3edf7;
-  --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#2f8a4a;--warn:#d9822b;--bad:#c0392b;
-  --r-owns:#c2185b;--r-agg:#00838f;--r-uses:#5c6bc0;--r-calls:#c62828;
-  --you:#2f62c9;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
-  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
-  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#eeeeee;--panel:#ffffff;--fg:#1d1d1d;--muted:#6a6a6a;--line:#dcdcdc;--soft:#f2f2f2;
+  --accent:#6B3FB8;--accent-soft:#e4dcf2;--req:#168a4d;--req-soft:#dcede4;
+  --priv:#9e9e9e;--pkg:#f6f6f6;--mod:#fbfbfb;--ifc:#ffffff;
+  --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#168a4d;--warn:#a47a00;--bad:#d1343f;
+  --r-owns:#9a6b00;--r-agg:#0f766e;--r-uses:#1d5fbf;--r-calls:#cf4a14;
+  --rule:#9a9a9a;--r-inherits:#6b46c1;--r-has:#9a6b00;--r-refers:#0f766e;--v-pub:#1e8e3e;--v-prot:#a67c00;--v-priv:#d1343f;--s-ty:#267f99;--s-pn:#001080;
+  --you:#6B3FB8;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{
-  --bg:#151618;--panel:#1d1f22;--fg:#e8e6e1;--muted:#9a968d;--line:#3a3d42;--soft:#26292d;
-  --accent:#7fb0e0;--accent-soft:#203a55;--req:#e3a27f;--req-soft:#3a271d;
-  --priv:#857f75;--pkg:#1a1c1f;--mod:#212427;--ifc:#1c2a37;
-  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#6cc68a;--warn:#f0a35a;--bad:#f07a6a;
-  --r-owns:#f06292;--r-agg:#4dd0e1;--r-uses:#9fa8da;--r-calls:#ef7f7f;}}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+  --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
+  --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
+  --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
+  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
+  --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
+  --rule:#5a5a5a;--r-inherits:#c9a8ff;--r-has:#ffd166;--r-refers:#6fd6c4;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --you:#B79CF0;}}
+:root:where([data-theme="dark"]){
+  --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
+  --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
+  --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
+  --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
+  --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
+  --rule:#5a5a5a;--r-inherits:#c9a8ff;--r-has:#ffd166;--r-refers:#6fd6c4;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --you:#B79CF0;}
 /* end theme: viewer */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.5 var(--sans)}
@@ -35,6 +48,14 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .tools .persp button{border:0;border-radius:0;border-right:1px solid var(--line)} .tools .persp button:last-child{border-right:0}
 .tools .persp button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
 .tools #tours,.tools #reqs,.tools [data-fam]{display:none}
+/* the relation kinds drawn at rest (DS-504): one line each, its swatch drawn in its own stroke, its name */
+.rels{position:relative;display:inline-flex}
+.relmenu{position:absolute;right:0;top:40px;z-index:6;min-width:168px;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:0 10px 30px var(--shadow-pop);display:flex;flex-direction:column;gap:2px}
+.relmenu[hidden]{display:none}
+.relmenu label{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:7px;font:12.5px var(--mono);color:var(--fg);cursor:pointer;white-space:nowrap}
+.relmenu label:hover{background:var(--soft)}
+.relmenu input{margin:0;accent-color:var(--accent)}
+.relmenu svg{flex:none;overflow:visible}
 .crumbs{position:absolute;left:10px;top:10px;right:260px;display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-family:var(--mono);font-size:12px;pointer-events:none;z-index:2}
 .crumbs button{pointer-events:auto;font:inherit;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:3px 8px;cursor:pointer}
 .crumbs span{color:var(--muted);padding:0 2px}
@@ -42,9 +63,6 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .rail button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:16px;cursor:pointer}
 .rail .lvl{font-size:10.5px;color:var(--muted);text-align:center;width:62px;background:var(--panel);border-radius:6px;padding:3px 0;border:1px solid var(--line)}
 .mini{position:absolute;left:10px;bottom:10px;width:170px;height:120px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;z-index:2}
-.legend{position:absolute;left:190px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;z-index:2;max-width:calc(100% - 260px)}
-.legend i{display:inline-block;width:5px;height:12px;vertical-align:-2px;margin-right:3px}
-.legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
 .card{position:absolute;right:62px;top:54px;width:min(330px,calc(100% - 80px));max-height:calc(100% - 120px);overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow);padding:10px 12px;font-size:13px;z-index:4}
 .card[hidden],.pop[hidden]{display:none}
 .pop{position:absolute;width:min(340px,calc(100% - 20px));max-height:60%;overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow-pop);padding:10px 12px;font-size:13px;z-index:5}
@@ -112,7 +130,7 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .tour .td{border-bottom:0!important;padding:8px 12px!important}
 .tour[hidden]{display:none}
 body.touring .stage{bottom:36%}
-body.touring .legend,body.touring .mini{opacity:0;pointer-events:none}  /* the step's caption needs the bottom of the canvas */
+body.touring .mini{opacity:0;pointer-events:none}  /* the step's caption needs the bottom of the canvas */
 body.carded.touring .tour{right:380px}
 /* the card of a box docks where the tour panel does: the canvas makes room instead of hiding under it */
 body.carded .stage{right:380px}
@@ -132,8 +150,8 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 .caption{position:absolute;left:50%;transform:translateX(-50%);bottom:60px;max-width:calc(100% - 100px);background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:5px 12px;font-family:var(--mono);font-size:12.5px;box-shadow:0 4px 18px var(--shadow-soft);pointer-events:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:3}
 .caption .z{display:block;font-family:var(--sans);font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .caption[hidden]{display:none}
-.rail,.mini,.legend{transition:opacity .25s}
-.stage.quiet .rail,.stage.quiet .mini,.stage.quiet .legend{opacity:0;pointer-events:none}
+.rail,.mini{transition:opacity .25s}
+.stage.quiet .rail,.stage.quiet .mini{opacity:0;pointer-events:none}
 @media (max-width:700px){
   .tour{height:46%;grid-template-columns:1fr;grid-template-rows:auto auto auto 1fr}
   .tour.listing{grid-template-rows:auto auto 1fr}.tour.listing .rf{grid-column:1;flex-wrap:wrap}
@@ -155,7 +173,6 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   .crumbs{top:92px;right:10px;font-size:10.5px}
   .rail{top:auto;bottom:70px;transform:none}.rail button{width:34px;height:34px;font-size:13px}.rail .lvl{display:none}
   .mini{width:96px;height:68px}
-  .legend{display:none}
   .card{left:8px;right:8px;width:auto;top:auto;bottom:10px;max-height:46%}
 }
 </style>
@@ -163,7 +180,8 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 /* ds render --css: the reader's stylesheet goes here, after the viewer's, so it wins.
    The viewer draws with these variables: --bg --panel --fg --muted --line --soft --accent --accent-soft
    --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum --k-interface --k-abstract
-   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --you --shadow --shadow-pop --shadow-soft --mono --sans */
+   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --rule --r-inherits --r-has --r-refers --v-pub --v-prot --v-priv --s-ty --s-pn --you --shadow
+   --shadow-pop --shadow-soft --mono --sans */
 /*CSS*/
 </style>
 </head>
@@ -172,11 +190,10 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
+  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button><span class="rels"><button id="rels" aria-haspopup="true" aria-expanded="false" title="Relations">⤳</button><div class="relmenu" id="relmenu" role="menu" hidden></div></span><button id="mode" title="Theme">◐</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
-  <div class="legend"><span><i style="background:var(--k-class)"></i>class</span><span><i style="background:var(--k-function)"></i>function</span><span><i style="background:var(--k-dataclass)"></i>dataclass</span><span><i style="background:var(--k-enum)"></i>enum</span><span><b style="background:var(--ok)"></b>linked to a requirement</span><span><b style="background:var(--warn)"></b>no requirement</span><span>dashed: private</span><span>◁ inherits · ◁┄ realises</span><span>on touching a box: <b style="background:var(--r-owns)"></b>composes <b style="background:var(--r-agg)"></b>aggregates <b style="background:var(--r-calls)"></b>calls <b style="background:var(--r-uses)"></b>uses</span></div>
   <div class="card" id="card" hidden></div>
 </div>
 <aside class="tour" id="tour" hidden aria-label="Tour">
@@ -252,6 +269,9 @@ const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.
 const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
 function linksOf(id){const n=N[id]; if(!n) return []; if(n.kind==='unit'||n.kind==='iface') return LINKS.filter(l=>unitOf(l.from)===id||unitOf(l.to)===id);
   const inside=x=>anc(x).includes(id); return LINKS.filter(l=>inside(l.from)!==inside(l.to));}
+// the relations of what is selected, worked out once for each selection, not for every relation on every frame (DS-508)
+let SEL_LINKS={id:undefined,set:new Set()};
+const selLinks=()=>{if(SEL_LINKS.id!==SEL) SEL_LINKS={id:SEL,set:new Set(SEL?linksOf(SEL):[])}; return SEL_LINKS.set;};
 let RELATED=new Set();
 const BASE_FAR={}; LINKS.forEach(l=>{if(FAMILY[l.kind]&&boxOf(l.from)!==boxOf(l.to)) (BASE_FAR[unitOf(l.from)]=BASE_FAR[unitOf(l.from)]||[]).push(short(l.to));});
 const hasReq=id=>{const n=N[id]; if(n._rq===undefined) n._rq=!!(n.reqs.length||(KIDS[id]||[]).some(k=>N[k].reqs.length)); return n._rq;};
@@ -263,8 +283,34 @@ let W=800,H=600,DPR=1,U=1; const cam={x:0,y:0,s:.3}; let anim=null, lanim=null;
 let K; function css(){const c=getComputedStyle(document.documentElement), g=v=>c.getPropertyValue(v).trim();
   K={bg:g('--bg'),panel:g('--panel'),fg:g('--fg'),muted:g('--muted'),line:g('--line'),soft:g('--soft'),accent:g('--accent'),as:g('--accent-soft'),req:g('--req'),rs:g('--req-soft'),priv:g('--priv'),pkg:g('--pkg'),mod:g('--mod'),ifc:g('--ifc'),you:g('--you'),shadow:g('--shadow'),ok:g('--ok'),warn:g('--warn'),bad:g('--bad'),mono:g('--mono'),sans:g('--sans'),
     kc:{class:g('--k-class'),function:g('--k-function'),dataclass:g('--k-dataclass'),enum:g('--k-enum'),interface:g('--k-interface'),abstract:g('--k-abstract')},
-    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')}};}
+    rc:{owns:g('--r-owns'),agg:g('--r-agg'),uses:g('--r-uses'),calls:g('--r-calls'),req:g('--req'),uc:g('--accent')},
+    rule:g('--rule')||g('--fg'),vpub:g('--v-pub')||g('--ok'),vprot:g('--v-prot')||g('--warn'),vpriv:g('--v-priv')||g('--priv'),ty:g('--s-ty')||g('--fg'),pn:g('--s-pn')||g('--fg')};}
 css(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{css(); loop();});
+// the playground's look (DS-495): the theme set on the page, and the fonts once they arrive, redraw the map in them
+new MutationObserver(()=>{css(); loop();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+// the playground's fonts, asked for once the page has loaded so the first draw never waits on the network; the system's
+// meanwhile, or for good offline, and the map drawn again when they arrive
+if(document.fonts) document.fonts.addEventListener('loadingdone',()=>loop());
+{const fonts=()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap';
+  l.media='print'; l.onload=()=>{l.media='all';}; document.head.appendChild(l);},0);  // a stylesheet in the head holds the first paint: not this one
+  // the viewer's code is inflated and run after the page has loaded, as a rule: then they are asked for at once
+  if(document.readyState==='complete') fonts(); else addEventListener('load',fonts);}
+const LETTER={class:'C',interface:'I',dataclass:'D',enum:'E',function:'F',abstract:'A',package:'P',module:'M'}, TIP=.75;
+// a kind's badge, as the playground draws one: a disc in its colour, its letter in the panel's
+function badge(x,y,r,col,letter){ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fillStyle=col; ctx.fill(); const t=r*1.36;
+  ctx.font=`700 ${t}px ${K.mono}`; ctx.fillStyle=K.panel; ctx.textAlign='center'; ctx.fillText(letter,x,y+t*.36); ctx.textAlign='left';}
+// a member written as the playground writes one: its visibility a dot, the name, then what it takes and gives in their
+// colours; the text is the row's label, at the size and place it had
+function member(label,x,y,px,vis,weight){const dot=vis==='-'?K.vpriv:vis==='#'?K.vprot:K.vpub, dr=Math.max(1.5,px*.24);
+  ctx.beginPath(); ctx.arc(x+dr,y-px*.34,dr,0,7); ctx.fillStyle=dot; ctx.fill(); x+=dr*2+px*.45;
+  const t=label.replace(/^[+\-#~]\s*/,''), k=t.search(/[(:]/), name=k<0?t:t.slice(0,k), rest=k<0?'':t.slice(k);
+  ctx.font=`${weight||''} ${px}px ${K.mono}`; const put=(t,c)=>{if(!t) return; ctx.fillStyle=c; ctx.fillText(t,x,y); x+=ctx.measureText(t).width;};
+  put(name,vis==='-'?K.priv:K.fg); const close=rest.indexOf(')');
+  if(rest.startsWith('(')&&close>=0){put('(',K.muted); rest.slice(1,close).split(/(,\s*|:\s*)/).forEach((q,i)=>put(q,/^[,:]/.test(q)?K.muted:(i%4===2?K.ty:K.pn))); put(')',K.muted);
+    const after=rest.slice(close+1), m=after.match(/^(\s*(?:→|->|:)\s*)(.*)$/); if(m){put(m[1],K.muted); put(m[2],K.ty);} else put(after,K.muted);}
+  else {const m=rest.match(/^(:\s*)(.*)$/); if(m){put(m[1],K.muted); put(m[2],K.ty);} else put(rest,K.ty);}
+  return x;}
 function resize(){const r=stage.getBoundingClientRect(); DPR=devicePixelRatio||1; U=r.width<560?.6:(r.width<800?.8:1); W=r.width/U; H=r.height/U;
   cv.width=r.width*DPR; cv.height=r.height*DPR; const m=mini.getBoundingClientRect(); mini.width=Math.max(1,m.width*DPR); mini.height=Math.max(1,m.height*DPR); loop();}
 new ResizeObserver(resize).observe(stage);
@@ -287,41 +333,46 @@ function draw(){
   ctx.setTransform(DPR*U,0,0,DPR*U,0,0); ctx.fillStyle=K.bg; ctx.fillRect(0,0,W,H);
   // packages and modules
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='package'&&n.kind!=='module'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
-    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.fg; ctx.lineWidth=sel||hl?2.6:pkg?1.6:1.3; ctx.stroke();
+    const pkg=n.kind==='package', sel=SEL===id||ACTIVE.has(id), hl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,pkg?8:6); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); ctx.strokeStyle=sel?K.accent:hl?K.rc[hl]:K.line; ctx.lineWidth=sel||hl?2.6:pkg?1.4:1.1; ctx.stroke();
     const px=Math.min(pkg?18:16,Math.max(11,(pkg?30:22)*cam.s)); const room=(pkg?90:46)*cam.s;
-    if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.fg,'700'); return;}
+    if(room<px+10||b.w<170){ctx.font=`700 ${px}px ${K.mono}`; const tw=ctx.measureText(n.label).width; rr(b.x+2,b.y-px-6,tw+10,px+6,4); ctx.fillStyle=pkg?K.pkg:K.mod; ctx.fill(); text(n.label,b.x+7,b.y-5,px,K.muted,'700'); return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    const st=`«${n.kind}» `; ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+10,b.y+px+8,px*.72,K.muted); text(n.label,b.x+10+off,b.y+px+8,px,K.fg,'700'); ctx.restore();});
+    const br=px*.42; badge(b.x+10+br,b.y+px*.64+8,br,K.muted,LETTER[n.kind]); text(n.label,b.x+10+2*br+px*.4,b.y+px+8,px,K.muted,'700'); ctx.restore();});
   // units with their rows
   UNITS.forEach(id=>{const n=N[id], b=scr(n); if(n.hidden||!onScreen(b)||b.w<3) return; const lab=visible(n); const dim=(SEL||REQSEL)&&SEL!==id&&!(SEL&&anc(id).includes(SEL))&&!RELATED.has(id);
     ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1); rr(b.x,b.y,b.w,b.h,Math.min(4,b.w/8)); ctx.fillStyle=K.panel; ctx.fill();
     const hl=HLBOX.get(id); if(hl){ctx.globalAlpha=.13; ctx.fillStyle=K.rc[hl]; ctx.fill(); ctx.globalAlpha=(lab?1:.55)*(dim?.35:1)*(GHOST.has(id)?.38:1);}
-    ctx.setLineDash(GHOST.has(id)?[3,3]:n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.fg); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1.2:.7); ctx.stroke(); ctx.setLineDash([]);
-    const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s)); ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,sw,Math.max(0,b.h-2));
-    const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){ctx.beginPath(); ctx.arc(b.x+b.w-dr-4,b.y+dr+4,dr,0,7); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
+    ctx.setLineDash(GHOST.has(id)?[3,3]:n.vis==='-'?[5,3]:[]); ctx.strokeStyle=(SEL===id||ACTIVE.has(id))?K.accent:hl?K.rc[hl]:(n.vis==='-'?K.priv:K.rule); ctx.lineWidth=SEL===id?3:ACTIVE.has(id)?2.2:hl?2.6:(lab?1:.6); ctx.stroke(); ctx.setLineDash([]);
+    const kc=K.kc[n.st]||K.muted, sw=Math.max(2.5,Math.min(6,5*cam.s));
+    const kid=(KIDS[id]||[]).find(r=>visible(N[r])), hh=Math.max(0,Math.min((kid?scr(N[kid]).y:b.y+b.h)-b.y,b.h));
+    if(hh>1&&hh<b.h){ctx.strokeStyle=kc; ctx.lineWidth=Math.max(1,Math.min(2.5,2*cam.s)); ctx.beginPath(); ctx.moveTo(b.x+.5,b.y+hh); ctx.lineTo(b.x+b.w-.5,b.y+hh); ctx.stroke();}
+    else if(!lab){ctx.fillStyle=kc; ctx.fillRect(b.x+1,b.y+1,Math.max(1,b.w-2),Math.max(1,Math.min(sw,b.h-2)));}
+    const dr=Math.max(2.5,Math.min(5.5,4.5*cam.s)); if(b.w>16&&b.h>12){rr(b.x+b.w-2*dr-4,b.y+4,2*dr,2*dr,dr*.35); ctx.fillStyle=hasReq(id)?K.ok:K.warn; ctx.fill();}
     if(!lab){ctx.globalAlpha=1; return;}
     ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); const st=(n.vis==='-'?'− ':'')+'«'+n.st+'» ';
-    ctx.font=`${px*.72}px ${K.mono}`; const off=ctx.measureText(st).width; text(st,b.x+sw+5,hy,px*.72,kc); text(n.label,b.x+sw+5+off,hy,px,K.fg,'700');
-    if(BASE_FAR[id]){ctx.font=`700 ${px}px ${K.mono}`; const lw=ctx.measureText(n.label).width; text(' ◁ '+BASE_FAR[id].join(', '),b.x+sw+5+off+lw,hy,px*.85,K.muted);}
+    const px=Math.min(14,Math.max(9,12*cam.s)), hy=b.y+Math.min(px+4,17*cam.s+3); const br=px*.5; badge(b.x+5+br,hy-px*.34,br,kc,LETTER[n.st]||'C');
+    const st=n.vis==='-'?'− ':''; ctx.font=`${px*.72}px ${K.mono}`; const off=2*br+9+ctx.measureText(st).width; text(st,b.x+2*br+9,hy,px*.72,K.priv);
+    ctx.font=`${n.st==='abstract'?'italic ':''}700 ${px}px ${K.mono}`; ctx.fillStyle=K.fg; ctx.fillText(n.label,b.x+off,hy);
+    if(BASE_FAR[id]){ctx.font=`700 ${px}px ${K.mono}`; const lw=ctx.measureText(n.label).width; text(' ◁ '+BASE_FAR[id].join(', '),b.x+off+lw,hy,px*.85,K.muted);}
     if(n.reqs.length&&cam.s>2) chip(n.reqs,b.x+b.w-2*dr-12,hy);
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(!visible(r)) return; const rb=scr(r); if(rb.y>H||rb.y+rb.h<0) return;
       const f=FORCED.has(rid), rpx=f?Math.max(9.5,Math.min(13,r.h*cam.s*.78)):Math.min(13,r.h*cam.s*.78);
       if(ACTIVE.has(rid)){ctx.fillStyle=K.as; ctx.fillRect(rb.x+1,rb.y,rb.w-2,Math.max(rb.h,rpx+4));}
-      const rh=HLROW.get(rid); if(rh&&!ACTIVE.has(rid)){const hh=Math.max(rb.h,rpx+4); ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+sw,rb.y,rb.w-sw-1,hh); ctx.globalAlpha=1; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+rb.w-5,rb.y+1,4,hh-2);}
-      text(r.label,rb.x+sw+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis==='-'?K.priv:K.fg,(ACTIVE.has(rid)||HLROW.has(rid))?'700':'');
-      if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); ctx.beginPath(); ctx.arc(rb.x+rb.w-rd-6,rb.y+rb.h/2,rd,0,7);
+      const rh=HLROW.get(rid); if(rh&&!ACTIVE.has(rid)){const hh=Math.max(rb.h,rpx+4); ctx.globalAlpha=.2; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+1,rb.y,rb.w-2,hh); ctx.globalAlpha=1; ctx.fillStyle=K.rc[rh]; ctx.fillRect(rb.x+rb.w-5,rb.y+1,4,hh-2);}
+      member(r.label,rb.x+6,rb.y+Math.max(rb.h,rpx+4)/2+rpx*.36,rpx,r.vis,(ACTIVE.has(rid)||HLROW.has(rid))?'700':'');
+      if(r.label.includes('(')&&rpx>=7){const rd=Math.max(2,Math.min(3.6,rpx*.28)); rr(rb.x+rb.w-2*rd-6,rb.y+rb.h/2-rd,2*rd,2*rd,rd*.35);
         if(r.reqs.length){ctx.fillStyle=K.ok; ctx.fill();} else {ctx.strokeStyle=K.line; ctx.lineWidth=1.2; ctx.stroke();}}
       if(r.reqs.length&&cam.s>2.6) chip(r.reqs,rb.x+rb.w-18,rb.y+rb.h/2+rpx*.36);});
     ctx.restore(); ctx.globalAlpha=1;});
   // interfaces, on their package's border
   ORDER.forEach(id=>{const n=N[id]; if(n.kind!=='iface'||n.hidden) return; const b=scr(n); if(!onScreen(b)) return;
-    const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:K.accent; ctx.lineWidth=SEL===id||ihl?3:1.6; ctx.stroke();
+    const ihl=HLBOX.get(id); rr(b.x,b.y,b.w,b.h,8); ctx.fillStyle=K.ifc; ctx.fill(); ctx.strokeStyle=ihl?K.rc[ihl]:SEL===id?K.accent:K.rule; ctx.lineWidth=SEL===id||ihl?3:1; ctx.stroke();
     const px=Math.min(15,Math.max(10,20*cam.s)); ctx.save(); ctx.beginPath(); ctx.rect(b.x,b.y,b.w,b.h); ctx.clip();
-    text('«interface»',b.x+10,b.y+px*.8+8,px*.72,K.muted); text(n.label,b.x+10,b.y+px*1.9+8,px,K.fg,'700');
+    const ihy=b.y+px*1.35+8, ibr=px*.5; badge(b.x+10+ibr,ihy-px*.34,ibr,K.kc.interface,'I'); ctx.font=`italic 700 ${px}px ${K.mono}`; ctx.fillStyle=K.fg; ctx.fillText(n.label,b.x+14+2*ibr,ihy);
+    const ifk=(KIDS[id]||[]).find(r=>!N[r].hidden); if(ifk){const ly=(scr(N[ifk]).y+ihy+px*.3)/2; ctx.strokeStyle=K.kc.interface; ctx.lineWidth=Math.max(1,Math.min(2.5,2*cam.s)); ctx.beginPath(); ctx.moveTo(b.x+.5,ly); ctx.lineTo(b.x+b.w-.5,ly); ctx.stroke();}
     (KIDS[id]||[]).forEach(rid=>{const r=N[rid]; if(r.hidden) return; const rb=scr(r); if(rb.h<6) return; const rpx=Math.max(9,Math.min(13,r.h*cam.s*.55));
-      const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.accent; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
-      const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.accent; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
+      const orh=HLROW.get(rid); rr(rb.x,rb.y,rb.w,rb.h,4); ctx.fillStyle=K.panel; ctx.fill(); if(orh){ctx.globalAlpha=.2; ctx.fillStyle=K.rc[orh]; ctx.fill(); ctx.globalAlpha=1;} ctx.strokeStyle=orh?K.rc[orh]:K.line; ctx.lineWidth=orh?2:1; ctx.stroke(); text(r.label,rb.x+8,rb.y+rb.h/2+rpx*.36,rpx,K.fg,orh?'700':'');
+      const ps=Math.max(5,rb.h*.45); ctx.fillStyle=K.kc.interface; ctx.fillRect(rb.x+rb.w+10*cam.s-ps/2,rb.y+rb.h/2-ps/2,ps,ps);});
     ctx.restore();});
   drawLinks();
   drawPills();
@@ -335,24 +386,39 @@ const STATIC={owns:1,refs:1,shares:1,uses:1,consumes:1,inherits:1,realises:1};  
 const STYLE={depends:{dash:[],end:'open'},breaks:{dash:[6,4],end:'arrow',bad:true},consumes:{dash:[5,4],end:'open',accent:true},inherits:{dash:[],end:'tri'},realises:{dash:[6,4],end:'tri'},owns:{dash:[],start:'diamond'},shares:{dash:[],start:'hollow'},
   refs:{dash:[],end:'open'},uses:{dash:[5,4],end:'open',muted:true},calls:{dash:[],end:'arrow',accent:true},'*':{dash:[],end:'arrow',muted:true}};
 let drawn=[];
+// ---- relations at rest, decided (tests/integration/viewer runs this part as it is: keep it free of the page) ----
+// the relation kinds a reader can draw at rest, in the order the list shows them; inheritance is on unless turned off,
+// and the choice is the reader's, kept by the viewer as the list of the kinds on (DS-504)
+const REL_KINDS=['inherits','realises','depends','owns','shares','refs','uses','calls','consumes','breaks'];
+function relationsOn(saved){const on={}; REL_KINDS.forEach(k=>{on[k]=k==='inherits'||k==='realises';});
+  let kept=null; try{kept=JSON.parse(saved||'null');}catch(e){} if(Array.isArray(kept)) REL_KINDS.forEach(k=>{on[k]=kept.includes(k);}); return on;}
+// the kind a relation is drawn as at rest: across two boxes in structure, what is not inheritance is the boxes' dependency
+function restKindOf(kind,perspective,inOneBox){return perspective==='structure'&&kind!=='inherits'&&kind!=='realises'&&kind!=='breaks'&&!inOneBox?'depends':kind;}
+// ---- relations at rest, decided: end ----
+const REL_ON=relationsOn((()=>{try{return localStorage.getItem('ds-viewer-relations');}catch(e){return null;}})());
+const restKind=(l,inBox)=>restKindOf(l.kind,PERSP,inBox(l));
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
-  const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
+  const mine=selLinks(), touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||mine.has(l));
   // each perspective draws its own relations; a touched box still shows its inheritance
   const inBox=l=>boxOf(l.from)===boxOf(l.to);
   const shown=l=>PERSP==='structure'?((FAMILY[l.kind]&&FAM.inheritance&&inBox(l))||(OWNED[l.kind]&&inBox(l))||(STATIC[l.kind]&&!inBox(l)))
     :PERSP==='behaviour'?(l.kind==='calls'||l.kind==='consumes'):false;
-  const list=LINKS.filter(l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l))&&isoBoth(l)).concat(PERSP==='logic'?RLINKS.filter(isoBoth):[]);
+  // at rest only the kinds the reader turned on, inheritance by default, in every perspective; what the selection
+  // touches lights as it always did (DS-504)
+  const before=l=>PERSP!=='logic'&&((FAMILY[l.kind]&&touched(l))||shown(l));
+  const on=l=>REL_ON[restKind(l,inBox)];
+  const list=LINKS.filter(l=>((touched(l)&&before(l))||on(l))&&isoBoth(l)).concat(RLINKS.filter(l=>(PERSP==='logic'||REL_ON.breaks)&&on(l)&&isoBoth(l)));
   const agg=new Map();
   const keepRows=SEL&&N[SEL].kind==='unit';  // a class selected keeps its own members; everything else is lifted to its class
   list.forEach(l=>{const inSel=x=>SEL&&unitOf(x)===SEL;
     let A=repOf(keepRows&&inSel(l.from)?l.from:unitOf(l.from)), B=repOf(keepRows&&inSel(l.to)?l.to:unitOf(l.to)); if(!A||!B) return;
     // structure: what crosses two boxes is one dependency between the boxes, as a component diagram draws it
-    const cross=PERSP==='structure'&&!inBox(l)&&!(SEL&&touched(l));
+    const cross=PERSP==='structure'&&!inBox(l)&&!(SEL&&touched(l))&&!FAMILY[l.kind];  // inheritance stays inheritance (DS-504)
     const coarse=cross||(!SEL&&(['module','package','iface'].includes(A.kind)||['module','package','iface'].includes(B.kind)));
     if(coarse){const a=boxOf(l.from), b=boxOf(l.to); if(!a||!b||a===b) return; A=N[a]; B=N[b];}  // far away: one arrow per pair of boxes
     if(A===B||anc(A.id).includes(B.id)||anc(B.id).includes(A.id)) return;
-    const kind=cross?'depends':coarse&&!KEEP[l.kind]?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
+    const kind=cross?'depends':coarse&&!KEEP[l.kind]&&!FAMILY[l.kind]?'*':l.kind, k=A.id+'>'+B.id+'>'+kind;
     if(!agg.has(k)) agg.set(k,{A,B,kind,n:0,links:[]}); const g=agg.get(k); g.n+=l.count; g.links.push(l);});
   // each perspective has its stroke: structure is built at right angles, behaviour flows in curves
   const flow=PERSP==='behaviour';
@@ -375,15 +441,15 @@ function drawPills(){pills=[]; if(!SEL&&!REQSEL) return; const cx=W/2, cy=H/2, m
     text(t,x+20,y+15,11.5,K.fg,'600'); pills.push({x,y,w,h:22,id});});}
 function span(n){const p=n.kind==='row'?N[n.parent]:n; return [p.x,p.x+p.w];}
 function anchorY(n){const b=scr(n); return n.kind==='row'?b.y+b.h/2:b.y+Math.min(b.h/2,16);}
-function arrow(x,y,a,col){const s=8; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
-function openArrow(x,y,a,col){const s=9; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
-function triangle(x,y,a,col){const s=12; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
-function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
+function arrow(x,y,a,col){const s=8*TIP; ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.4),y-s*Math.sin(a-.4)); ctx.lineTo(x-s*Math.cos(a+.4),y-s*Math.sin(a+.4)); ctx.closePath(); ctx.fill();}
+function openArrow(x,y,a,col){const s=9*TIP; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x,y); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.stroke();}
+function triangle(x,y,a,col){const s=12*TIP; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s*Math.cos(a-.45),y-s*Math.sin(a-.45)); ctx.lineTo(x-s*Math.cos(a+.45),y-s*Math.sin(a+.45)); ctx.closePath(); ctx.fillStyle=K.panel; ctx.fill(); ctx.strokeStyle=col; ctx.stroke();}
+function diamond(x,y,a,col,hollow){ctx.save(); ctx.translate(x,y); ctx.rotate(a); ctx.scale(TIP,TIP); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(7,-4.5); ctx.lineTo(14,0); ctx.lineTo(7,4.5); ctx.closePath(); ctx.fillStyle=hollow?K.panel:col; ctx.fill(); ctx.strokeStyle=col; ctx.stroke(); ctx.restore();}
 // a base above what inherits from it: a trunk in right angles, one triangle on the base
 function trunk(g,emph,st){const a=scr(g.A), b=scr(g.B); if(b.y+b.h>a.y-4) return null;
   const x1=a.x+a.w/2, y1=a.y, x2=b.x+b.w/2, y2=b.y+b.h, ym=y2+Math.min((y1-y2)/2,22*cam.s);
   if(Math.max(x1,x2)<-300||Math.min(x1,x2)>W+300||y1<-300||y2>H+300) return {pts:[]};
-  const col=st.muted?K.muted:K.fg; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  const col=st.muted?K.muted:K.rule; ctx.globalAlpha=emph?1:.75; ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   const tri=12; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x1,ym); ctx.lineTo(x2,ym); ctx.lineTo(x2,y2+tri); ctx.stroke(); ctx.setLineDash([]);
   triangle(x2,y2,-Math.PI/2,col); ctx.globalAlpha=1; return {pts:[[x1,y1],[x1,ym],[x2,ym],[x2,y2]]};}
 /* ---------- orthogonal routes: straight segments at right angles, around the boxes in the way ---------- */
@@ -406,20 +472,38 @@ function route(A,B){const key=A.id+'>'+B.id+'>'+[A.x,A.y,A.w,A.h,B.x,B.y,B.w,B.h
   for(let j=Y.length-1;j>0;j--) Y.splice(j,0,(Y[j-1]+Y[j])/2);
   const nx=X.length, ny=Y.length, inside=(x,y)=>obs.some(o=>x>o.x0+.01&&x<o.x1-.01&&y>o.y0+.01&&y<o.y1-.01);
   if(nx*ny>250000){ROUTES.set(key,null); return null;}
-  const free=new Uint8Array(nx*ny); for(let j=0;j<ny;j++) for(let i=0;i<nx;i++) free[j*nx+i]=inside(X[i],Y[j])?0:1;
+  // what is blocked, laid out once: each obstacle marks the grid points, and the steps between neighbours (by their
+  // middle), strictly inside it, as inside() would answer for each of them; the same grid, without asking every obstacle
+  // at every point (DS-495: this was the viewer's seconds-long freeze)
+  const MX=X.slice(1).map((x,i)=>(X[i]+x)/2), MY=Y.slice(1).map((y,j)=>(Y[j]+y)/2);
+  const span=(A,lo,hi)=>{let a=0,b=A.length; while(a<b){const c=(a+b)>>1; if(A[c]>lo) b=c; else a=c+1;} const from=a; a=from; b=A.length;
+    while(a<b){const c=(a+b)>>1; if(A[c]<hi) a=c+1; else b=c;} return [from,a];};  // the indices of A strictly between lo and hi
+  const free=new Uint8Array(nx*ny).fill(1), hstep=new Uint8Array(Math.max(0,nx-1)*ny).fill(1), vstep=new Uint8Array(nx*Math.max(0,ny-1)).fill(1);
+  for(const o of obs){const lx=o.x0+.01, hx=o.x1-.01, ly=o.y0+.01, hy=o.y1-.01; if(!(lx<hx&&ly<hy)) continue;
+    const [i0,i1]=span(X,lx,hx), [j0,j1]=span(Y,ly,hy), [m0,m1]=span(MX,lx,hx), [n0,n1]=span(MY,ly,hy);
+    for(let j=j0;j<j1;j++){for(let i=i0;i<i1;i++) free[j*nx+i]=0; for(let i=m0;i<m1;i++) hstep[j*(nx-1)+i]=0;}
+    for(let j=n0;j<n1;j++) for(let i=i0;i<i1;i++) vstep[j*nx+i]=0;}
+  const stepFree=(i,j,e)=>e<2?hstep[j*(nx-1)+(e===0?i:i-1)]:vstep[(e===2?j:j-1)*nx+i];
   const at=(x,y)=>[X.indexOf(x),Y.indexOf(y)];
   const starts=pa.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]);
   const goals=new Set(pb.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]).map(([i,j])=>j*nx+i));
   if(!starts.length||!goals.size){ROUTES.set(key,null); return null;}
   // A*: length plus a price for every bend; a segment between two grid lines is free when its middle is
   const bend=(B.w+A.w+B.h+A.h)/8, gx=pb.reduce((s,p)=>s+p[0],0)/4, gy=pb.reduce((s,p)=>s+p[1],0)/4;
-  const cost=new Map(), prev=new Map(), open=[]; const push=(s,c,f)=>{open.push([f,s,c]);};
+  const cost=new Map(), prev=new Map(), open=[];
+  // the open steps as they always were, a list from which the cheapest is taken (between equals, the one nearest the
+  // front) and the last put in its place; a tree over the list's places finds it without reading the whole list (DS-495)
+  let cap=1024, tree=new Int32Array(2*cap).fill(-1);
+  const better=(a,b)=>a<0||a>=open.length?(b>=open.length?-1:b):b<0||b>=open.length?a:(open[b][0]<open[a][0]||(open[b][0]===open[a][0]&&b<a))?b:a;
+  const set=k=>{let t=cap+k; tree[t]=k<open.length?k:-1; for(t>>=1;t>=1;t>>=1) tree[t]=better(tree[2*t],tree[2*t+1]);};
+  const push=(s,c,f)=>{open.push([f,s,c]); if(open.length>cap){cap*=2; tree=new Int32Array(2*cap).fill(-1);
+    for(let k=0;k<open.length;k++) tree[cap+k]=k; for(let t=cap-1;t>=1;t--) tree[t]=better(tree[2*t],tree[2*t+1]);} else set(open.length-1);};
   starts.forEach(([i,j])=>{for(let d=0;d<4;d++){const s=(j*nx+i)*4+d; cost.set(s,0); push(s,0,Math.abs(X[i]-gx)+Math.abs(Y[j]-gy));}});
   const D=[[1,0],[-1,0],[0,1],[0,-1]]; let end=-1, guard=0;
-  while(open.length&&guard++<400000){let bi=0; for(let k=1;k<open.length;k++) if(open[k][0]<open[bi][0]) bi=k; const [,s,c]=open[bi]; open[bi]=open[open.length-1]; open.pop();
+  while(open.length&&guard++<400000){const bi=tree[1]; const [,s,c]=open[bi]; open[bi]=open[open.length-1]; open.pop(); set(open.length); set(bi);
     if(c>cost.get(s)) continue; const cell=s>>2, d=s&3; if(goals.has(cell)){end=s; break;} const i=cell%nx, j=(cell/nx)|0;
     for(let e=0;e<4;e++){const ni=i+D[e][0], nj=j+D[e][1]; if(ni<0||nj<0||ni>=nx||nj>=ny||!free[nj*nx+ni]) continue;
-      if(inside((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)) continue;
+      if(!stepFree(i,j,e)) continue;
       const nc=c+(Math.abs(X[ni]-X[i])+Math.abs(Y[nj]-Y[j]))*toll((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)+(e===d?0:bend), ns=(nj*nx+ni)*4+e;
       if(nc<(cost.has(ns)?cost.get(ns):Infinity)){cost.set(ns,nc); prev.set(ns,s); push(ns,nc,nc+Math.abs(X[ni]-gx)+Math.abs(Y[nj]-gy));}}}
   if(end<0){ROUTES.set(key,null); return null;}
@@ -451,8 +535,8 @@ function poly(g,pts,emph,st){const P=pts.map(p=>[sx(p[0]),sy(p[1])]);
   if(g.lane){const gap=k=>{const l=g.lane[k]; return l?l.i*Math.max(2,Math.min(7,routeMargin*cam.s*1.7/Math.max(1,l.n))):0;};
     const dx=new Array(P.length).fill(0), dy=new Array(P.length).fill(0);
     g.lane.forEach((l,k)=>{if(!l) return; const o=gap(k); if(l.v){dx[k]=o; dx[k+1]=o;} else {dy[k]=o; dy[k+1]=o;}});
-    P.forEach((p,k)=>{p[0]+=dx[k]; p[1]+=dy[k];});} const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
-  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.3):.65); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.3; ctx.setLineDash(st.dash);
+    P.forEach((p,k)=>{p[0]+=dx[k]; p[1]+=dy[k];});} const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.rule;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.3):.65); ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   ctx.lineJoin='miter'; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]);
   for(let k=1;k<P.length;k++) ctx.lineTo(P[k][0],P[k][1]); ctx.stroke(); ctx.setLineDash([]);
   const L=P.length, endA=Math.atan2(P[L-1][1]-P[L-2][1],P[L-1][0]-P[L-2][0]), startA=Math.atan2(P[1][1]-P[0][1],P[1][0]-P[0][0]);
@@ -473,8 +557,8 @@ function edge(g,emph){const A=g.A,B=g.B,st=STYLE[g.kind]||STYLE['*'];
   if(b1<a2-4&&b2>a1+4){const o=Math.max(24,30*cam.s); x1=a2; x2=b2; c1=[x1+o,y1]; c2=[x2+o,y2];}
   else if(b1>=a2){x1=a2; x2=b1; const d=Math.max(30,(x2-x1)/2); c1=[x1+d,y1]; c2=[x2-d,y2];}
   else {x1=a1; x2=b2; const d=Math.max(30,(x1-x2)/2); c1=[x1-d,y1]; c2=[x2+d,y2];}
-  const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.fg;
-  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.8:1.2; ctx.setLineDash(st.dash);
+  const col=st.bad?K.bad:st.accent?K.accent:st.muted?K.muted:K.rule;
+  ctx.globalAlpha=emph?1:(g.kind==='*'?(cam.s<.6?.4:.25):.6); ctx.strokeStyle=col; ctx.lineWidth=emph?1.5:1; ctx.setLineDash(st.dash);
   ctx.beginPath(); ctx.moveTo(x1,y1); ctx.bezierCurveTo(c1[0],c1[1],c2[0],c2[1],x2,y2); ctx.stroke(); ctx.setLineDash([]);
   const endA=Math.atan2(y2-c2[1],x2-c2[0]), startA=Math.atan2(c1[1]-y1,c1[0]-x1);
   if(st.end==='tri') triangle(x2,y2,endA,col); else if(st.end==='open') openArrow(x2,y2,endA,col); else if(st.end==='arrow') arrow(x2,y2,endA,col);
@@ -726,6 +810,22 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
   const t0=performance.now(); lanim=now=>{let k=Math.min(1,(now-t0)/450); k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
     moves.forEach(([n,a,b])=>{if(!b) return; n.x=a[0]+(b[0]-a[0])*k; n.y=a[1]+(b[1]-a[1])*k; n.w=a[2]+(b[2]-a[2])*k; n.h=a[3]+(b[3]-a[3])*k;});
     if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; ROUTES=new Map(); if(SEL) select(SEL); return false;} return true;}; loop();};
+// the relation kinds drawn at rest: a list of them, each its swatch in its own stroke and end (DS-504)
+{const menu=document.getElementById('relmenu'), btn=document.getElementById('rels');
+  const tone=st=>st.bad?'var(--bad)':st.accent?'var(--accent)':st.muted?'var(--muted)':'var(--rule)';
+  const tip=(st,c)=>st.end==='tri'?`<path d="M40 5 L31 1 L31 9 Z" fill="var(--panel)" stroke="${c}"/>`:st.end==='arrow'?`<path d="M40 5 L33 1.5 L33 8.5 Z" fill="${c}"/>`:
+    st.end==='open'?`<path d="M33 1.5 L40 5 L33 8.5" fill="none" stroke="${c}"/>`:'';
+  const tail=(st,c)=>st.start==='diamond'?`<path d="M0 5 L5 2 L10 5 L5 8 Z" fill="${c}" stroke="${c}"/>`:st.start==='hollow'?`<path d="M0 5 L5 2 L10 5 L5 8 Z" fill="var(--panel)" stroke="${c}"/>`:'';
+  const swatch=k=>{const st=STYLE[k], c=tone(st); return `<svg width="40" height="10" viewBox="0 0 40 10" aria-hidden="true"><line x1="${st.start?10:0}" y1="5" x2="${st.end==='tri'?31:38}" y2="5" stroke="${c}" stroke-width="1.2"${st.dash.length?` stroke-dasharray="${st.dash.join(' ')}"`:''}/>${tail(st,c)}${tip(st,c)}</svg>`;};
+  menu.innerHTML=REL_KINDS.map(k=>`<label><input type="checkbox" data-rel="${k}"${REL_ON[k]?' checked':''}>${swatch(k)}<span>${k}</span></label>`).join('');
+  btn.onclick=e=>{e.stopPropagation(); menu.hidden=!menu.hidden; btn.setAttribute('aria-expanded',String(!menu.hidden));};
+  menu.addEventListener('click',e=>e.stopPropagation());
+  menu.addEventListener('change',e=>{const k=e.target.dataset.rel; if(!k) return; REL_ON[k]=e.target.checked; FAM.inheritance=REL_ON.inherits||REL_ON.realises;
+    try{localStorage.setItem('ds-viewer-relations',JSON.stringify(REL_KINDS.filter(x=>REL_ON[x])));}catch(err){} ROUTES=new Map(); loop();});
+  document.addEventListener('click',()=>{if(!menu.hidden){menu.hidden=true; btn.setAttribute('aria-expanded','false');}});}
+// light or dark, as the playground switches it; kept by the viewer (the colours follow at once: css() watches data-theme)
+document.getElementById('mode').onclick=()=>{const r=document.documentElement; r.dataset.theme=r.dataset.theme==='light'?'dark':'light';
+  try{localStorage.setItem('ds-viewer-theme',r.dataset.theme);}catch(e){}};
 // embedded in a page (the live session), the page goes fullscreen whole, its panels with it (DS-141)
 document.getElementById('fs').onclick=()=>{if(parent!==window){try{parent.postMessage({ds:'fullscreen'},'*'); return;}catch(e){}}if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
 

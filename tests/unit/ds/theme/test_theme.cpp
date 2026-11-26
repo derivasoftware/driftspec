@@ -81,4 +81,30 @@ TEST(TestDrawnAsThePlayground, EachDrawingTokenIsThePlaygroundsColour) {
   EXPECT_EQ(theme.token("container-fill").dark, "#1b1b1b");   // #202020 45% over #171717
 }
 
+TEST(TestViewedAsThePlayground, EachViewerTokenIsThePlaygroundsColour) {
+  const ds::theme::Theme theme;
+  const auto on = [&theme](const std::string& page, const std::string& name) {
+    for (const auto& t : theme.page(page))
+      if (t.name == name) return t;
+    throw std::logic_error(name);
+  };
+  for (const auto& [viewer, from] : std::vector<std::pair<std::string, std::string>>{{"bg", "bg"},
+                                                                                     {"panel", "panel"},
+                                                                                     {"fg", "fg"},
+                                                                                     {"line", "line"},
+                                                                                     {"rule", "rule"},
+                                                                                     {"accent", "brand"},
+                                                                                     {"k-class", "k-class"},
+                                                                                     {"k-interface", "k-interface"},
+                                                                                     {"v-pub", "v-pub"},
+                                                                                     {"v-priv", "v-priv"},
+                                                                                     {"s-ty", "s-ty"},
+                                                                                     {"ok", "c-req"}}) {
+    EXPECT_EQ(on("viewer", viewer).light, on("playground", from).light) << viewer;
+    EXPECT_EQ(on("viewer", viewer).dark, on("playground", from).dark) << viewer;
+  }
+  EXPECT_EQ(on("viewer", "pkg").light, "#f6f6f6");  // the panel 45% over the background, as a drawing's container
+  EXPECT_EQ(on("viewer", "pkg").dark, "#1b1b1b");
+}
+
 }  // namespace
