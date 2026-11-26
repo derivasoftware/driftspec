@@ -1593,9 +1593,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_ModelNamespace {
-  kind: class
-  include: driftspec@ds@model::*
-  show: ownership
-}

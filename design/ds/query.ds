@@ -564,9 +564,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_QueryNamespace {
-  kind: class
-  include: driftspec@ds@query::*
-  show: ownership
-}
