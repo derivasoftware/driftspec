@@ -117,7 +117,11 @@ Each figure was measured when its change landed, on the design as it was then.
 - `ds export` and every JSON document are written as they are made, faster and with less memory.
 - Rules scoped to a box are checked faster: a scoped range reads only what its box holds, once per check. `ds check` on
   DriftSpec's own design went from 0.69 to 0.60 s, and on the playground's tour from 0.74 to 0.65 s.
-<!-- DS-506, DS-507, DS-510 (efficiency): a line each, with the measured figures of its merge request, when it lands. -->
+- Rules are evaluated with each term read from a slot worked out once, and each constant's meaning looked up once:
+  `ds check` spends 28% fewer instructions on DriftSpec's own design and on the playground's tour, every finding and
+  table as before. A design with no rules is unchanged.
+- Drawing a diagram that closes boxes finds what each box holds through the model's tree, instead of a pass over the
+  whole model for every box.
 
 ### The manual
 
@@ -177,6 +181,12 @@ Each figure was measured when its change landed, on the design as it was then.
 
 ### The playground
 
+- Start with a tour of DriftSpec's own design: a first visit to the editor opens on it once the editor shows, with an
+  animation while the design is read, checked and drawn, and the coach then says how long that took, what it bought,
+  and how long PlantUML takes only to draw as many diagrams. The small lessons come before the tour, and only an
+  example you chose is remembered for your next visit.
+- See the live viewer at work on the home page, beside an editor, in a short recorded clip; the home page itself loads
+  no large design.
 - Use the site on a phone: it fits the screen as the browser bar comes and goes.
 
 ### DriftSpec's own design
@@ -195,6 +205,39 @@ Each figure was measured when its change landed, on the design as it was then.
 - Two versions of a design are not compared.
 - There is no wheel for an Intel Mac, and DriftSpec is not on PyPI yet.
 - DriftSpec checks the design, not the code.
+
+## 0.1.178
+
+Drawing a diagram with a cut finds each closed box's members through the model's tree, not by a pass over every
+entity per box (DS-506). Nothing a design writes changes. The model's index answers three more questions: whether one
+entity descends from another (by a pre-order interval), the chain of an id's holders, and a box's children of one
+kind. All three are built when first asked and dropped when the tree changes. The resolver no longer walks a bare
+name's scopes a second time: the first walk had already tried every candidate.
+
+The tree and the holder read from an identity's text disagree in some places, and there the text is kept:
+- an interface written directly in a package has no holder in the tree, so a closed package still finds it in its
+  own scope;
+- behaviours (sequences, their frames and messages, states) hang in the tree from where they were written and from
+  their frames, and artefacts (requirements, verifications, constraints) from the box that holds them, while the text
+  says otherwise. The resolver's scope walks and the cut's path to the top go on reading the text for that reason.
+
+## 0.1.176
+
+- The playground opens a first visit to the editor on the tour of DriftSpec's own design, and only once the editor shows (DS-510): an animation while the design is read, checked and drawn, then the coach says how long it took, what that time bought and what PlantUML takes only to draw as many diagrams. Only an example the reader chose is remembered, and the small lessons come before the tour. The home page shows the live viewer beside an editor in a recorded clip, which `playground/live/make_clip.sh` makes again; the home page alone loads no large design. (DS-510)
+
+## 0.1.175
+
+The rule evaluator looks up what a rule's constants stand for once, when it first solves each body, never at every step
+(DS-507, second part). Each constant term's identity and the definition each call applies are resolved in the facts
+once and kept with the body's compiled slots (`CompiledBody`). `ds check` spends a further 10% fewer instructions on
+DriftSpec's own design and on the playground's tour (28% fewer than before DS-507), and the same on a design with no
+rules; every finding, breach and table is as before, byte for byte.
+
+The rule evaluator reads each term of a rule by its slot, compiled once, never by its name at every step (DS-507).
+`Variables` compiles every body of its formula when it is made: for each literal, the slot of each term. The solver
+reads them there, so `value`, `ready`, `unify` and `answers` look no name up. `ds check` spends 18% fewer
+instructions on DriftSpec's own design and on the playground's tour, and the same on a design with no rules; every
+finding, breach and table is as before, byte for byte.
 
 ## 0.1.174
 
