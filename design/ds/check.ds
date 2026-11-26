@@ -256,31 +256,46 @@ package driftspec@ds {
       @requirement REQ-00192-1
       - refs facts_: Facts
       - owns texts_: std::unordered_set<std::string>   // what it binds from outside the facts, each once; an element never moves (DS-381)
+      - compiled_: std::unordered_map<const void*, CompiledBody>   // each body compiled once, by its address alone (DS-507)
       + Solver(facts: Facts)
       + solve(owner: std::string, body: std::vector<model::Literal>, variables: Variables, bindings: std::vector<const std::string*>, first: bool) -> std::vector<std::vector<const std::string*>>
       + static compares(form: model::LiteralForm) -> bool
       // one working binding, bound, continued and undone: nothing copied per answer (DS-401)
-      - solveFrom(owner: std::string, body: std::vector<model::Literal>, variables: Variables, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
-      - ready(literal: model::Literal, variables: Variables, bindings: std::vector<const std::string*>) -> bool
-      - answers<Next>(owner: std::string, literal: model::Literal, variables: Variables, work: std::vector<const std::string*>, next: Next) -> bool
-      - value(owner: std::string, term: model::Term, variables: Variables, bindings: std::vector<const std::string*>) -> std::string
-      - unify(owner: std::string, term: model::Term, variables: Variables, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
+      // each term read by the slot and the constant its body was compiled with, never by its name (DS-507)
+      - compiled(owner: std::string, body: std::vector<model::Literal>, variables: Variables) -> CompiledBody
+      - solveFrom(owner: std::string, body: std::vector<model::Literal>, compiled: CompiledBody, done: std::vector<bool>, work: std::vector<const std::string*>, first: bool, out_answers: std::vector<std::vector<const std::string*>>) -> bool
+      - static ready(literal: model::Literal, slots: std::vector<int>, bindings: std::vector<const std::string*>) -> bool
+      - answers<Next>(owner: std::string, literal: model::Literal, compiled: CompiledBody, at: std::size_t, work: std::vector<const std::string*>, next: Next) -> bool
+      - value(term: model::Term, slot: int, constant: std::string, bindings: std::vector<const std::string*>) -> std::string
+      - unify(term: model::Term, slot: int, constant: std::string, entity: std::string, out_bindings: std::vector<const std::string*>) -> bool
       - text(text: std::string) -> std::string
       - static number(text: std::string, out_number: double) -> bool
       - static literal(text: std::string) -> bool
       - static compare(form: model::LiteralForm, a: std::string, z: std::string) -> bool
     }
 
+    // a body of a formula as the solver reads it (DS-507): each term's slot, as Variables compiled it, and what its
+    // constants stand for and the definition each call applies, resolved in the facts once, the first time it is solved
+    dataclass CompiledBody {
+      @requirement REQ-00096-1
+      + slots: std::vector<std::vector<int>>              // per literal and term: its slot, as Variables compiled it
+      + constants: std::vector<std::vector<const std::string*>>   // per literal and term; null for a variable or a value
+      + calls: std::vector<const std::string*>                     // per literal; null for none
+    }
+
     class Variables {                        // a formula's variables, each given a fixed slot once, in the order of their names (DS-381)
       @requirement REQ-00096-1
       - owns many names_: std::vector<std::string>
-      + Variables(formula: model::Formula)
+      - bodies_: std::unordered_map<const void*, Slots>   // each body's slots, by its address alone, never read through (DS-507)
+      + Variables(formula: model::Formula)    // its names sorted, then every body of the formula compiled once
       + size() -> std::size_t
       + slotOf(name: std::string) -> int
       + name(slot: std::size_t) -> std::string
       + before(a: std::vector<const std::string*>, b: std::vector<const std::string*>) -> bool   // as a map of name to text would sort them
       + pairs(bindings: std::vector<const std::string*>) -> std::vector<std::pair<std::string, std::string>>
+      + slotsOf(body: std::vector<model::Literal>) -> Slots   // for each literal, each term's slot: -1 for no variable (DS-507)
       - collect(body: std::vector<model::Literal>) -> void
+      - compile(body: std::vector<model::Literal>) -> Slots
     }
 
     // Read-only questions about the model: what a name means where it is written, what a type inherits
@@ -1245,31 +1260,4 @@ package driftspec@ds {
     }
 
   }
-}
-
-diagram SEQ_CheckerRun {
-  kind: sequence
-  include: driftspec@ds@check::Checker::run
-}
-
-diagram SEQ_Load {                         // a load as the command line opens a workspace (DS-409), two levels down: parse, then the Api's steps (DS-383)
-  kind: sequence
-  include: driftspec@ds@api::Workspace::reload
-  depth: 2
-}
-
-diagram CL_CheckNamespace {
-  kind: class
-  include: driftspec@ds@check::*
-  show: ownership
-}
-
-diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage
-}
-
-diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
 }

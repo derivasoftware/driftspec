@@ -175,13 +175,13 @@ TEST_F(TestSceneOfTheDesign, EveryLinkJoinsTwoNodesOfTheSceneInOneOfTheKindsItDr
 
 TEST_F(TestSceneOfTheDesign, EveryDiagramListsTheNodesItShowsAndEveryRequirementHasItsTitle) {
   const auto doc = ds::scene::Scene(model, metamodel).build();
-  bool checkNamespace = false;
+  bool ruleChecked = false;
   for (const auto& d : doc.diagrams) {
     for (const auto& n : d.nodes) EXPECT_EQ(byId.count(n), 1u) << d.name << " " << n;
-    if (d.name == "CL_CheckNamespace")
-      checkNamespace = std::find(d.nodes.begin(), d.nodes.end(), "driftspec@ds@check::Checker") != d.nodes.end();
+    if (d.name == "how-a-rule-is-checked")
+      ruleChecked = std::find(d.nodes.begin(), d.nodes.end(), "driftspec@ds@check::Evaluator") != d.nodes.end();
   }
-  EXPECT_TRUE(checkNamespace);
+  EXPECT_TRUE(ruleChecked);
   for (const auto& n : doc.nodes)
     for (const auto& r : n.requirements) EXPECT_TRUE(doc.titles.count(r)) << r;
 }

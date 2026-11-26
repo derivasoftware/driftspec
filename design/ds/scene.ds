@@ -970,8 +970,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_SceneNamespace {
-  kind: class
-  include: driftspec@ds@scene::*
-}

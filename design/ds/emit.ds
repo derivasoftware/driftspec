@@ -321,8 +321,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_Emit {
-  kind: class
-  include: driftspec@ds@emit::*
-}

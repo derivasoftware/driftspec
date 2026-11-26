@@ -1510,18 +1510,3 @@ package driftspec@driftspec {
     function mcp(port: int, stdin, stdout) -> None
   }
 }
-
-diagram CL_LiveModule {                         // the live session's modules: the session and what serves it
-  kind: class
-  include: driftspec@driftspec@live::*
-  include: driftspec@driftspec@live_session::*
-  include: driftspec@driftspec@live_contract::*
-  include: driftspec@driftspec@live_page::*
-  include: driftspec@driftspec@live_http::*
-  include: driftspec@driftspec@live_mcp::*
-}
-
-diagram CL_NativeModule {                       // the extension: the workspace it holds in the engine
-  kind: class
-  include: driftspec@driftspec@_native::*
-}
