@@ -15,15 +15,16 @@ const char* const SvgStyleSheet::kStylesheet = R"CSS(
     --pr-name: {{name}}; --pr-type: {{type}}; --pr-param: {{param}}; --pr-punct: {{punct}};
     --pr-vis-public: {{vis-public}}; --pr-vis-private: {{vis-private}}; --pr-vis-protected: {{vis-protected}}; --pr-vis-package: {{vis-package}};
     --pr-port-in: {{port-in}}; --pr-port-out: {{port-out}}; --pr-focus: {{focus}}; --pr-dimmed: {{dimmed}};
-    --pr-stroke-width: {{stroke-width}}; --pr-container-stroke-width: {{container-stroke-width}}; --pr-edge-width: {{edge-width}}; --pr-edge-hit: {{edge-hit}}; }
+    --pr-stroke-width: {{stroke-width}}; --pr-container-stroke-width: {{container-stroke-width}}; --pr-edge-width: {{edge-width}}; --pr-edge-hit: {{edge-hit}};
+    --pr-line-requirement: {{line-requirement}}; --pr-line-constraint: {{line-constraint}}; --pr-line-usecase: {{line-usecase}}; --pr-line-verification: {{line-verification}}; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
     --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
-    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; } }
+    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; --pr-line-requirement: {{line-requirement:dark}}; --pr-line-constraint: {{line-constraint:dark}}; --pr-line-usecase: {{line-usecase:dark}}; --pr-line-verification: {{line-verification:dark}}; } }
   [data-theme="dark"] .pr-diagram { --pr-text: {{text:dark}}; --pr-muted: {{muted:dark}}; --pr-stroke: {{stroke:dark}}; --pr-edge: {{edge:dark}}; --pr-box-fill: {{box-fill:dark}}; --pr-container-fill: {{container-fill:dark}}; --pr-container-stroke: {{container-stroke:dark}};
     --pr-note-fill: {{note-fill:dark}}; --pr-note-stroke: {{note-stroke:dark}}; --pr-head-class: {{head-class:dark}}; --pr-head-interface: {{head-interface:dark}}; --pr-head-enum: {{head-enum:dark}}; --pr-head-function: {{head-function:dark}}; --pr-head-abstract: {{head-abstract:dark}};
     --pr-badge-class: {{badge-class:dark}}; --pr-badge-interface: {{badge-interface:dark}}; --pr-badge-enum: {{badge-enum:dark}}; --pr-badge-function: {{badge-function:dark}}; --pr-badge-abstract: {{badge-abstract:dark}}; --pr-badge-dataclass: {{badge-dataclass:dark}}; --pr-badge-requirement: {{badge-requirement:dark}}; --pr-badge-verification: {{badge-verification:dark}}; --pr-badge-constraint: {{badge-constraint:dark}};
-    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; }
+    --pr-name: {{name:dark}}; --pr-type: {{type:dark}}; --pr-param: {{param:dark}}; --pr-punct: {{punct:dark}}; --pr-vis-public: {{vis-public:dark}}; --pr-vis-private: {{vis-private:dark}}; --pr-vis-protected: {{vis-protected:dark}}; --pr-vis-package: {{vis-package:dark}}; --pr-port-in: {{port-in:dark}}; --pr-port-out: {{port-out:dark}}; --pr-focus: {{focus:dark}}; --pr-dimmed: {{dimmed:dark}}; --pr-line-requirement: {{line-requirement:dark}}; --pr-line-constraint: {{line-constraint:dark}}; --pr-line-usecase: {{line-usecase:dark}}; --pr-line-verification: {{line-verification:dark}}; }
   .pr-diagram text { fill: var(--pr-text); }
   .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
   .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
@@ -50,6 +51,15 @@ const char* const SvgStyleSheet::kStylesheet = R"CSS(
   .pr-diagram .pr-abstract .pr-header { font-style: italic; }
   .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
   .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--pr-badge-dataclass); }
+  .pr-diagram .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-namespace .pr-header + .pr-sep { stroke: var(--pr-stroke); stroke-width: 1; }
+  .pr-diagram .pr-classifier-requirement .pr-header + .pr-sep { stroke: var(--pr-line-requirement); }
+  .pr-diagram .pr-classifier-constraint .pr-header + .pr-sep { stroke: var(--pr-line-constraint); }
+  .pr-diagram .pr-classifier-usecase .pr-header + .pr-sep { stroke: var(--pr-line-usecase); }
+  .pr-diagram .pr-classifier-verification .pr-header + .pr-sep { stroke: var(--pr-line-verification); }
   .pr-diagram .pr-name { fill: var(--pr-name); }
   .pr-diagram .pr-type { fill: var(--pr-type); }
   .pr-diagram .pr-param { fill: var(--pr-param); }
@@ -136,16 +146,27 @@ const char* const ViewerVariables::kStylesheet = R"CSS(:root{
   --priv:{{priv}};--pkg:{{pkg}};--mod:{{mod}};--ifc:{{ifc}};
   --k-class:{{k-class}};--k-function:{{k-function}};--k-dataclass:{{k-dataclass}};--k-enum:{{k-enum}};--k-interface:{{k-interface}};--k-abstract:{{k-abstract}};--ok:{{ok}};--warn:{{warn}};--bad:{{bad}};
   --r-owns:{{r-owns}};--r-agg:{{r-agg}};--r-uses:{{r-uses}};--r-calls:{{r-calls}};
+  --rule:{{rule}};--r-inherits:{{r-inherits}};--r-has:{{r-has}};--r-refers:{{r-refers}};--v-pub:{{v-pub}};--v-prot:{{v-prot}};--v-priv:{{v-priv}};--s-ty:{{s-ty}};--s-pn:{{s-pn}};
   --you:{{you}};--shadow:{{shadow}};--shadow-pop:{{shadow-pop}};--shadow-soft:{{shadow-soft}};
-  --mono:ui-monospace,"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
-  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
   --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
   --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
   --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
   --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--k-interface:{{k-interface:dark}};--k-abstract:{{k-abstract:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
-  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};}}
+  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};
+  --rule:{{rule:dark}};--r-inherits:{{r-inherits:dark}};--r-has:{{r-has:dark}};--r-refers:{{r-refers:dark}};--v-pub:{{v-pub:dark}};--v-prot:{{v-prot:dark}};--v-priv:{{v-priv:dark}};--s-ty:{{s-ty:dark}};--s-pn:{{s-pn:dark}};
+  --you:{{you:dark}};}}
+:root:where([data-theme="dark"]){
+  --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
+  --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
+  --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
+  --k-class:{{k-class:dark}};--k-function:{{k-function:dark}};--k-dataclass:{{k-dataclass:dark}};--k-enum:{{k-enum:dark}};--k-interface:{{k-interface:dark}};--k-abstract:{{k-abstract:dark}};--ok:{{ok:dark}};--warn:{{warn:dark}};--bad:{{bad:dark}};
+  --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};
+  --rule:{{rule:dark}};--r-inherits:{{r-inherits:dark}};--r-has:{{r-has:dark}};--r-refers:{{r-refers:dark}};--v-pub:{{v-pub:dark}};--v-prot:{{v-prot:dark}};--v-priv:{{v-priv:dark}};--s-ty:{{s-ty:dark}};--s-pn:{{s-pn:dark}};
+  --you:{{you:dark}};}
 )CSS";
 
 // viewer/themes/night.css: where each value of the page goes; the values are the theme's.
@@ -177,6 +198,15 @@ const char* const ViewerNightVariables::kStylesheet = R"CSS(:root {
   --ok: {{ok}};          /* linked to a requirement */
   --warn: {{warn}};        /* linked to none */
   --bad: {{bad}};         /* what breaks a rule, in the logic perspective */
+  --rule: {{rule}};        /* a box's outline and the relations (DS-495) */
+  --r-inherits: {{r-inherits}};  /* a drawing's relation, lit: what derives (DS-493) */
+  --r-has: {{r-has}};       /* a drawing's relation, lit: what holds */
+  --r-refers: {{r-refers}};    /* a drawing's relation, lit: what refers */
+  --v-pub: {{v-pub}};       /* a public member's dot */
+  --v-prot: {{v-prot}};      /* a protected member's dot */
+  --v-priv: {{v-priv}};      /* a private member's dot */
+  --s-ty: {{s-ty}};        /* a member's type */
+  --s-pn: {{s-pn}};        /* a parameter's name */
   --you: {{you}};         /* what the reader wrote, in a note */
   --shadow: {{shadow}};       /* under a card */
   --shadow-pop: {{shadow-pop}};    /* under a popup */

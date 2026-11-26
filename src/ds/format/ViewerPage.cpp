@@ -58,7 +58,8 @@ std::string ViewerPage::page(const scene::SceneDocument& document, const std::st
   std::string drawn;
   if (!document.walkthroughs.empty() && !drawings.empty()) {
     const size_t end = code.rfind("})();");
-    if (end != std::string::npos) code.insert(end, walkTemplate() + "\n");
+    // the drawings the mode shows rest and light as everywhere else: the one script, ahead of the mode (DS-491)
+    if (end != std::string::npos) code.insert(end, drawingsTemplate() + "\n" + walkTemplate() + "\n");
     out_sink.beginRecord();
     for (const auto& d : drawings) out_sink.field(d.first).value(d.second);  // a std::map: in byte order
     out_sink.endRecord();
@@ -68,8 +69,13 @@ std::string ViewerPage::page(const scene::SceneDocument& document, const std::st
   const std::string inflate =
       "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
       ".pipeThrough(new DecompressionStream('deflate'))).text();";
+  // dark first (DS-495): the reader's choice the viewer keeps, else a theme the page was written with, else dark, set
+  // before anything is drawn; the system's preference only where this does not run
+  const std::string theme =
+      "(()=>{const r=document.documentElement;let t=null;try{t=localStorage.getItem('ds-viewer-theme');}catch(e){}"
+      "r.dataset.theme=t==='light'||t==='dark'?t:(r.dataset.theme==='light'?'light':'dark');})();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\n" + drawn + "const STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" +
+      "\n" + theme + "\n" + mark + "\n" + aim + "\n" + drawn + "const STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" +
       common::Packing::pack(code) + "';\n(async()=>{try{" + inflate +
       "const st=document.createElement('style');st.textContent=await "
       "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"

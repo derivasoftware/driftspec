@@ -2,21 +2,22 @@
 <title>CL_SceneNamespace</title>
 <style>
   .pr-diagram { font-family: var(--pr-font, "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Menlo, Consolas, ui-monospace, monospace); font-size: 12px;
-    --pr-text: #1e293b; --pr-muted: #64748b; --pr-stroke: #64748b; --pr-edge: #64748b; --pr-box-fill: #ffffff; --pr-container-fill: #f8fafc; --pr-container-stroke: #94a3b8;
-    --pr-note-fill: #fffbeb; --pr-note-stroke: #fcd34d; --pr-head-class: #eef2ff; --pr-head-interface: #ecfdf5; --pr-head-enum: #fff7ed; --pr-head-function: #f1f5f9; --pr-head-abstract: #f5f3ff;
-    --pr-badge-class: #4f46e5; --pr-badge-interface: #be185d; --pr-badge-enum: #047857; --pr-badge-function: #475569; --pr-badge-abstract: #7c3aed; --pr-badge-dataclass: #b45309; --pr-badge-requirement: #475569; --pr-badge-verification: #059669; --pr-badge-constraint: #d97706;
-    --pr-name: #0f172a; --pr-type: #2563eb; --pr-param: #475569; --pr-punct: #94a3b8;
-    --pr-vis-public: #16a34a; --pr-vis-private: #dc2626; --pr-vis-protected: #d97706; --pr-vis-package: #2563eb;
+    --pr-text: #1d1d1d; --pr-muted: #6a6a6a; --pr-stroke: #9a9a9a; --pr-edge: #9a9a9a; --pr-box-fill: #ffffff; --pr-container-fill: #f6f6f6; --pr-container-stroke: #dcdcdc;
+    --pr-note-fill: #ffffff; --pr-note-stroke: #dcdcdc; --pr-head-class: #ffffff; --pr-head-interface: #ffffff; --pr-head-enum: #ffffff; --pr-head-function: #ffffff; --pr-head-abstract: #ffffff;
+    --pr-badge-class: #4f46e5; --pr-badge-interface: #be185d; --pr-badge-enum: #047857; --pr-badge-function: #6a6a6a; --pr-badge-abstract: #4f46e5; --pr-badge-dataclass: #b45309; --pr-badge-requirement: #475569; --pr-badge-verification: #059669; --pr-badge-constraint: #d97706;
+    --pr-name: #1d1d1d; --pr-type: #267f99; --pr-param: #001080; --pr-punct: #6a6a6a;
+    --pr-vis-public: #1e8e3e; --pr-vis-private: #d1343f; --pr-vis-protected: #a67c00; --pr-vis-package: #6a6a6a;
     --pr-port-in: #2563eb; --pr-port-out: #c2730a; --pr-focus: #c2730a; --pr-dimmed: .25;
-    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
-    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
-    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; } }
-  [data-theme="dark"] .pr-diagram { --pr-text: #e2e8f0; --pr-muted: #94a3b8; --pr-stroke: #94a3b8; --pr-edge: #94a3b8; --pr-box-fill: #1e293b; --pr-container-fill: #0f172a; --pr-container-stroke: #64748b;
-    --pr-note-fill: #3b3418; --pr-note-stroke: #a16207; --pr-head-class: #312e81; --pr-head-interface: #064e3b; --pr-head-enum: #78350f; --pr-head-function: #334155; --pr-head-abstract: #4c1d95;
-    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #cbd5e1; --pr-badge-abstract: #c4b5fd; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
-    --pr-name: #f8fafc; --pr-type: #7dd3fc; --pr-param: #cbd5e1; --pr-punct: #64748b; --pr-vis-public: #4ade80; --pr-vis-private: #f87171; --pr-vis-protected: #fbbf24; --pr-vis-package: #60a5fa; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; }
+    --pr-stroke-width: 1; --pr-container-stroke-width: 1; --pr-edge-width: 1; --pr-edge-hit: 12;
+    --pr-line-requirement: #168a4d; --pr-line-constraint: #7a3fd6; --pr-line-usecase: #0b8794; --pr-line-verification: #1f6fd6; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pr-diagram { --pr-text: #e9e9e9; --pr-muted: #929292; --pr-stroke: #5a5a5a; --pr-edge: #5a5a5a; --pr-box-fill: #202020; --pr-container-fill: #1b1b1b; --pr-container-stroke: #333333;
+    --pr-note-fill: #2a2a2a; --pr-note-stroke: #333333; --pr-head-class: #202020; --pr-head-interface: #202020; --pr-head-enum: #202020; --pr-head-function: #202020; --pr-head-abstract: #202020;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #929292; --pr-badge-abstract: #a5b4fc; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
+    --pr-name: #e9e9e9; --pr-type: #4ec9b0; --pr-param: #9cdcfe; --pr-punct: #929292; --pr-vis-public: #56c271; --pr-vis-private: #f0616d; --pr-vis-protected: #e6c84a; --pr-vis-package: #929292; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; --pr-line-requirement: #4fd08a; --pr-line-constraint: #b58cff; --pr-line-usecase: #36c9d6; --pr-line-verification: #5aa9ff; } }
+  [data-theme="dark"] .pr-diagram { --pr-text: #e9e9e9; --pr-muted: #929292; --pr-stroke: #5a5a5a; --pr-edge: #5a5a5a; --pr-box-fill: #202020; --pr-container-fill: #1b1b1b; --pr-container-stroke: #333333;
+    --pr-note-fill: #2a2a2a; --pr-note-stroke: #333333; --pr-head-class: #202020; --pr-head-interface: #202020; --pr-head-enum: #202020; --pr-head-function: #202020; --pr-head-abstract: #202020;
+    --pr-badge-class: #a5b4fc; --pr-badge-interface: #f9a8d4; --pr-badge-enum: #6ee7b7; --pr-badge-function: #929292; --pr-badge-abstract: #a5b4fc; --pr-badge-dataclass: #fcd34d; --pr-badge-requirement: #cbd5e1; --pr-badge-verification: #6ee7b7; --pr-badge-constraint: #fcd34d;
+    --pr-name: #e9e9e9; --pr-type: #4ec9b0; --pr-param: #9cdcfe; --pr-punct: #929292; --pr-vis-public: #56c271; --pr-vis-private: #f0616d; --pr-vis-protected: #e6c84a; --pr-vis-package: #929292; --pr-port-in: #60a5fa; --pr-port-out: #fbbf24; --pr-focus: #fbbf24; --pr-dimmed: .3; --pr-line-requirement: #4fd08a; --pr-line-constraint: #b58cff; --pr-line-usecase: #36c9d6; --pr-line-verification: #5aa9ff; }
   .pr-diagram text { fill: var(--pr-text); }
   .pr-diagram rect, .pr-diagram line.pr-sep { shape-rendering: crispEdges; }
   .pr-diagram rect, .pr-diagram path, .pr-diagram line { vector-effect: non-scaling-stroke; }
@@ -43,6 +44,15 @@
   .pr-diagram .pr-abstract .pr-header { font-style: italic; }
   .pr-diagram .pr-stereo { fill: var(--pr-muted); font-size: 10.5px; }
   .pr-diagram .pr-sep { stroke: var(--pr-stroke); }
+  .pr-diagram .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--pr-badge-class); }
+  .pr-diagram .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--pr-badge-interface); }
+  .pr-diagram .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--pr-badge-dataclass); }
+  .pr-diagram .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--pr-badge-enum); }
+  .pr-diagram .pr-classifier-namespace .pr-header + .pr-sep { stroke: var(--pr-stroke); stroke-width: 1; }
+  .pr-diagram .pr-classifier-requirement .pr-header + .pr-sep { stroke: var(--pr-line-requirement); }
+  .pr-diagram .pr-classifier-constraint .pr-header + .pr-sep { stroke: var(--pr-line-constraint); }
+  .pr-diagram .pr-classifier-usecase .pr-header + .pr-sep { stroke: var(--pr-line-usecase); }
+  .pr-diagram .pr-classifier-verification .pr-header + .pr-sep { stroke: var(--pr-line-verification); }
   .pr-diagram .pr-name { fill: var(--pr-name); }
   .pr-diagram .pr-type { fill: var(--pr-type); }
   .pr-diagram .pr-param { fill: var(--pr-param); }

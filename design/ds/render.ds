@@ -1136,26 +1136,3 @@ package driftspec@ds {
     }
   }
 }
-
-// The render box drawn inside, names only: every class of the namespace.
-diagram CL_RenderNamespace {
-  kind: class
-  include: driftspec@ds@render::*
-  hide: fields, methods
-}
-
-// Two views, one per intent: the namespace mixes the projection (REQ-00006-1)
-// and the drawing (REQ-00007-1), two requirement families in one namespace;
-// splitting the namespace is a backlog task.
-diagram CL_RenderIr {
-  kind: class
-  include: driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge, driftspec@ds@render::IrDocument, driftspec@ds@render::IrExport, driftspec@ds@render::IrTable, driftspec@ds@render::IrRow, driftspec@ds@render::IrCell
-  show: ownership
-}
-
-diagram CL_RenderDrawing {
-  kind: class
-  include: driftspec@ds@render::Point, driftspec@ds@render::Rect, driftspec@ds@render::Route, driftspec@ds@render::Placed, driftspec@ds@render::LayoutResult, driftspec@ds@render::Metrics, driftspec@ds@render::Svg, driftspec@ds@render::Text, driftspec@ds@render::TextPen, driftspec@ds@render::ChangeMark
-  show: ownership
-  hide: fields
-}

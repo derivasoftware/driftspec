@@ -171,10 +171,12 @@ package driftspec@ds {
       - owns extension_: std::map<std::string, std::set<std::vector<std::string>>>
       - owns parent_: std::unordered_map<std::string, std::string>                 // what holds each entity, copied from the index (DS-381)
       - owns children_: std::unordered_map<std::string, std::vector<std::string>>  // what each entity holds, in the index's order
+      - owns inScope_: std::map<std::pair<std::string, std::string>, std::vector<const std::string*>>  // kind and scope, to what the scope holds of it (DS-503)
       - readers_: std::size_t                                                      // solves reading now: the facts do not grow meanwhile
       + Facts(model: model::Model, metamodel: model::Metamodel)
       + index() -> void
       + ofKind(kind: std::string) -> std::vector<std::string>
+      + ofKindIn(kind: std::string, scope: std::string) -> std::vector<const std::string*>   // in ofKind's order, pointing into it, read once (DS-503)
       + forward(relation: std::string) -> std::multimap<std::string, std::string>
       + backward(relation: std::string) -> std::multimap<std::string, std::string>
       + record(owner: std::string, written: std::string, identity: std::string) -> void
@@ -1243,31 +1245,4 @@ package driftspec@ds {
     }
 
   }
-}
-
-diagram SEQ_CheckerRun {
-  kind: sequence
-  include: driftspec@ds@check::Checker::run
-}
-
-diagram SEQ_Load {                         // a load as the command line opens a workspace (DS-409), two levels down: parse, then the Api's steps (DS-383)
-  kind: sequence
-  include: driftspec@ds@api::Workspace::reload
-  depth: 2
-}
-
-diagram CL_CheckNamespace {
-  kind: class
-  include: driftspec@ds@check::*
-  show: ownership
-}
-
-diagram SEQ_CheckMessage {                 // the whole behaviour, every branch with its frame
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage
-}
-
-diagram SEQ_CheckMessageUndeclared {       // one scenario: what is shared, then its branch
-  kind: sequence
-  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
 }

@@ -354,8 +354,16 @@ package driftspec@ds {
       + name() -> std::string
       + write(document: scene::SceneDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
       @requirement REQ-00244-1
-      + static viewerTemplate() -> std::string    // viewer/scene.html compiled in, with the places the scene fills
-      + static walkTemplate() -> std::string      // viewer/walk.js compiled in: only a page with a walkthrough carries it
+      // viewer/scene.html compiled in, with the places the scene fills; its map draws at rest what the reader turned on (DS-504)
+      + static viewerTemplate() -> std::string {
+        @requirement REQ-00335-1
+      }
+      // viewer/walk.js compiled in: only a page with a walkthrough carries it; its drawings as the playground's (DS-493)
+      + static walkTemplate() -> std::string {
+        @requirement REQ-00334-1
+      }
+      @requirement REQ-00320-1
+      + static drawingsTemplate() -> std::string  // viewer/drawings.js compiled in (DS-491), carried beside the walkthroughs' mode
       // the scene described and the identities it opens framed on, written one after the other into the compact sink lent
       - static page(document: scene::SceneDocument, title: std::string, css: std::string, focus: std::vector<std::string>, drawings: std::map<std::string, std::string>, out_sink: emit::ISink) -> std::string
       - static frame(page: std::string, title: std::string, height: int) -> std::string
@@ -418,9 +426,4 @@ package driftspec@ds {
       return written
     }
   }
-}
-
-diagram CL_Format {
-  kind: class
-  include: driftspec@ds@format::*
 }

@@ -316,40 +316,8 @@ main { flex: 1; display: flex; min-height: 0; }
 .pane .body > svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
 .pane .empty { color: var(--muted); font-style: italic; padding: 12px; text-align: center; }
 
-/* the diagrams in the same look: cards on the grey stage, the kind in its colour, signatures as code */
+/* the diagrams on the grey stage; how a drawing looks is its own stylesheet's, the same on every page (DS-490, DS-493) */
 .pane .body { background: var(--bg); }
-.pane svg.pr-diagram, #home svg.pr-diagram, #docs svg.pr-diagram {
-  --pr-text: var(--fg); --pr-muted: var(--muted); --pr-stroke: var(--rule); --pr-edge: var(--rule); --pr-edge-width: 1;
-  --pr-box-fill: var(--panel); --pr-container-fill: color-mix(in srgb, var(--panel) 45%, var(--bg)); --pr-container-stroke: var(--line);
-  --pr-note-fill: var(--raised); --pr-note-stroke: var(--line);
-  --pr-head-class: var(--panel); --pr-head-interface: var(--panel); --pr-head-enum: var(--panel); --pr-head-function: var(--panel); --pr-head-abstract: var(--panel);
-  --pr-badge-class: var(--k-class); --pr-badge-interface: var(--k-interface); --pr-badge-enum: var(--k-enum); --pr-badge-function: var(--muted); --pr-badge-abstract: var(--k-class);
-  --pr-name: var(--fg); --pr-type: var(--s-ty); --pr-param: var(--s-pn); --pr-punct: var(--muted);
-  --pr-vis-public: var(--v-pub); --pr-vis-protected: var(--v-prot); --pr-vis-private: var(--v-priv); --pr-vis-package: var(--muted);
-  --pr-font: var(--mono);
-}
-/* relations on a class diagram (DS-193): at rest only what derives from what; the rest
-   lights up, in the colour of its kind, when one of its ends is touched or selected */
-.pane svg .pr-classifier-dataclass { --pr-badge-class: var(--k-dataclass); }
-.pane svg .pr-classifier-interface { --pr-badge-abstract: var(--k-interface); }
-/* the line under a card's name wears the colour of its kind (the chosen class widget) */
-.pane svg .pr-box .pr-header + .pr-sep, #home svg .pr-box .pr-header + .pr-sep { stroke-width: 2; stroke: var(--k-class); }
-.pane svg .pr-classifier-interface .pr-header + .pr-sep { stroke: var(--k-interface); }
-.pane svg .pr-classifier-dataclass .pr-header + .pr-sep { stroke: var(--k-dataclass); }
-.pane svg .pr-classifier-enum .pr-header + .pr-sep { stroke: var(--k-enum); }
-.pane svg .pr-classifier-namespace .pr-header + .pr-sep { stroke: var(--rule); stroke-width: 1; }
-.pane svg .pr-classifier-requirement .pr-header + .pr-sep { stroke: var(--c-req); }
-.pane svg .pr-classifier-constraint .pr-header + .pr-sep { stroke: var(--c-cst); }
-.pane svg .pr-classifier-usecase .pr-header + .pr-sep { stroke: var(--c-state); }
-.pane svg .pr-classifier-verification .pr-header + .pr-sep { stroke: var(--c-seq); }  /* an abstract class keeps the class colour; italics say what it lacks */
-.pane svg .pr-edge-group.quiet { display: none; }
-.pane svg .pr-edge-group[data-rk="inherits"] { --rc: var(--r-inherits); }
-.pane svg .pr-edge-group[data-rk="has"] { --rc: var(--r-has); }
-.pane svg .pr-edge-group[data-rk="refers"] { --rc: var(--r-refers); }
-.pane svg .pr-edge-group[data-rk="uses"] { --rc: var(--r-uses); }
-.pane svg .pr-edge-group.lit .pr-edge { stroke: var(--rc); stroke-width: 1.6; }
-.pane svg .pr-edge-group.lit .pr-edge-label { fill: var(--rc); }
-.pane svg.quietable .pr-box { cursor: pointer; }
 .pane svg .pr-box, .pane svg .pr-lifeline-head, .pane svg .pr-msg-group[data-ref-location] { cursor: pointer; }
 .pane svg .pr-msg-group[data-ref-location]:hover text { fill: var(--fg); text-decoration: underline; }
 .pane svg .go-diagram { cursor: pointer; }
@@ -379,8 +347,6 @@ main { flex: 1; display: flex; min-height: 0; }
 .reqtable .missing { color: var(--warn); }
 .reveal-line { background: color-mix(in srgb, var(--c-seq) 18%, transparent); }
 .pane.arrived { box-shadow: 0 0 0 2px var(--c-seq); transition: box-shadow .3s; }
-.pane svg .pr-box.sel > rect { stroke: var(--fg); stroke-width: 1.6; }
-.pane svg .pr-box.rel > rect { stroke: var(--rc); stroke-width: 1.6; }
 /* the coach: a lesson's steps, one floating card at a time, anchored to what it talks about */
 .coach { position: fixed; z-index: 50; width: 320px; background: var(--raised); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px var(--shadow-float); font: 13px/1.5 var(--sans); visibility: hidden; }
 .coach.placed { visibility: visible; }
@@ -782,6 +748,7 @@ definition module-depends(m, n) {
   </div>
 </main>
 
+<script src="drawings.js"></script>  <!-- a drawing at rest and lit, shared with the viewer (DS-491) -->
 <script type="module">
 import { start, ds, manual } from "./engine.js";
 import { grammarMode } from "./highlight.js";
@@ -1805,62 +1772,13 @@ function paintTable(rows) {
   for (const el of p.body.querySelectorAll("[data-go]")) el.addEventListener("click", () => reveal(el.dataset.go));
 }
 
-// ---- relations at rest and lit -----------------------------------------------------------
-const EDGE_KIND = { inheritance: "inherits", realization: "inherits", composition: "has", aggregation: "refers", dependency: "uses", association: "has" };  // association: a structural bond between closed boxes (DS-230)
-const UNIT = /pr-classifier-(class|dataclass|enum|package|module)\b/;  // what lights its relations when pointed at: a class, or a closed box
-
+// ---- relations at rest and lit: drawings.js (DS-491), the one script every page shows ds's drawings with ----
+// the pane keeps what is selected; a click on a box is a change of the page; a use's interfaces go on the via card
 function wireRelations(pane) {
-  const svg = pane.body.querySelector("svg");
-  if (!svg) return;
-  const box = (id) => svg.querySelector(`.pr-box[data-id="${CSS.escape(id)}"]`);
-  let quietable = false;
-  for (const g of svg.querySelectorAll(".pr-edge-group")) {
-    const edge = g.querySelector(".pr-edge");
-    const k = edge && [...edge.classList].map((c) => c.replace("pr-edge-", "")).find((c) => EDGE_KIND[c]);
-    g.dataset.rk = EDGE_KIND[k] || "uses";
-    // a relation between classes waits to be asked; one between packages or interfaces stays
-    const a = box(g.dataset.from), b = box(g.dataset.to);
-    const betweenUnits = (a && UNIT.test(a.getAttribute("class"))) || (b && UNIT.test(b.getAttribute("class")));
-    g.dataset.quiet = betweenUnits && g.dataset.rk !== "inherits" ? "1" : "";
-    if (g.dataset.quiet) quietable = true;
-  }
-  tintTips(svg, box);
-  svg.classList.toggle("quietable", quietable);
-  if (!quietable) return;
-  const light = (id) => {
-    for (const el of svg.querySelectorAll(".pr-box.sel, .pr-box.rel")) { el.classList.remove("sel", "rel"); el.style.removeProperty("--rc"); }
-    for (const g of svg.querySelectorAll(".pr-edge-group")) {
-      const touches = id && (g.dataset.from === id || g.dataset.to === id);
-      g.classList.toggle("lit", !!touches);
-      g.classList.toggle("quiet", !!g.dataset.quiet && !touches);
-      if (touches) {
-        const other = box(g.dataset.from === id ? g.dataset.to : g.dataset.from);
-        if (other && other.dataset.id !== id) {
-          other.classList.add("rel");
-          other.style.setProperty("--rc", getComputedStyle(g).getPropertyValue("--rc"));
-        }
-      }
-    }
-    if (id) box(id)?.classList.add("sel");
-  };
-  // a use between two boxes says which interfaces it goes through (DS-266): the page shows it beside what is pointed at
-  for (const g of svg.querySelectorAll('.pr-edge-group[data-ref-bond="uses"]')) {
-    const said = g.querySelector(":scope > title");
-    if (!said) continue;
-    g.dataset.via = said.textContent; said.remove();  // the page's own card, not the browser's tooltip over it
-    g.addEventListener("mouseenter", () => showVia([g], g));
-    g.addEventListener("mouseleave", hideVia);
-  }
-  for (const b of svg.querySelectorAll(".pr-box")) {
-    if (!UNIT.test(b.getAttribute("class"))) continue;
-    b.addEventListener("mouseenter", () => { light(b.dataset.id); showVia([...svg.querySelectorAll(".pr-edge-group[data-via]")].filter((g) => g.dataset.from === b.dataset.id || g.dataset.to === b.dataset.id), b); });
-    b.addEventListener("mouseleave", () => { light(pane.selected); hideVia(); });
-    b.addEventListener("click", (e) => { e.stopPropagation(); pane.selected = pane.selected === b.dataset.id ? null : b.dataset.id; light(pane.selected); uiChanged(); });
-  }
-  svg.addEventListener("click", () => { pane.selected = null; light(null); });
-  pane.light = (id) => { pane.selected = id; light(id); };
-  if (pane.selected && !box(pane.selected)) pane.selected = null;
-  light(pane.selected);
+  const light = wireDrawing(pane.body.querySelector("svg"), {
+    get selected() { return pane.selected; }, set selected(id) { pane.selected = id; },
+    chose: uiChanged, point: showVia, leave: hideVia });
+  if (light) pane.light = light;
 }
 
 // ---- from a drawing to its text, and from a call to the diagram of what it calls --------
@@ -1939,60 +1857,6 @@ function wireNavigation(pane) {
     mark.innerHTML = `<title></title><circle r="6"/><path d="M-1.8,-3 L3,0 L-1.8,3 Z"/>`;
     mark.addEventListener("click", (e) => { e.stopPropagation(); const now = diagramOf(target); now ? goToPane(now) : reveal(target); });
     g.append(mark);
-  }
-}
-
-// the tip of a relation wears the colour of the kind of the card it touches (DS-193):
-// each marker is copied once per kind and the end points at its copy
-const CARD_COLOUR = { class: "--k-class", dataclass: "--k-dataclass", enum: "--k-enum", interface: "--k-interface" };
-function cardColour(el) {
-  const m = el && /pr-classifier-(\w+)/.exec(el.getAttribute("class"));
-  return m && CARD_COLOUR[m[1]];
-}
-// the engine's tips are sized for print and grow with the line: here they are smaller, and fixed
-const TIP_SCALE = 0.75;
-function shrinkTips(svg) {
-  for (const m of svg.querySelectorAll("marker")) {
-    if (m.dataset.shrunk) continue;
-    m.setAttribute("markerUnits", "userSpaceOnUse");
-    m.setAttribute("markerWidth", (parseFloat(m.getAttribute("markerWidth")) || 12) * TIP_SCALE);
-    m.setAttribute("markerHeight", (parseFloat(m.getAttribute("markerHeight")) || 12) * TIP_SCALE);
-    m.dataset.shrunk = "1";
-  }
-}
-
-function tintTips(svg, box) {
-  shrinkTips(svg);
-  const defs = svg.querySelector("defs") || svg.insertBefore(document.createElementNS("http://www.w3.org/2000/svg", "defs"), svg.firstChild);
-  for (const g of svg.querySelectorAll(".pr-edge-group")) {
-    const ends = [box(g.dataset.from), box(g.dataset.to)].filter(Boolean);
-    for (const path of g.querySelectorAll(".pr-edge")) {
-      for (const [attr, atEnd] of [["marker-start", false], ["marker-end", true]]) {
-        const ref = path.getAttribute(attr);
-        const id = ref && /url\(#([^)]+)\)/.exec(ref)?.[1];
-        if (!id || !ends.length) continue;
-        let p;
-        try { p = path.getPointAtLength(atEnd ? path.getTotalLength() : 0); } catch { continue; }
-        // the card the tip touches is the nearer end
-        const dist = (el) => { const b = el.getBBox(); const dx = Math.max(b.x - p.x, 0, p.x - b.x - b.width); const dy = Math.max(b.y - p.y, 0, p.y - b.y - b.height); return dx * dx + dy * dy; };
-        const touched = ends.reduce((a, b) => (dist(b) < dist(a) ? b : a));
-        const colour = cardColour(touched);
-        if (!colour) continue;
-        const copy = `${id}--${colour.slice(4)}`;
-        if (!svg.getElementById(copy)) {
-          const src = svg.getElementById(id);
-          if (!src) continue;
-          const m = src.cloneNode(true);
-          m.id = copy;
-          for (const shape of m.querySelectorAll("path, polygon, polyline")) {
-            shape.style.stroke = `var(${colour})`;
-            if (shape.classList.contains("pr-filled")) shape.style.fill = `var(${colour})`;
-          }
-          defs.append(m);
-        }
-        path.setAttribute(attr, `url(#${copy})`);
-      }
-    }
   }
 }
 
@@ -2080,7 +1944,8 @@ document.addEventListener("keydown", (e) => {
 (function theme() {
   const root = document.documentElement;
   const saved = new URLSearchParams(location.search).get("theme") || store.get("ds-playground-theme");
-  if (saved) root.dataset.theme = saved;
+  // the page is dark unless asked light, and says so: a drawing follows the theme a page sets (DS-490, DS-493)
+  root.dataset.theme = saved === "light" ? "light" : "dark";
   $("theme").onclick = () => {
     root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
     store.set("ds-playground-theme", root.dataset.theme);
