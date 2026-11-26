@@ -355,7 +355,10 @@ package driftspec@ds {
       + write(document: scene::SceneDocument, options: FormatOptions, out_sink: emit::ISink) -> std::string
       @requirement REQ-00244-1
       + static viewerTemplate() -> std::string    // viewer/scene.html compiled in, with the places the scene fills
-      + static walkTemplate() -> std::string      // viewer/walk.js compiled in: only a page with a walkthrough carries it
+      // viewer/walk.js compiled in: only a page with a walkthrough carries it; its drawings as the playground's (DS-493)
+      + static walkTemplate() -> std::string {
+        @requirement REQ-00334-1
+      }
       @requirement REQ-00320-1
       + static drawingsTemplate() -> std::string  // viewer/drawings.js compiled in (DS-491), carried beside the walkthroughs' mode
       // the scene described and the identities it opens framed on, written one after the other into the compact sink lent

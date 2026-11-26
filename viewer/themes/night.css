@@ -30,6 +30,9 @@
   --warn: #f0883e;        /* linked to none */
   --bad: #ff7b72;         /* what breaks a rule, in the logic perspective */
   --rule: #6e7681;        /* a box's outline and the relations (DS-495) */
+  --r-inherits: #d2a8ff;  /* a drawing's relation, lit: what derives (DS-493) */
+  --r-has: #e3b341;       /* a drawing's relation, lit: what holds */
+  --r-refers: #39c5cf;    /* a drawing's relation, lit: what refers */
   --v-pub: #3fb950;       /* a public member's dot */
   --v-prot: #d29922;      /* a protected member's dot */
   --v-priv: #ff7b72;      /* a private member's dot */
