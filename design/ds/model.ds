@@ -1180,6 +1180,8 @@ package driftspec@ds {
       + parent: std::map<std::string, std::string>
       + children: std::map<std::string, std::vector<std::string>>
       + treeStale: bool
+      + span: std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>  // each node's pre-order enter and exit, numbered when first asked (DS-506)
+      + holders: std::unordered_map<std::string, std::vector<std::string>>         // each id's chain of holders, memoised; both dropped when the tree is built again
     }
 
     constraint CST-00008-2 {
@@ -1226,19 +1228,24 @@ package driftspec@ds {
       + members(scope: std::string) -> std::vector<std::string>
       + parent(id: std::string) -> std::string
       + children(id: std::string) -> std::vector<std::string>
+      + childrenOfKind(id: std::string, kind: std::string) -> std::vector<std::string>   // what a closed box offers, by kind (DS-506)
+      + descends(id: std::string, ancestor: std::string) -> bool                         // by pre-order interval; nothing descends from itself (DS-506)
+      + holders(id: std::string) -> std::vector<std::string>                             // parent after parent, memoised (DS-506)
       + revisionOf(artefact: std::string) -> std::string
       + named(package: std::string, name: std::string) -> std::vector<std::string>
       - at(table: std::map<std::string, std::vector<std::size_t>>, key: std::string) -> std::vector<Relation>
       - atOfKind(table: std::map<std::string, std::vector<std::size_t>>, key: std::string, kind: std::string) -> std::vector<Relation>
       - tree() -> void
+      - spans() -> void
     }
 
-    verification VER-00119-2 {
-      status: approved
+    verification VER-00119-3 {
+      status: draft
       @requirement REQ-00001-1
-      title: Integration tests cover the questions the model answers by identity, kept in step with every file bound and every rename
+      title: Integration tests cover the questions the model answers by identity, kept in step with every file bound and every rename, what descends from a box, an id's holders and a box's children of one kind included
       method: test
       tests:
+        tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatDescendsWhatHoldsAndWhatOfAKindIsHeldAgreeWithTheTree
         tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatLeavesAndWhatReachesAnEntityComeInTheOrderStated
         tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.EveryRelationOfAKindAndOfSeveralKindsComesInTheOrderStated
         tests/integration/ds/model/test_model_of_a_design.cpp::TestIndexOfADesign.WhatTouchesAnEntityComesOnce

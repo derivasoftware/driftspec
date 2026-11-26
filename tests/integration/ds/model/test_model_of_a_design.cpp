@@ -175,6 +175,33 @@ TEST_F(TestIndexOfADesign, WhatHoldsWhatIsATreeAndAScopeNamesWhatItDeclares) {
   EXPECT_TRUE(model.index().members("shop@none").empty());
 }
 
+TEST_F(TestIndexOfADesign, WhatDescendsWhatHoldsAndWhatOfAKindIsHeldAgreeWithTheTree) {
+  // DS-506: the three questions a drawing and the resolver ask, answered from parent and children
+  EXPECT_TRUE(model.index().descends("shop@store::Stock::take", "shop"));
+  EXPECT_TRUE(model.index().descends("shop@store::Stock::take", "shop@store::Stock"));
+  EXPECT_FALSE(model.index().descends("shop@store::Stock::take", "shop@till"));
+  EXPECT_FALSE(model.index().descends("shop@store", "shop@store"));
+  EXPECT_EQ(model.index().holders("shop@store::Stock::take"), (std::vector<std::string>{"shop@store::Stock", "shop@store", "shop"}));
+  EXPECT_EQ(model.index().childrenOfKind("shop@store", "class"), (std::vector<std::string>{"shop@store::Item", "shop@store::Stock"}));
+  EXPECT_TRUE(model.index().childrenOfKind("shop@store", "enum").empty());
+  // every entity: its holders are its parent's chain, and it descends from each of them and from nothing else held
+  for (const auto& [id, e] : model.entities()) {
+    const std::vector<std::string>& up = model.index().holders(id);
+    std::string at = id;
+    for (const auto& h : up) {
+      EXPECT_EQ(model.index().parent(at), h) << id;
+      EXPECT_TRUE(model.index().descends(id, h)) << id << " in " << h;
+      at = h;
+    }
+    EXPECT_EQ(model.index().parent(at), "") << id;
+    for (const auto& c : model.index().children(id)) EXPECT_TRUE(model.index().descends(c, id)) << c << " in " << id;
+  }
+  bind("crate.ds", kCrate);  // a change: the intervals and the chains are numbered again
+  EXPECT_TRUE(model.index().descends("shop@store::Crate::stock", "shop@store"));
+  EXPECT_EQ(model.index().holders("shop@store::Crate::stock"), (std::vector<std::string>{"shop@store::Crate", "shop@store", "shop"}));
+  EXPECT_EQ(model.index().childrenOfKind("shop@store", "class").back(), "shop@store::Crate");
+}
+
 TEST_F(TestIndexOfADesign, AnArtefactIsFoundByAnyRevisionOrNone) {
   EXPECT_EQ(model.index().revisionOf("REQ-00001-1"), "REQ-00001-2");
   EXPECT_EQ(model.index().revisionOf("REQ-00001"), "REQ-00001-2");
