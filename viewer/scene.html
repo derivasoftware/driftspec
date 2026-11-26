@@ -14,7 +14,7 @@
   --priv:#9e9e9e;--pkg:#f6f6f6;--mod:#fbfbfb;--ifc:#ffffff;
   --k-class:#4f46e5;--k-function:#475569;--k-dataclass:#b45309;--k-enum:#047857;--k-interface:#be185d;--k-abstract:#7c3aed;--ok:#168a4d;--warn:#a47a00;--bad:#d1343f;
   --r-owns:#9a6b00;--r-agg:#0f766e;--r-uses:#1d5fbf;--r-calls:#cf4a14;
-  --rule:#9a9a9a;--v-pub:#1e8e3e;--v-prot:#a67c00;--v-priv:#d1343f;--s-ty:#267f99;--s-pn:#001080;
+  --rule:#9a9a9a;--r-inherits:#6b46c1;--r-has:#9a6b00;--r-refers:#0f766e;--v-pub:#1e8e3e;--v-prot:#a67c00;--v-priv:#d1343f;--s-ty:#267f99;--s-pn:#001080;
   --you:#6B3FB8;--shadow:rgba(0,0,0,.18);--shadow-pop:rgba(0,0,0,.2);--shadow-soft:rgba(0,0,0,.12);
   --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -25,7 +25,7 @@
   --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
   --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
   --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
-  --rule:#5a5a5a;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --rule:#5a5a5a;--r-inherits:#c9a8ff;--r-has:#ffd166;--r-refers:#6fd6c4;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
   --you:#B79CF0;}}
 :root[data-theme="dark"]{
   --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
@@ -33,7 +33,7 @@
   --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
   --k-class:#a5b4fc;--k-function:#cbd5e1;--k-dataclass:#fcd34d;--k-enum:#6ee7b7;--k-interface:#f9a8d4;--k-abstract:#c4b5fd;--ok:#4fd08a;--warn:#f0cd3c;--bad:#f0616d;
   --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
-  --rule:#5a5a5a;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
+  --rule:#5a5a5a;--r-inherits:#c9a8ff;--r-has:#ffd166;--r-refers:#6fd6c4;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
   --you:#B79CF0;}
 /* end theme: viewer */
 *{box-sizing:border-box}
@@ -177,7 +177,7 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 /* ds render --css: the reader's stylesheet goes here, after the viewer's, so it wins.
    The viewer draws with these variables: --bg --panel --fg --muted --line --soft --accent --accent-soft
    --req --req-soft --priv --pkg --mod --ifc --k-class --k-function --k-dataclass --k-enum --k-interface --k-abstract
-   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --rule --v-pub --v-prot --v-priv --s-ty --s-pn --you --shadow
+   --r-owns --r-agg --r-uses --r-calls --ok --warn --bad --rule --r-inherits --r-has --r-refers --v-pub --v-prot --v-priv --s-ty --s-pn --you --shadow
    --shadow-pop --shadow-soft --mono --sans */
 /*CSS*/
 </style>
@@ -286,8 +286,10 @@ new MutationObserver(()=>{css(); loop();}).observe(document.documentElement,{att
 // the playground's fonts, asked for once the page has loaded so the first draw never waits on the network; the system's
 // meanwhile, or for good offline, and the map drawn again when they arrive
 if(document.fonts) document.fonts.addEventListener('loadingdone',()=>loop());
-addEventListener('load',()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
-  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap'; document.head.appendChild(l);},0));
+{const fonts=()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
+  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap'; document.head.appendChild(l);},0);
+  // the viewer's code is inflated and run after the page has loaded, as a rule: then they are asked for at once
+  if(document.readyState==='complete') fonts(); else addEventListener('load',fonts);}
 const LETTER={class:'C',interface:'I',dataclass:'D',enum:'E',function:'F',abstract:'A',package:'P',module:'M'}, TIP=.75;
 // a kind's badge, as the playground draws one: a disc in its colour, its letter in the panel's
 function badge(x,y,r,col,letter){ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fillStyle=col; ctx.fill(); const t=r*1.36;

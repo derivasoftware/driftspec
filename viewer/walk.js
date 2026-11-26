@@ -34,7 +34,7 @@ wkStyle.textContent=`
 #walk .wk-card h3{margin:0;display:flex;align-items:center;gap:6px;padding:4px 8px;font:600 11px var(--mono);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden}
 #walk .wk-card h3 .k,#walk .wk-card h3 .n{font-weight:400;color:var(--muted)}
 #walk .wk-card h3 .n{margin-left:auto}
-#walk .wk-card .th{height:104px;padding:6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#walk .wk-card .th{height:104px;padding:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #walk .wk-card .th svg{max-width:100%;max-height:92px;width:auto;height:auto;pointer-events:none}
 #walk .wk-card.off{opacity:.55}
 #walk .wk-card.here{border-color:var(--coach);box-shadow:0 0 0 1px var(--coach);opacity:1}
@@ -44,7 +44,7 @@ wkStyle.textContent=`
 #wk-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:420px;display:flex;flex-direction:column;overflow:hidden}
 #wk-box h3{margin:0;display:flex;gap:8px;padding:6px 12px;font:600 12px var(--mono);border-bottom:1px solid var(--line)}
 #wk-box h3 .k{font-weight:400;color:var(--muted)}
-#wk-stage{flex:1;padding:14px;display:flex;justify-content:center;align-items:flex-start;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
+#wk-stage{flex:1;padding:14px;background:var(--bg);display:flex;justify-content:center;align-items:flex-start;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
 #wk-stage svg{max-width:100%;height:auto}
 #wk-ptr{position:fixed;inset:0;width:100vw;height:100vh;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease}
 #wk-ptr.on{opacity:1}
@@ -52,6 +52,7 @@ wkStyle.textContent=`
 #wk-ptr circle{fill:var(--coach)}
 #wk-stage.focusing .pr-box,#wk-stage.focusing .pr-lifeline,#wk-stage.focusing .pr-msg-group,#wk-stage.focusing .pr-edge-group{transition:opacity .25s ease;opacity:.22}
 #wk-stage.focusing .g-on{opacity:1!important}
+#wk-stage .pr-edge-group.quiet.g-on{display:inline}
 #wk-stage .g-focus>rect,#wk-stage .g-focus .pr-lifeline-head rect{stroke:var(--coach)!important;stroke-width:2.5px!important}
 #wk-stage .pr-msg-group.g-focus path:not(.pr-edge-hit),#wk-stage .pr-msg-group.g-focus line,#wk-stage .pr-edge-group.g-focus path:not(.pr-edge-hit){stroke:var(--coach)!important}
 #wk-stage .pr-msg-group.g-focus text{fill:var(--coach)!important;font-weight:600}
@@ -130,9 +131,11 @@ const wkKinds={}; (SCENE.diagrams||[]).forEach(d=>{wkKinds[d.name]=d.kind;});
 // every diagram, in the order the scene lists them, then any it drew and does not list
 const wkOrder=[...new Set([...(SCENE.diagrams||[]).map(d=>d.name).filter(n=>DRAWN[n]),...Object.keys(DRAWN)])];
 let W=null, wkAt=-1;
+const wkPick={selected:null};  // what the reader picked in the stage's drawing, kept from step to step
 function wkStrip(){
   $w('wk-strip').innerHTML=wkOrder.map(d=>{const n=W.steps.map((s,i)=>s.diagram===d?i+1:0).filter(Boolean);
     return `<div class="wk-card${n.length?'':' off'}" data-d="${esc(d)}"><h3><span>${esc(d)}</span><span class="k">${esc(wkKinds[d]||'')}</span><span class="n">${n.join('·')}</span></h3><div class="th">${wkCopy(DRAWN[d],'c'+wkOrder.indexOf(d))}</div></div>`;}).join('');
+  $w('wk-strip').querySelectorAll('.th svg').forEach(svg=>wireDrawing(svg,{selected:null}));
 }
 const wkCard=d=>[...document.querySelectorAll('#walk .wk-card')].find(c=>c.dataset.d===d);
 // what an identity lights in a drawing: a box or a participant by its id; an operation by the messages that call it
@@ -157,6 +160,7 @@ async function wkSwap(s){const stage=$w('wk-stage'), card=wkCard(s.diagram);
   const ox=Math.max(0,Math.min(100,((c.left+c.width/2-box.left)/Math.max(1,box.width))*100));
   if(!wkStill&&stage.firstChild) await stage.animate([{opacity:1},{opacity:0}],{duration:120,easing:'ease-in',fill:'forwards'}).finished;
   stage.innerHTML=DRAWN[s.diagram]||`<p style="color:var(--muted);font:12px var(--mono)">${esc(s.diagram)} is not drawn</p>`;
+  wireDrawing(stage.querySelector('svg'),wkPick);  // at rest and lit as the playground leaves it (DS-493)
   wkLight(s);
   if(!wkStill){stage.style.transformOrigin=`${ox}% 0%`;
     await stage.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}],{duration:280,easing:'cubic-bezier(.25,.1,.25,1)',fill:'forwards'}).finished;}

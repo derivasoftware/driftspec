@@ -116,4 +116,30 @@ describe('a drawing at rest, the same on every page', () => {
     assert.ok(at < walked.indexOf('// The walkthroughs\' mode of the viewer'), 'ahead of the mode that shows the drawings');
     assert.ok(!page(false).includes('// A ds drawing at rest and lit'), 'a page with no walkthrough is written as it was');
   });
+
+  // one look (DS-493): a walkthrough shows a diagram as ds render draws it, the bytes the playground's engine draws, and
+  // neither page restyles it: how a drawing looks is its own stylesheet's (DS-490), how it rests and lights drawings.js's
+  test('a walkthrough carries each diagram as ds render draws it, and wires it as the playground does', () => {
+    const ws = workspace(true);
+    const html = execFileSync(DS, ['render', ws, '-f', 'html'], { maxBuffer: 1 << 28 }).toString();
+    const packed = /const DRAWINGS='([^']*)'/.exec(html);
+    assert.ok(packed, 'the page packs the drawings');
+    const drawn = JSON.parse(inflateSync(Buffer.from(packed[1], 'base64')).toString()) as Record<string, string>;
+    assert.equal(drawn.CL_P, svg(ws, 'CL_P'), 'byte for byte the drawing ds render writes');
+    const walk = readFileSync(join(ROOT, 'viewer', 'walk.js'), 'utf8');
+    assert.match(walk, /wireDrawing\(stage\.querySelector\('svg'\)/, 'the stage\'s drawing at rest and lit by drawings.js');
+    assert.match(walk, /\.th svg'\)\.forEach\(svg=>wireDrawing\(/, 'each card\'s drawing too');
+  });
+
+  test('neither the playground nor the walkthroughs restyle a drawing', () => {
+    const styles = (text: string): string => [...text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+    const pages: [string, string][] = [
+      ['the playground', styles(readFileSync(join(ROOT, 'playground', 'web', 'index.html'), 'utf8'))],
+      ['the walkthroughs', readFileSync(join(ROOT, 'viewer', 'walk.js'), 'utf8')],
+    ];
+    for (const [name, css] of pages) {
+      assert.doesNotMatch(css, /--pr-[a-z-]+\s*:/, `${name} sets none of a drawing's tokens`);
+      assert.doesNotMatch(css, /\.pr-(sep|badge|head|header|name|type|param|punct|vis)\b[^{]*\{/, `${name} draws no part of a card its own way`);
+    }
+  });
 });
