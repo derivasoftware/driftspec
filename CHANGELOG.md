@@ -14,8 +14,9 @@ A merge request does not edit this file: it writes its entry as `changelog.d/<ca
 
 What changed for a user since 0.1.0, released on 18 November 2026: walkthroughs, overloads and outcomes that name their
 failure in the language; a check that keeps what is not yet written apart from what is wrong; drawings spaced the same in
-SVG and in the terminal; a faster engine; a manual that teaches what first users stumbled on. The entries of each 0.1
-release below say the same in detail.
+SVG and in the terminal; one look for every drawing, page and the viewer, which also stays responsive on a large
+design; a faster engine; a manual that teaches what first users stumbled on. The entries of each 0.1 release below say
+the same in detail.
 
 ### Before you upgrade
 
@@ -88,8 +89,11 @@ What a design written for 0.1 has to change.
   keeps room either side.
 - Recognise each kind by its colour, the same in every drawing and page, light and dark: class indigo, interface rose,
   enum green, dataclass amber, function slate, abstract violet.
-<!-- DS-486 (one look, one theme source for the viewer, the playground and the drawings): its line goes here when its
-last part lands. -->
+- See every drawing in the playground's look wherever it is shown: each SVG carries its own stylesheet, a dark or light
+  card with its name underlined in its kind's colour, the kind's badge, members in the editor's colours and thin
+  relations, so `ds render -f svg` draws on any page what the playground draws.
+- See a diagram rest and light the same in the playground, in a walkthrough and on any page ds writes: relations quiet
+  until asked, smaller tips tinted, the light following the pointer.
 - Read a state diagram as UML draws one: a filled dot where the machine starts, a bullseye for each final state, states
   as capsules, transitions as curves with their labels clear of the states, and a transition back to its own state as a
   loop beside it.
@@ -111,6 +115,9 @@ Each figure was measured when its change landed, on the design as it was then.
 - An editor gets its diagnostics in about half the time: 337 to 175 ms on DriftSpec's design, 484 to 184 ms on 3,200
   classes.
 - `ds export` and every JSON document are written as they are made, faster and with less memory.
+- Rules scoped to a box are checked faster: a scoped range reads only what its box holds, once per check. `ds check` on
+  DriftSpec's own design went from 0.69 to 0.60 s, and on the playground's tour from 0.74 to 0.65 s.
+<!-- DS-506, DS-507, DS-510 (efficiency): a line each, with the measured figures of its merge request, when it lands. -->
 
 ### The manual
 
@@ -135,6 +142,22 @@ Each figure was measured when its change landed, on the design as it was then.
 - Ask for the findings or the coverage of a file or of an entity and everything it holds.
 - Play the walkthroughs in the page `ds render <workspace> -f html` writes.
 
+### The viewer
+
+- Read the map in the playground's look: its palette for each role, light and dark, Figtree and JetBrains Mono, each
+  box's kind a badge with a line under its name in the kind's colour, members with their visibility and types in the
+  editor's colours, relations in thin strokes. Boxes, layout and what the map shows are as they were.
+- Open it dark, as the playground opens, and switch with the playground's toggle (◐); your choice is kept, and a
+  stylesheet of your own (the night theme) still wins. The legend is gone, since the badges say each kind. A
+  walkthrough's diagram cards stand in a column at the side, and in a strip along the top on a phone.
+- See the map's structure at a glance: at rest it draws only inheritance, what inherits and what realises, and every
+  other kind of relation is yours to turn on from a list beside the toggle, each with its stroke, your choice kept.
+  On DriftSpec's own design the map at rest goes from 1,191 relations in structure and 605 in behaviour to its 97
+  inheritances. Selecting a box or a class still lights everything it touches.
+- Open and move about a large design without waiting: on DriftSpec's own design the pause on opening goes from about
+  5 s to under half a second, a zoom's from 4.8 to 0.3 s, and with a class or a module selected each frame takes about
+  2 ms instead of a third of a second to a second. The fonts no longer hold the first drawing while they load.
+
 ### The editor
 
 - Keep a design open: the language server keeps it loaded, parses again only the files you change, and publishes the
@@ -156,6 +179,13 @@ Each figure was measured when its change landed, on the design as it was then.
 
 - Use the site on a phone: it fits the screen as the browser bar comes and goes.
 
+### DriftSpec's own design
+
+- Read DriftSpec's own design, which the playground's tour walks, one question at a time: how a file becomes a model,
+  how a name binds, how a rule is checked, how a diagram is drawn, how the viewer gets its scene, and more, each a
+  dozen boxes at most and named for what it shows, in place of diagrams that drew a whole namespace (one held 376
+  boxes and 1,337 arrows). A diagram's name needs no `CL_` or `SEQ_` in front: any name ds reads is one.
+
 ### What 0.2 does not do yet
 
 - The language may still change before 1.0; a release that renames a word says so.
@@ -165,6 +195,49 @@ Each figure was measured when its change landed, on the design as it was then.
 - Two versions of a design are not compared.
 - There is no wheel for an Intel Mac, and DriftSpec is not on PyPI yet.
 - DriftSpec checks the design, not the code.
+
+## 0.1.174
+
+DriftSpec's own design is drawn one question at a time (DS-505). Its 30 class, sequence and interface diagrams, most
+of them a whole namespace (CL_Ds drew 376 boxes and 1,337 arrows, CL_BindNamespace 144 arrows), give way to 23 in
+design/diagrams.ds, each answering one thing a reader asks, a dozen boxes and two dozen arrows at most, picked box by
+box: engine-modules, doors-and-use-cases, how-a-file-becomes-a-model, how-a-name-binds, what-the-model-holds,
+how-a-design-is-checked, how-a-rule-is-checked, how-a-failure-ends, how-a-state-machine-is-read,
+how-a-diagram-picks-what-it-shows, how-a-diagram-is-drawn, how-a-diagram-is-laid-out, where-the-look-comes-from,
+how-the-viewer-gets-its-scene, how-ds-query-answers, how-output-is-written, how-an-editor-gets-diagnostics,
+how-the-live-viewer-follows-the-files, the-command-line, the-engine-in-process, how-a-file-is-parsed,
+how-an-undeclared-operation-is-reported and how-a-syntax-error-is-reported. A diagram's name needs no CL_ or SEQ_
+prefix; the requirement diagrams are unchanged.
+
+## 0.1.173
+
+- The viewer works out the relations of what is selected once per selection, not for every relation on every frame (DS-508). With a class selected on DriftSpec's design, a frame's work goes from hundreds of milliseconds to about 2 ms; what it draws is the same. (DS-508)
+
+## 0.1.172
+
+`ds check` evaluates scoped rules faster: a scoped range walks only the entities its scope holds, read once
+per check, instead of every entity of its kind again for each binding of the ranges before it (DS-503).
+Nothing a design writes changes.
+
+## 0.1.171
+
+- A diagram looks the same in a walkthrough as in the playground (DS-493): the walkthroughs rest and light their drawings with the playground's script (drawings.js) on the same grey stage, the playground drops its own copy of how a drawing looks (each drawing carries it since DS-490), and the viewer's palette gains the relation colours drawings.js lights with. (DS-493)
+
+- The viewer's map wears the playground's look (DS-495): its colours are the playground's palette for each role, light and dark (and the theme a page sets), its fonts Figtree and JetBrains Mono, a box's kind a badge with a line under its name in the kind's colour, members with their visibility dots and their types and parameters in the editor's colours, relations in the rule with thin strokes and smaller tips. Boxes, layout, routing, interaction and what the map shows are as they were; the scene is untouched. (DS-495)
+- The viewer opens dark, as the playground does, and carries the playground's light/dark toggle (◐), its choice kept by the viewer; a reader's stylesheet (the night theme) still wins. The legend is gone: the badges speak for themselves. A walkthrough's diagram cards stand in a column at the side; on a phone they stay a strip along the top, clear of the step's card at the bottom. (DS-495)
+
+- The viewer's map draws at rest only inheritance (inherits and realises), in every perspective (DS-504). Every other relation kind (depends, owns, shares, refs, uses, calls, consumes, breaks) is turned on from a list next to the theme's toggle, each with its name and a swatch in its own stroke; the choice is kept for the reader. A selected box or class lights its relations as before. On DriftSpec's design, the map at rest goes from 1191 relations in structure and 605 in behaviour to the 97 inheritances. (DS-504)
+
+## 0.1.170
+
+A ds drawing rests and lights the same on every page (DS-491): the playground's rest-and-light code (each relation's
+kind, the ones touching a class quiet until asked, tips shrunk and tinted, the light on pointing) is one script,
+viewer/drawings.js, which the playground loads (build.py copies it) and ds puts into a viewer page beside the
+walkthroughs' mode. The playground behaves as before; a viewer page with no walkthrough is written as it was.
+
+## 0.1.169
+
+- Every drawing ds writes carries the playground's look in its own stylesheet (DS-490): a dark or light card with its name underlined in its kind's colour, the kind's badge, members in the editor's colours, the rule's edges. Its colours are taken from the playground's palette, the one source, so `ds render -f svg` draws on any page what the playground draws. The playground, the viewer and the walkthroughs adopt it in DS-493. (DS-490)
 
 ## 0.1.168
 
