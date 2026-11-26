@@ -281,7 +281,8 @@ new MutationObserver(()=>{css(); loop();}).observe(document.documentElement,{att
 // meanwhile, or for good offline, and the map drawn again when they arrive
 if(document.fonts) document.fonts.addEventListener('loadingdone',()=>loop());
 {const fonts=()=>setTimeout(()=>{const l=document.createElement('link'); l.rel='stylesheet';
-  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap'; document.head.appendChild(l);},0);
+  l.href='https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap';
+  l.media='print'; l.onload=()=>{l.media='all';}; document.head.appendChild(l);},0);  // a stylesheet in the head holds the first paint: not this one
   // the viewer's code is inflated and run after the page has loaded, as a rule: then they are asked for at once
   if(document.readyState==='complete') fonts(); else addEventListener('load',fonts);}
 const LETTER={class:'C',interface:'I',dataclass:'D',enum:'E',function:'F',abstract:'A',package:'P',module:'M'}, TIP=.75;
@@ -445,7 +446,18 @@ function route(A,B){const key=A.id+'>'+B.id+'>'+[A.x,A.y,A.w,A.h,B.x,B.y,B.w,B.h
   for(let j=Y.length-1;j>0;j--) Y.splice(j,0,(Y[j-1]+Y[j])/2);
   const nx=X.length, ny=Y.length, inside=(x,y)=>obs.some(o=>x>o.x0+.01&&x<o.x1-.01&&y>o.y0+.01&&y<o.y1-.01);
   if(nx*ny>250000){ROUTES.set(key,null); return null;}
-  const free=new Uint8Array(nx*ny); for(let j=0;j<ny;j++) for(let i=0;i<nx;i++) free[j*nx+i]=inside(X[i],Y[j])?0:1;
+  // what is blocked, laid out once: each obstacle marks the grid points, and the steps between neighbours (by their
+  // middle), strictly inside it, as inside() would answer for each of them; the same grid, without asking every obstacle
+  // at every point (DS-495: this was the viewer's seconds-long freeze)
+  const MX=X.slice(1).map((x,i)=>(X[i]+x)/2), MY=Y.slice(1).map((y,j)=>(Y[j]+y)/2);
+  const span=(A,lo,hi)=>{let a=0,b=A.length; while(a<b){const c=(a+b)>>1; if(A[c]>lo) b=c; else a=c+1;} const from=a; a=from; b=A.length;
+    while(a<b){const c=(a+b)>>1; if(A[c]<hi) a=c+1; else b=c;} return [from,a];};  // the indices of A strictly between lo and hi
+  const free=new Uint8Array(nx*ny).fill(1), hstep=new Uint8Array(Math.max(0,nx-1)*ny).fill(1), vstep=new Uint8Array(nx*Math.max(0,ny-1)).fill(1);
+  for(const o of obs){const lx=o.x0+.01, hx=o.x1-.01, ly=o.y0+.01, hy=o.y1-.01; if(!(lx<hx&&ly<hy)) continue;
+    const [i0,i1]=span(X,lx,hx), [j0,j1]=span(Y,ly,hy), [m0,m1]=span(MX,lx,hx), [n0,n1]=span(MY,ly,hy);
+    for(let j=j0;j<j1;j++){for(let i=i0;i<i1;i++) free[j*nx+i]=0; for(let i=m0;i<m1;i++) hstep[j*(nx-1)+i]=0;}
+    for(let j=n0;j<n1;j++) for(let i=i0;i<i1;i++) vstep[j*nx+i]=0;}
+  const stepFree=(i,j,e)=>e<2?hstep[j*(nx-1)+(e===0?i:i-1)]:vstep[(e===2?j:j-1)*nx+i];
   const at=(x,y)=>[X.indexOf(x),Y.indexOf(y)];
   const starts=pa.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]);
   const goals=new Set(pb.map(p=>at(p[0],p[1])).filter(([i,j])=>i>=0&&j>=0&&free[j*nx+i]).map(([i,j])=>j*nx+i));
@@ -458,7 +470,7 @@ function route(A,B){const key=A.id+'>'+B.id+'>'+[A.x,A.y,A.w,A.h,B.x,B.y,B.w,B.h
   while(open.length&&guard++<400000){let bi=0; for(let k=1;k<open.length;k++) if(open[k][0]<open[bi][0]) bi=k; const [,s,c]=open[bi]; open[bi]=open[open.length-1]; open.pop();
     if(c>cost.get(s)) continue; const cell=s>>2, d=s&3; if(goals.has(cell)){end=s; break;} const i=cell%nx, j=(cell/nx)|0;
     for(let e=0;e<4;e++){const ni=i+D[e][0], nj=j+D[e][1]; if(ni<0||nj<0||ni>=nx||nj>=ny||!free[nj*nx+ni]) continue;
-      if(inside((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)) continue;
+      if(!stepFree(i,j,e)) continue;
       const nc=c+(Math.abs(X[ni]-X[i])+Math.abs(Y[nj]-Y[j]))*toll((X[i]+X[ni])/2,(Y[j]+Y[nj])/2)+(e===d?0:bend), ns=(nj*nx+ni)*4+e;
       if(nc<(cost.has(ns)?cost.get(ns):Infinity)){cost.set(ns,nc); prev.set(ns,s); push(ns,nc,nc+Math.abs(X[ni]-gx)+Math.abs(Y[nj]-gy));}}}
   if(end<0){ROUTES.set(key,null); return null;}
