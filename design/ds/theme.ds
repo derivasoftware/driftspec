@@ -29,6 +29,31 @@ package driftspec@ds {
     }
   }
 
+  requirement REQ-00333-1 {
+    status: draft
+    @refines REQ-00231-1
+    tags: theme, viewer, playground
+    title: The viewer's map shall wear the playground's colours and fonts, its boxes, layout and behaviour as they were
+    text:
+      The viewer's tokens are the playground's colours for the same role: the background, the panel, the foreground, the
+      line and the rule, the kinds' colours, the visibility and the editor's colours, the brand for what is selected, a
+      container the panel over the background as the playground mixes it. It opens dark, as the playground does, unless
+      the reader chose light with the playground's toggle (kept by the viewer) or the page was written light; the system's
+      preference only where its code does not run. It carries no legend: the badges speak for themselves. The map draws in the playground's fonts, a box's kind as its badge and a line under its name in
+      its kind's colour, a member's visibility as a dot and its type and parameters in the editor's colours, relations in
+      the rule with thin strokes and the playground's smaller tips. Where each box, row and relation falls, what it says
+      and how the viewer answers stay as they were; the scene is not touched.
+    rationale: the Owner liked the viewer and wanted only its look to be the playground's (DS-495)
+
+    verification VER-00383-1 {
+      status: draft
+      title: A unit test confirms each of the viewer's tokens is the playground's colour for its role, light and dark
+      method: test
+      tests:
+        tests/unit/ds/theme/test_theme.cpp::TestViewedAsThePlayground.EachViewerTokenIsThePlaygroundsColour
+    }
+  }
+
   requirement REQ-00231-1 {
     status: approved
     @refines SREQ-00005-1
@@ -129,6 +154,10 @@ package driftspec@ds {
       // each drawing token as the playground's colour its rules gave it: the playground's palette, the one source (DS-490)
       - drawnAsThePlayground() -> void {
         @requirement REQ-00332-1
+      }
+      // the viewer's palette as the playground's colours for the same roles (DS-495)
+      - viewedAsThePlayground() -> void {
+        @requirement REQ-00333-1
       }
     }
 

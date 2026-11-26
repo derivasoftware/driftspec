@@ -69,8 +69,13 @@ std::string ViewerPage::page(const scene::SceneDocument& document, const std::st
   const std::string inflate =
       "const inflate=async p=>new Response(new Blob([Uint8Array.from(atob(p),c=>c.charCodeAt(0))]).stream()"
       ".pipeThrough(new DecompressionStream('deflate'))).text();";
+  // dark first (DS-495): the reader's choice the viewer keeps, else a theme the page was written with, else dark, set
+  // before anything is drawn; the system's preference only where this does not run
+  const std::string theme =
+      "(()=>{const r=document.documentElement;let t=null;try{t=localStorage.getItem('ds-viewer-theme');}catch(e){}"
+      "r.dataset.theme=t==='light'||t==='dark'?t:(r.dataset.theme==='light'?'light':'dark');})();";
   const std::string loader =
-      "\n" + mark + "\n" + aim + "\n" + drawn + "const STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" +
+      "\n" + theme + "\n" + mark + "\n" + aim + "\n" + drawn + "const STYLE='" + common::Packing::pack(own) + "';\nconst VIEWER='" +
       common::Packing::pack(code) + "';\n(async()=>{try{" + inflate +
       "const st=document.createElement('style');st.textContent=await "
       "inflate(STYLE);document.head.insertBefore(st,document.getElementById('theme'));"

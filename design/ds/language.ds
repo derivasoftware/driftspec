@@ -1839,6 +1839,54 @@ package driftspec@ds {
       }
     }
 
+    requirement REQ-00334-1 {
+      tags: viewer, playground, drawing
+      status: draft
+      @refines REQ-00320-1
+      title: A diagram shall look the same in a walkthrough as in the playground
+      text:
+        A walkthrough shows each diagram as `ds render -f svg` draws it, the drawing the playground's engine writes, and
+        rests and lights it with the same script as the playground, on the same grey stage. Neither page restyles a
+        drawing: how it looks is its own stylesheet's, so a diagram in a walkthrough's card or stage and the same diagram
+        in the playground are the same picture.
+      rationale:
+        Owner, 2026-11-25 (DS-486, "one look", MR4): "quiero exactamente los mismos diagramas en ambos"; the playground
+        and the walkthroughs each had a copy of how a drawing looks and rests.
+      verification VER-00384-1 {
+        status: draft
+        title: Integration tests confirm a walkthrough carries each diagram byte for byte as ds render draws it and wires it with drawings.js, and that neither page sets a drawing's tokens or draws a card's parts its own way
+        method: test
+        tests:
+          tests/integration/viewer/drawings.test.ts::a walkthrough carries each diagram as ds render draws it, and wires it as the playground does
+          tests/integration/viewer/drawings.test.ts::neither the playground nor the walkthroughs restyle a drawing
+      }
+    }
+
+    requirement REQ-00335-1 {
+      tags: viewer, relations
+      status: draft
+      title: The viewer's map shall draw at rest only inheritance, every other relation kind turned on by the reader
+      text:
+        At rest, in every perspective, the map draws what inherits and what realises and no other relation. The reader
+        turns any relation kind on or off from a list of them next to the theme's toggle, each with its name and a
+        swatch drawn in its own stroke; the viewer keeps the choice for the reader. Across two boxes in structure a
+        relation that does not inherit is drawn as the boxes' dependency, and turned on as one. A box or a class
+        selected lights the relations it touches as before.
+      rationale:
+        Owner, 2026-11-26 (DS-504): the map of a large design drew hundreds of arrows at rest; inheritance is the
+        skeleton a reader reads first, the rest is asked for.
+      verification VER-00385-1 {
+        status: draft
+        title: Integration tests confirm the map draws inheritance alone until a kind is turned on, keeps the reader's choice, lists every kind with a stroke of its own, and draws a relation across two boxes in structure as their dependency
+        method: test
+        tests:
+          tests/integration/viewer/relations.test.ts::inheritance alone until the reader turns a kind on
+          tests/integration/viewer/relations.test.ts::a choice is kept as the list of the kinds on, inheritance included
+          tests/integration/viewer/relations.test.ts::every relation the map can draw is in the list, each drawn in a style of its own
+          tests/integration/viewer/relations.test.ts::across two boxes in structure a relation is drawn as their dependency, unless it inherits; elsewhere as itself
+      }
+    }
+
     requirement REQ-00243-1 {
       tags: language, walkthrough, export, scene, query
       status: draft

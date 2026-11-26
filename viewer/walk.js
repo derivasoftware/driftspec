@@ -21,30 +21,33 @@ const DRAWN=await (async()=>{try{return JSON.parse(await new Response(new Blob([
 if(WALKS.length){
 const wkStyle=document.createElement('style');
 wkStyle.textContent=`
-#walk{position:fixed;inset:0;z-index:40;background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);overflow-y:auto;overflow-x:hidden;--coach:var(--k-abstract)}
+#walk{position:fixed;inset:0;z-index:40;background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);overflow:hidden;display:flex;flex-direction:column;--coach:var(--k-abstract)}
 #walk[hidden]{display:none}
+#walk header{flex:none}
+/* the cards in a column at the side, the drawing and its step beside them, each scrolling on its own (DS-495) */
+#wk-body{flex:1;min-height:0;display:grid;grid-template-columns:208px minmax(0,1fr)}
 #walk header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
 #walk header h1{font-size:15px;margin:0;font-weight:600}
 #walk header .kind{font:11px var(--mono);color:var(--muted)}
 #walk header .sp{flex:1}
 #walk header button,#walk header select{font:12px var(--mono);color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
 #walk header button:hover{color:var(--fg)}
-#wk-strip{display:flex;gap:10px;padding:12px 20px;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--panel)}
-#walk .wk-card{flex:0 0 168px;background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+#wk-strip{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px;overflow-y:auto;overflow-x:hidden;border-right:1px solid var(--line);background:var(--panel)}
+#walk .wk-card{flex:0 0 auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .2s,box-shadow .2s}
 #walk .wk-card h3{margin:0;display:flex;align-items:center;gap:6px;padding:4px 8px;font:600 11px var(--mono);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden}
 #walk .wk-card h3 .k,#walk .wk-card h3 .n{font-weight:400;color:var(--muted)}
 #walk .wk-card h3 .n{margin-left:auto}
-#walk .wk-card .th{height:104px;padding:6px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#walk .wk-card .th{height:104px;padding:6px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
 #walk .wk-card .th svg{max-width:100%;max-height:92px;width:auto;height:auto;pointer-events:none}
 #walk .wk-card.off{opacity:.55}
 #walk .wk-card.here{border-color:var(--coach);box-shadow:0 0 0 1px var(--coach);opacity:1}
 #walk .wk-card.here h3{color:var(--coach)}
-#wk-main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16px 20px 40px;align-items:start}
+#wk-main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;padding:16px 20px 40px;align-items:start;overflow-y:auto;min-height:0}
 #wk-main.at{grid-template-columns:minmax(0,1fr)}
 #wk-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:420px;display:flex;flex-direction:column;overflow:hidden}
 #wk-box h3{margin:0;display:flex;gap:8px;padding:6px 12px;font:600 12px var(--mono);border-bottom:1px solid var(--line)}
 #wk-box h3 .k{font-weight:400;color:var(--muted)}
-#wk-stage{flex:1;padding:14px;display:flex;justify-content:center;align-items:flex-start;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
+#wk-stage{flex:1;padding:14px;background:var(--bg);display:flex;justify-content:center;align-items:flex-start;overflow:auto;touch-action:pan-x pan-y pinch-zoom}
 #wk-stage svg{max-width:100%;height:auto}
 #wk-ptr{position:fixed;inset:0;width:100vw;height:100vh;z-index:60;pointer-events:none;opacity:0;transition:opacity .2s ease}
 #wk-ptr.on{opacity:1}
@@ -52,6 +55,7 @@ wkStyle.textContent=`
 #wk-ptr circle{fill:var(--coach)}
 #wk-stage.focusing .pr-box,#wk-stage.focusing .pr-lifeline,#wk-stage.focusing .pr-msg-group,#wk-stage.focusing .pr-edge-group{transition:opacity .25s ease;opacity:.22}
 #wk-stage.focusing .g-on{opacity:1!important}
+#wk-stage .pr-edge-group.quiet.g-on{display:inline}
 #wk-stage .g-focus>rect,#wk-stage .g-focus .pr-lifeline-head rect{stroke:var(--coach)!important;stroke-width:2.5px!important}
 #wk-stage .pr-msg-group.g-focus path:not(.pr-edge-hit),#wk-stage .pr-msg-group.g-focus line,#wk-stage .pr-edge-group.g-focus path:not(.pr-edge-hit){stroke:var(--coach)!important}
 #wk-stage .pr-msg-group.g-focus text{fill:var(--coach)!important;font-weight:600}
@@ -84,6 +88,10 @@ wkStyle.textContent=`
 #wk-coach.sheet .bd{max-height:calc(46vh - 70px);overflow-y:auto}
 @media (max-width:860px){#wk-main{grid-template-columns:1fr}}
 @media (max-width:720px){
+  #walk{display:block;overflow-y:auto;overflow-x:hidden}
+  #wk-body{display:block}
+  #wk-strip{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line)}
+  #wk-main{overflow:visible}
   #walk header{padding:10px 16px;gap:8px}
   #walk header h1{font-size:14px;flex:1 1 100%;order:1}
   #walk header .kind{order:2;font-size:10.5px}
@@ -111,8 +119,8 @@ const wkEl=document.createElement('div'); wkEl.id='walk'; wkEl.hidden=true; wkEl
 wkEl.innerHTML=`<header><h1 id="wk-title"></h1><span class="kind" id="wk-kind"></span><span class="sp"></span>`+
   (WALKS.length>1?`<select id="wk-pick" aria-label="walkthrough">${WALKS.map((w,i)=>`<option value="${i}">${esc(w.name)}</option>`).join('')}</select>`:'')+
   `<button id="wk-close" title="back to the map (Esc)">✕ map</button></header>`+
-  `<nav id="wk-strip" aria-label="every diagram of the workspace"></nav>`+
-  `<main id="wk-main"><section id="wk-box"><h3><span id="wk-shown"></span><span class="k" id="wk-shownkind"></span></h3><div id="wk-stage"></div></section><aside id="wk-dock"></aside></main>`;
+  `<div id="wk-body"><nav id="wk-strip" aria-label="every diagram of the workspace"></nav>`+
+  `<main id="wk-main"><section id="wk-box"><h3><span id="wk-shown"></span><span class="k" id="wk-shownkind"></span></h3><div id="wk-stage"></div></section><aside id="wk-dock"></aside></main></div>`;
 document.body.appendChild(wkEl);
 const wkPtr=document.createElementNS('http://www.w3.org/2000/svg','svg'); wkPtr.id='wk-ptr'; wkPtr.setAttribute('aria-hidden','true');
 wkPtr.innerHTML='<line/><circle r="3.5"/>'; wkEl.appendChild(wkPtr);
@@ -130,9 +138,11 @@ const wkKinds={}; (SCENE.diagrams||[]).forEach(d=>{wkKinds[d.name]=d.kind;});
 // every diagram, in the order the scene lists them, then any it drew and does not list
 const wkOrder=[...new Set([...(SCENE.diagrams||[]).map(d=>d.name).filter(n=>DRAWN[n]),...Object.keys(DRAWN)])];
 let W=null, wkAt=-1;
+const wkPick={selected:null};  // what the reader picked in the stage's drawing, kept from step to step
 function wkStrip(){
   $w('wk-strip').innerHTML=wkOrder.map(d=>{const n=W.steps.map((s,i)=>s.diagram===d?i+1:0).filter(Boolean);
     return `<div class="wk-card${n.length?'':' off'}" data-d="${esc(d)}"><h3><span>${esc(d)}</span><span class="k">${esc(wkKinds[d]||'')}</span><span class="n">${n.join('·')}</span></h3><div class="th">${wkCopy(DRAWN[d],'c'+wkOrder.indexOf(d))}</div></div>`;}).join('');
+  $w('wk-strip').querySelectorAll('.th svg').forEach(svg=>wireDrawing(svg,{selected:null}));
 }
 const wkCard=d=>[...document.querySelectorAll('#walk .wk-card')].find(c=>c.dataset.d===d);
 // what an identity lights in a drawing: a box or a participant by its id; an operation by the messages that call it
@@ -157,6 +167,7 @@ async function wkSwap(s){const stage=$w('wk-stage'), card=wkCard(s.diagram);
   const ox=Math.max(0,Math.min(100,((c.left+c.width/2-box.left)/Math.max(1,box.width))*100));
   if(!wkStill&&stage.firstChild) await stage.animate([{opacity:1},{opacity:0}],{duration:120,easing:'ease-in',fill:'forwards'}).finished;
   stage.innerHTML=DRAWN[s.diagram]||`<p style="color:var(--muted);font:12px var(--mono)">${esc(s.diagram)} is not drawn</p>`;
+  wireDrawing(stage.querySelector('svg'),wkPick);  // at rest and lit as the playground leaves it (DS-493)
   wkLight(s);
   if(!wkStill){stage.style.transformOrigin=`${ox}% 0%`;
     await stage.animate([{opacity:0,transform:'scale(.96)'},{opacity:1,transform:'scale(1)'}],{duration:280,easing:'cubic-bezier(.25,.1,.25,1)',fill:'forwards'}).finished;}
@@ -177,8 +188,9 @@ function wkSpot(anchor,w,h){const svg=$w('wk-stage').querySelector('svg'), rect=
   for(const dy of [-h/2,-40,-h+40]){cands.push({x:all.right+gap,y:cy+dy}); cands.push({x:all.left-gap-w,y:cy+dy});}
   for(const dx of [-w/2,-40,-w+40]) cands.push({x:cx+dx,y:all.bottom+gap});
   let best=null;
-  const top=Math.max(56,$w('wk-strip').getBoundingClientRect().bottom+8);  // below the cards, never over them
-  for(const c of cands){if(c.x<8||c.y<top||c.x+w>innerWidth-8||c.y+h>innerHeight-8) continue;
+  const st=$w('wk-strip').getBoundingClientRect(), side=st.height>st.width, head=wkEl.querySelector('header').getBoundingClientRect();
+  const top=Math.max(56,(side?head.bottom:st.bottom)+8), left=side?st.right+8:8;  // clear of the cards, never over them
+  for(const c of cands){if(c.x<left||c.y<top||c.x+w>innerWidth-8||c.y+h>innerHeight-8) continue;
     let score=0; for(const r of lit) score+=100*over(c.x,c.y,r); for(const r of others) score+=8*over(c.x,c.y,r);
     const dx=Math.max(0,c.x-a.right,a.left-(c.x+w)), dy=Math.max(0,c.y-a.bottom,a.top-(c.y+h)); score+=60*Math.hypot(dx,dy);
     if(!best||score<best.score) best={...c,score};}
@@ -214,7 +226,8 @@ async function wkGo(i){const n=W.steps.length; i=(i+n)%n; if(i===wkAt) return;
   const before=wkAt>=0?W.steps[wkAt]:null, s=W.steps[i]; wkAt=i;
   document.querySelectorAll('#walk .wk-card').forEach(c=>c.classList.toggle('here',c.dataset.d===s.diagram));
   const here=wkCard(s.diagram), strip=$w('wk-strip');
-  if(here) strip.scrollTo({left:here.offsetLeft-(strip.clientWidth-here.offsetWidth)/2,behavior:wkStill?'auto':'smooth'});
+  if(here){const side=strip.clientHeight>strip.clientWidth;  // the card in the middle of the strip, a column or a row
+    strip.scrollTo(side?{top:here.offsetTop-(strip.clientHeight-here.offsetHeight)/2,behavior:wkStill?'auto':'smooth'}:{left:here.offsetLeft-(strip.clientWidth-here.offsetWidth)/2,behavior:wkStill?'auto':'smooth'});}
   wkPtr.classList.remove('on');
   if(before&&before.diagram===s.diagram) wkLight(s); else await wkSwap(s);  // the same drawing stays put: only what is lit changes
   const scen=s.behaviour.includes(' / ')?s.behaviour.slice(s.behaviour.indexOf(' / ')):'';
