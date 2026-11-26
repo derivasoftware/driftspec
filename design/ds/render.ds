@@ -489,8 +489,13 @@ package driftspec@ds {
       loop each selected id {
         self -> model_.find(id) -> entity
       }
+      // what holds a box is asked up the model's tree, by the text only where the tree holds it in nothing (DS-506)
+      self -> model_.index() -> tree
       loop each container {
         self -> model_.find(id) -> container
+        loop each box up to a container {
+          self -> tree.parent(box) -> holder
+        }
       }
       loop each selected box {
         self -> model_.find(id) -> entity
@@ -511,6 +516,20 @@ package driftspec@ds {
         return closed
       }
       return out
+    }
+
+    sequence ClassProjector::closeBoxes {
+      loop each node the cut closes {
+        // a closed box's public children are what the model's tree holds of it, by kind, not a pass over every entity (DS-506)
+        self -> model_.index() -> index
+        loop each kind a closed box offers {
+          self -> index.childrenOfKind(id, kind) -> held
+          loop each child held {
+            self -> model_.find(child) -> entity
+          }
+        }
+      }
+      return doc
     }
 
     // a sequence diagram: the lifelines a behaviour stands on and its messages, followed as deep as it says

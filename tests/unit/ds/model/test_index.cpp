@@ -156,6 +156,48 @@ TEST_F(TestIndex, TheTreeFollowsWhatIsDeclaredAfterItWasAsked) {
   EXPECT_EQ(model.index().children("p@m::B"), std::vector<std::string>{"p@m::B::stop"});
 }
 
+TEST_F(TestIndex, WhatDescendsFromABoxIsAnsweredByItsInterval) {
+  // DS-506: whether one holds the other, directly or through others; nothing descends from itself
+  EXPECT_TRUE(model.index().descends("p@m", "p"));
+  EXPECT_TRUE(model.index().descends("p@m::A::run", "p"));
+  EXPECT_TRUE(model.index().descends("p@m::A::run", "p@m::A"));
+  EXPECT_FALSE(model.index().descends("p@m::A::run", "p@m::B"));  // a sibling's
+  EXPECT_FALSE(model.index().descends("p", "p@m"));               // upward
+  EXPECT_FALSE(model.index().descends("p@m::A", "p@m::A"));       // itself
+  EXPECT_FALSE(model.index().descends("p@m::Nobody", "p"));       // an id the tree does not hold
+  EXPECT_FALSE(model.index().descends("p@m::A", "nobody"));
+}
+
+TEST_F(TestIndex, AChangeToTheTreeIsAnsweredByNewIntervals) {
+  EXPECT_FALSE(model.index().descends("p@m::B::stop", "p@m"));
+  model.declare(entity(Kind::Method, "p@m::B::stop", "p@m::B"));  // declared after the intervals were numbered
+  EXPECT_TRUE(model.index().descends("p@m::B::stop", "p@m"));
+  EXPECT_TRUE(model.index().descends("p@m::B::stop", "p"));
+  model.declare(entity(Kind::Package, "q"));
+  model.relate({"contains", "q", "p", {}, ""});  // the whole tree moves under a new top
+  EXPECT_TRUE(model.index().descends("p@m::B::stop", "q"));
+  EXPECT_FALSE(model.index().descends("q", "p"));
+}
+
+TEST_F(TestIndex, TheHoldersOfAnIdComeUpToTheTopAndFollowAChange) {
+  EXPECT_EQ(model.index().holders("p@m::A::run"), (std::vector<std::string>{"p@m::A", "p@m", "p"}));
+  EXPECT_EQ(model.index().holders("p@m::A::run"), (std::vector<std::string>{"p@m::A", "p@m", "p"}));  // memoised
+  EXPECT_TRUE(model.index().holders("p").empty());
+  EXPECT_TRUE(model.index().holders("p@m::Nobody").empty());
+  model.declare(entity(Kind::Package, "q"));
+  model.relate({"contains", "q", "p", {}, ""});
+  EXPECT_EQ(model.index().holders("p@m::A::run"), (std::vector<std::string>{"p@m::A", "p@m", "p", "q"}));
+}
+
+TEST_F(TestIndex, TheChildrenOfOneKindComeInTheOrderOfTheTree) {
+  model.declare(entity(Kind::Enum, "p@m::E", "p@m"));
+  EXPECT_EQ(model.index().childrenOfKind("p@m", "class"), (std::vector<std::string>{"p@m::A", "p@m::B"}));
+  EXPECT_EQ(model.index().childrenOfKind("p@m", "enum"), std::vector<std::string>{"p@m::E"});
+  EXPECT_EQ(model.index().childrenOfKind("p", "module"), std::vector<std::string>{"p@m"});
+  EXPECT_TRUE(model.index().childrenOfKind("p@m", "interface").empty());
+  EXPECT_TRUE(model.index().childrenOfKind("p@m::Nobody", "class").empty());
+}
+
 TEST_F(TestIndex, AnArtefactIsFoundByAnyRevisionOrNone) {
   model.declare(entity(Kind::Requirement, "REQ-00001-2"));
   EXPECT_EQ(model.index().revisionOf("REQ-00001-1"), "REQ-00001-2");

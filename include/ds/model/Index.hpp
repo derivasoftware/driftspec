@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -29,6 +30,11 @@ struct Indexed {
   std::map<std::string, std::string> parent;                 ///< what holds each entity
   std::map<std::string, std::vector<std::string>> children;  ///< what each entity holds
   bool treeStale = true;                                     ///< the tree is built again at the next question
+  // Built when first asked and dropped whenever the tree is built again (DS-506). The model keeps all of this in a
+  // `mutable` member because a const reader's question fills it: ds reads a model from one thread only (the command
+  // line runs its work on one worker thread, the Python face and the language server one call at a time), so no lock.
+  std::unordered_map<std::string, std::pair<std::size_t, std::size_t>> span;  ///< each node's enter and exit, pre-order
+  std::unordered_map<std::string, std::vector<std::string>> holders;          ///< each id's chain of holders, memoised
 };
 
 /// The one way into the model's relations (DS-171), whoever asks: the model knows none of its
@@ -64,6 +70,16 @@ class Index {
   std::string parent(const std::string& id) const;
   /// What `id` holds, in the order the tree was built.
   std::vector<std::string> children(const std::string& id) const;
+  /// What `id` holds that is an entity of `kind` (as the language writes it: class, module...), in the order of
+  /// children (DS-506).
+  std::vector<std::string> childrenOfKind(const std::string& id, const std::string& kind) const;
+  /// Whether `ancestor` holds `id`, directly or through others, in the tree parent and children say: O(1) by a
+  /// pre-order interval of each node, numbered when first asked after a change (DS-506). Nothing descends from itself,
+  /// and an id the tree does not hold descends from nothing.
+  bool descends(const std::string& id, const std::string& ancestor) const;
+  /// What holds `id`, then what holds that, up to the top: parent after parent, `id` itself left out; empty at the
+  /// top or for an id the tree does not hold. Memoised per id (DS-506): the reference holds until the model changes.
+  const std::vector<std::string>& holders(const std::string& id) const;
   /// The identity the workspace declares for an artefact written with any revision or with none;
   /// "" when nothing declares it.
   std::string revisionOf(const std::string& artefact) const;
@@ -76,6 +92,7 @@ class Index {
   std::vector<Relation> atOfKind(const std::map<std::string, std::vector<std::size_t>>& table, const std::string& key,
                                  const std::string& kind) const;
   void tree() const;
+  void spans() const;
   const Model& model_;
 };
 
