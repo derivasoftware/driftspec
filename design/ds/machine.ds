@@ -216,8 +216,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_MachineNamespace {
-  kind: class
-  include: driftspec@ds@machine::*
-}

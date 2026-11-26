@@ -421,8 +421,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_Format {
-  kind: class
-  include: driftspec@ds@format::*
-}

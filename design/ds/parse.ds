@@ -299,9 +299,3 @@ package driftspec@ds {
     }
   }
 }
-
-diagram CL_ParseNamespace {
-  kind: class
-  include: driftspec@ds@parse::*
-  show: ownership
-}

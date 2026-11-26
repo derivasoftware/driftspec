@@ -1,0 +1,182 @@
+// DriftSpec's own design, drawn one question at a time (DS-505). Each diagram answers one thing a reader of
+// this design asks, picked box by box with include, open, depth and hide, never a whole namespace: a dozen
+// boxes and a couple of dozen arrows at most, the classes named only where who works with whom is the point. The
+// name says what it shows.
+
+// ---- the whole ----------------------------------------------------------------------------------------------
+
+diagram engine-modules {                          // what the engine is made of: its modules, and which reads which
+  kind: class                                     // each module's classes, closed into their module: argos reads them
+  include: driftspec@ds@parse::*, driftspec@ds@bind::*, driftspec@ds@model::*, driftspec@ds@check::*
+  include: driftspec@ds@render::*, driftspec@ds@layout::*, driftspec@ds@scene::*, driftspec@ds@exporter::*
+  open: driftspec@ds                              // the doors and the api: doors-and-use-cases, the-engine-in-process
+}
+
+diagram doors-and-use-cases {                     // how the doors reach the engine: each door asks a use case by name
+  kind: class
+  include: driftspec@ds@app::CommandLine, driftspec@ds@app::ICommand, driftspec@ds@api::Workspace
+  include: driftspec@ds@api::Browser, driftspec@driftspec@_native::Workspace, driftspec@driftspec@lsp::DesignServer
+  include: driftspec@ds@service::UseCaseFactory, driftspec@ds@service::IUseCase, driftspec@ds@service::Request
+  include: driftspec@ds@service::Outcome, driftspec@ds@service::CheckDesign, driftspec@ds@service::SeeDesign
+  hide: fields, methods
+}
+
+// ---- from text to a checked model ----------------------------------------------------------------------------
+
+diagram how-a-file-becomes-a-model {              // a load: the files parsed, the trees bound into the model
+  kind: sequence
+  include: driftspec@ds@api::Workspace::reload
+  depth: 2
+}
+
+diagram how-a-name-binds {                        // a node to its binder, a written name to what it means
+  kind: class
+  include: driftspec@ds@bind::Binder, driftspec@ds@bind::BindContext, driftspec@ds@bind::NodeBinderFactory
+  include: driftspec@ds@bind::INodeBinder, driftspec@ds@bind::ClassBinder
+  include: driftspec@ds@bind::MemberBinder, driftspec@ds@bind::Reference, driftspec@ds@check::Linker
+  include: driftspec@ds@check::Resolver, driftspec@ds@model::Scope, driftspec@ds@model::Model
+  hide: fields, methods
+}
+
+diagram what-the-model-holds {                    // the model: entities of kinds, relations between them, findings
+  kind: class
+  include: driftspec@ds@model::Model, driftspec@ds@model::Entity, driftspec@ds@model::Relation
+  include: driftspec@ds@model::Finding, driftspec@ds@model::Identity, driftspec@ds@model::Location
+  include: driftspec@ds@model::Index, driftspec@ds@model::Metamodel, driftspec@ds@model::KindSpec
+  include: driftspec@ds@model::RelationSpec, driftspec@ds@model::FieldSpec, driftspec@ds@model::Severity
+  show: ownership
+  hide: methods
+}
+
+diagram how-a-design-is-checked {                 // the checker runs its steps, each adding findings to the report
+  kind: sequence
+  include: driftspec@ds@check::Checker::run
+  depth: 2
+}
+
+diagram how-a-rule-is-checked {                   // a written rule evaluated over the model, and what a broken one says
+  kind: class
+  include: driftspec@ds@check::RuleCheck, driftspec@ds@check::RuleValidator, driftspec@ds@check::Evaluator
+  include: driftspec@ds@check::Solver, driftspec@ds@check::Variables, driftspec@ds@check::Facts
+  include: driftspec@ds@check::Derivation, driftspec@ds@model::WrittenRule, driftspec@ds@model::Term
+  include: driftspec@ds@model::Formula, driftspec@ds@model::Breach
+  hide: fields, methods
+}
+
+diagram how-a-failure-ends {                      // a failure followed through a scenario to the outcome that ends it
+  kind: sequence
+  include: driftspec@ds@check::FailureFlow::run
+  depth: 2
+}
+
+diagram how-a-state-machine-is-read {             // a machine's states and transitions, and the rules that compute them
+  kind: class
+  include: driftspec@ds@machine::*
+  include: driftspec@ds@check::StateRules
+  hide: fields, methods
+}
+
+// ---- from a model to a drawing --------------------------------------------------------------------------------
+
+diagram how-a-diagram-picks-what-it-shows {       // include, depth and the cut, then a projector per kind makes the IR
+  kind: class
+  include: driftspec@ds@axis::Cut, driftspec@ds@query::Pattern, driftspec@ds@render::ProjectorFactory
+  include: driftspec@ds@render::IProjector, driftspec@ds@render::ClassProjector, driftspec@ds@render::SequenceProjector
+  include: driftspec@ds@render::StateProjector, driftspec@ds@render::TableProjector, driftspec@ds@render::IrExport
+  include: driftspec@ds@render::IrDocument, driftspec@ds@render::IrNode, driftspec@ds@render::IrEdge
+  hide: fields, methods
+}
+
+diagram how-a-diagram-is-drawn {                  // the drawing asked for: its composer lays it out and writes SVG or text
+  kind: sequence
+  include: driftspec@ds@service::SeeDesign::picture
+  depth: 1
+}
+
+diagram how-a-diagram-is-laid-out {               // the engine each kind of drawing is placed by, and the routers for its arrows
+  kind: class
+  include: driftspec@ds@layout::EngineFactory, driftspec@ds@layout::IEngine, driftspec@ds@layout::LayeredEngine
+  include: driftspec@ds@layout::GridEngine, driftspec@ds@layout::PackingEngine, driftspec@ds@layout::StackedEngine
+  include: driftspec@ds@layout::Graph, driftspec@ds@layout::Placement, driftspec@ds@layout::RouterFactory
+  include: driftspec@ds@layout::IRouter, driftspec@ds@layout::OrthogonalRouter, driftspec@ds@layout::CurvedRouter
+  hide: fields, methods
+}
+
+diagram where-the-look-comes-from {               // the theme's tokens, and the writers that turn them into pages
+  kind: class
+  include: driftspec@ds@theme::Theme, driftspec@ds@theme::Token, driftspec@ds@theme::Role
+  include: driftspec@ds@theme::Font, driftspec@ds@theme::Measures, driftspec@ds@theme::Terminal
+  include: driftspec@ds@theme::ThemeWriterFactory, driftspec@ds@theme::IThemeWriter, driftspec@ds@theme::SvgStyleSheet
+  include: driftspec@ds@theme::ViewerVariables, driftspec@ds@theme::PlaygroundVariables, driftspec@ds@theme::DesignPageVariables
+  hide: fields, methods
+}
+
+// ---- from a model to a reader ---------------------------------------------------------------------------------
+
+diagram how-the-viewer-gets-its-scene {           // the model made into the scene the viewer reads, layer by layer
+  kind: class
+  include: driftspec@ds@scene::Scene, driftspec@ds@scene::SceneDocument, driftspec@ds@scene::LayerFactory
+  include: driftspec@ds@scene::ILayer, driftspec@ds@scene::StructureLayer, driftspec@ds@scene::BehaviourLayer
+  include: driftspec@ds@scene::RulesLayer, driftspec@ds@scene::TraceLayer, driftspec@ds@scene::WalkthroughLayer
+  include: driftspec@ds@exporter::JsonExport, driftspec@ds@format::ViewerPage
+  hide: fields, methods
+}
+
+diagram how-ds-query-answers {                    // a question asked of the model, answered through its filter
+  kind: sequence
+  include: driftspec@ds@query::Query::shows
+  depth: 2
+}
+
+diagram how-output-is-written {                   // a document described into a sink, in the format asked for
+  kind: class
+  include: driftspec@ds@emit::ISink, driftspec@ds@emit::JsonSink, driftspec@ds@emit::TextSink
+  include: driftspec@ds@emit::SinkFactory, driftspec@ds@emit::NotImplemented, driftspec@ds@format::FormatFactory
+  include: driftspec@ds@format::DescriptionFactory, driftspec@ds@format::ADescription, driftspec@ds@format::ReportDescription
+  include: driftspec@ds@format::SceneDescription, driftspec@ds@format::FormatOptions, driftspec@driftspec@_native::PySink
+  hide: fields, methods
+}
+
+diagram how-an-editor-gets-diagnostics {          // an edit reaches the language server and comes back as diagnostics
+  kind: sequence
+  include: driftspec@driftspec@lsp::DesignServer::changed
+  depth: 2
+}
+
+diagram how-the-live-viewer-follows-the-files {   // the live session: the files watched, the page and the agent told
+  kind: class
+  include: driftspec@driftspec@live_session::Live, driftspec@driftspec@live_session::Watcher
+  include: driftspec@driftspec@live_session::Events, driftspec@driftspec@live_session::Annotations
+  include: driftspec@driftspec@live_http::Handler, driftspec@driftspec@live_contract::Contract
+  include: driftspec@driftspec@live_contract::Tool, driftspec@driftspec@live::Command, driftspec@driftspec@driftspec::Workspace
+  hide: fields, methods
+}
+
+// ---- kept from before, renamed -------------------------------------------------------------------------------
+
+diagram the-command-line {                        // the verbs of ds, as the interface they are
+  kind: interface
+  include: driftspec@ds@cli
+}
+
+diagram the-engine-in-process {                   // the api box drawn inside: the engine's faces and what they share
+  kind: class
+  include: driftspec@ds@api::*
+}
+
+diagram how-a-file-is-parsed {                    // the parser, the tree it reads and the errors it places
+  kind: class
+  include: driftspec@ds@parse::*
+  show: ownership
+}
+
+diagram how-an-undeclared-operation-is-reported { // how a message is typed, in one scenario: what is shared, then its branch
+  kind: sequence
+  include: driftspec@ds@check::BehaviourTyping::checkMessage / undeclared-op
+}
+
+diagram how-a-syntax-error-is-reported {          // ds check on a file that does not parse
+  kind: sequence
+  include: driftspec@ds@cli::check / errors
+  depth: 2
+}

@@ -909,8 +909,3 @@ package driftspec@ds {
   }
 
 }
-
-diagram CL_ApiNamespace {                   // the api box drawn inside: the engine's three faces and what they share
-  kind: class
-  include: driftspec@ds@api::*
-}
