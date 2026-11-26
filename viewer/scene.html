@@ -269,6 +269,9 @@ const boxOf=id=>{let n=N[id]; while(n&&!['module','iface','package'].includes(n.
 const short=id=>{const n=N[id]; return n?n.label.replace(/^[+-] /,'').split(/[(:]/)[0].trim():id;};
 function linksOf(id){const n=N[id]; if(!n) return []; if(n.kind==='unit'||n.kind==='iface') return LINKS.filter(l=>unitOf(l.from)===id||unitOf(l.to)===id);
   const inside=x=>anc(x).includes(id); return LINKS.filter(l=>inside(l.from)!==inside(l.to));}
+// the relations of what is selected, worked out once for each selection, not for every relation on every frame (DS-508)
+let SEL_LINKS={id:undefined,set:new Set()};
+const selLinks=()=>{if(SEL_LINKS.id!==SEL) SEL_LINKS={id:SEL,set:new Set(SEL?linksOf(SEL):[])}; return SEL_LINKS.set;};
 let RELATED=new Set();
 const BASE_FAR={}; LINKS.forEach(l=>{if(FAMILY[l.kind]&&boxOf(l.from)!==boxOf(l.to)) (BASE_FAR[unitOf(l.from)]=BASE_FAR[unitOf(l.from)]||[]).push(short(l.to));});
 const hasReq=id=>{const n=N[id]; if(n._rq===undefined) n._rq=!!(n.reqs.length||(KIDS[id]||[]).some(k=>N[k].reqs.length)); return n._rq;};
@@ -396,7 +399,7 @@ const REL_ON=relationsOn((()=>{try{return localStorage.getItem('ds-viewer-relati
 const restKind=(l,inBox)=>restKindOf(l.kind,PERSP,inBox(l));
 function repOf(id){let n=N[id]; while(n&&(n.hidden||!visible(n)||(n.kind==='row'&&!visible(N[n.parent])))) n=N[n.parent]; return n;}
 function drawLinks(){drawn=[]; if(T.idx>=0&&!SEL) return;  // a tour playing: only its own arrows
-  const touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||linksOf(SEL).includes(l));
+  const mine=selLinks(), touched=l=>SEL&&(unitOf(l.from)===SEL||unitOf(l.to)===SEL||mine.has(l));
   // each perspective draws its own relations; a touched box still shows its inheritance
   const inBox=l=>boxOf(l.from)===boxOf(l.to);
   const shown=l=>PERSP==='structure'?((FAMILY[l.kind]&&FAM.inheritance&&inBox(l))||(OWNED[l.kind]&&inBox(l))||(STATIC[l.kind]&&!inBox(l)))
