@@ -2,9 +2,11 @@
 #define DRIFTSPEC_CHECK_SOLVER_HPP
 
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#include "ds/check/CompiledBody.hpp"
 #include "ds/check/Facts.hpp"
 #include "ds/check/Variables.hpp"
 #include "ds/model/Model.hpp"
@@ -33,22 +35,26 @@ class Solver {
   static bool compares(model::LiteralForm form);
 
  private:
+  /// The body compiled for `owner`, once, kept by the body's address alone.
+  const CompiledBody& compiled(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables) const;
   /// The answers of what is left of `body`, extending `work`: one binding the search binds, continues and undoes
   /// (DS-401), the literals done marked and unmarked; false once `first` has its answer.
-  bool solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const Variables& variables, std::vector<bool>& done,
+  bool solveFrom(const std::string& owner, const std::vector<model::Literal>& body, const CompiledBody& compiled, std::vector<bool>& done,
                  std::vector<const std::string*>& work, bool first, std::vector<std::vector<const std::string*>>& out_answers) const;
-  /// Whether a literal can be answered with what is bound.
-  bool ready(const model::Literal& literal, const Variables& variables, const std::vector<const std::string*>& bindings) const;
+  /// Whether a literal can be answered with what is bound; `slots` its terms' slots.
+  static bool ready(const model::Literal& literal, const std::vector<int>& slots, const std::vector<const std::string*>& bindings);
   /// Each answer of one literal, as it reads positively, bound into `work` while `next` continues and undone after
   /// it, in the order the facts give them (DS-401); false when `next` stops the search. Nothing is copied per answer.
+  /// `at` is the literal's place in the compiled body: its terms' slots and constants, and its call's definition.
   template <class Next>
-  bool answers(const std::string& owner, const model::Literal& literal, const Variables& variables, std::vector<const std::string*>& work,
-               Next&& next) const;
+  bool answers(const std::string& owner, const model::Literal& literal, const CompiledBody& compiled, std::size_t at,
+               std::vector<const std::string*>& work, Next&& next) const;
   /// What a term stands for under `bindings`: a value as written, a bound variable (or a field of it), a constant;
-  /// null for a variable not bound yet.
-  const std::string* value(const std::string& owner, const model::Term& term, const Variables& variables,
+  /// null for a variable not bound yet. `slot` is the term's and `constant` what it stands for when it is a constant,
+  /// as compiled.
+  const std::string* value(const model::Term& term, int slot, const std::string* constant,
                            const std::vector<const std::string*>& bindings) const;
-  bool unify(const std::string& owner, const model::Term& term, const Variables& variables, const std::string* entity,
+  bool unify(const model::Term& term, int slot, const std::string* constant, const std::string* entity,
              std::vector<const std::string*>& out_bindings) const;
   /// A text the solver computes or reads from outside the facts, kept once among its own texts.
   const std::string* text(const std::string& text) const { return &*texts_.insert(text).first; }
@@ -61,6 +67,7 @@ class Solver {
 
   const Facts& facts_;
   mutable std::unordered_set<std::string> texts_;  ///< what the solver binds from outside the facts: an element never moves
+  mutable std::unordered_map<const void*, CompiledBody> compiled_;  ///< each body compiled, by its address alone, never read through
 };
 
 }  // namespace check
