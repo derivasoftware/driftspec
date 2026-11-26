@@ -73,6 +73,8 @@ def main() -> None:
         shutil.copy(pathlib.Path(args.wasm) / name, out / name)
     # the editor is coloured by the grammar's own queries, the ones every other editor reads (DS-269)
     shutil.copy(ROOT / "grammar" / "queries" / "highlights.scm", out / "highlights.scm")
+    # a drawing at rest and lit is one script, the viewer's: the page loads it, no copy of it lives here (DS-491)
+    shutil.copy(ROOT / "viewer" / "drawings.js", out / "drawings.js")
     # the engine compiled into the page carries third-party code: its notices go with it (DS-284)
     for name in ("LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"):  # the licence and the notices go with it (DS-287)
         shutil.copy(ROOT / name, out / name)

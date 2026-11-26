@@ -169,6 +169,20 @@ set_property(
   DIRECTORY
   APPEND
   PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/walk.js)
+# a drawing at rest and lit (DS-491): viewer/drawings.js ships inside ds too,
+# beside the walkthroughs' mode, and the playground copies the same file
+file(READ ${CMAKE_SOURCE_DIR}/viewer/drawings.js DS_DRAWINGS_JS)
+ds_embedded_pieces("${DS_DRAWINGS_JS}" DS_DRAWINGS_PIECES)
+file(
+  WRITE ${CMAKE_BINARY_DIR}/generated/ViewerDrawings.cpp.in
+  "#include <string>\n\n#include \"ds/format/ViewerPage.hpp\"\n\nnamespace ds {\nnamespace format {\nconst std::string& ViewerPage::drawingsTemplate() {\n  static const char* const pieces[] = {\n${DS_DRAWINGS_PIECES}  };\n  static const std::string whole = [] {\n    std::string out;\n    for (const char* piece : pieces) out += piece;\n    return out;\n  }();\n  return whole;\n}\n}  // namespace format\n}  // namespace ds\n"
+)
+configure_file(${CMAKE_BINARY_DIR}/generated/ViewerDrawings.cpp.in
+               ${CMAKE_BINARY_DIR}/generated/ViewerDrawings.cpp COPYONLY)
+set_property(
+  DIRECTORY
+  APPEND
+  PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/viewer/drawings.js)
 # the guides of the manual ship inside ds too (DS-272): each
 # doc/manual/NN-topic.md becomes a page ds manual <topic> prints and the site
 # draws; one source for both. They are the Manual's (DS-342): the file written
@@ -216,6 +230,7 @@ add_library(
   ${driftspec_SOURCES}
   ${CMAKE_BINARY_DIR}/generated/ViewerPage.cpp
   ${CMAKE_BINARY_DIR}/generated/ViewerWalk.cpp
+  ${CMAKE_BINARY_DIR}/generated/ViewerDrawings.cpp
   ${CMAKE_BINARY_DIR}/generated/ManualGuides.cpp
   ${CMAKE_BINARY_DIR}/generated/Version.cpp)
 target_include_directories(driftspec PUBLIC include)
