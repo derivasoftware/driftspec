@@ -19,7 +19,7 @@
   --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
   --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
   --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
   --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
@@ -27,7 +27,7 @@
   --r-owns:#ffd166;--r-agg:#6fd6c4;--r-uses:#8fbcff;--r-calls:#ff8552;
   --rule:#5a5a5a;--r-inherits:#c9a8ff;--r-has:#ffd166;--r-refers:#6fd6c4;--v-pub:#56c271;--v-prot:#e6c84a;--v-priv:#f0616d;--s-ty:#4ec9b0;--s-pn:#9cdcfe;
   --you:#B79CF0;}}
-:root[data-theme="dark"]{
+:root:where([data-theme="dark"]){
   --bg:#171717;--panel:#202020;--fg:#e9e9e9;--muted:#929292;--line:#333333;--soft:#2a2a2a;
   --accent:#B79CF0;--accent-soft:#3b3645;--req:#4fd08a;--req-soft:#273a30;
   --priv:#676767;--pkg:#1b1b1b;--mod:#1e1e1e;--ifc:#202020;
@@ -55,10 +55,6 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .rail button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:16px;cursor:pointer}
 .rail .lvl{font-size:10.5px;color:var(--muted);text-align:center;width:62px;background:var(--panel);border-radius:6px;padding:3px 0;border:1px solid var(--line)}
 .mini{position:absolute;left:10px;bottom:10px;width:170px;height:120px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;z-index:2}
-.legend{position:absolute;left:190px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 9px;z-index:2;max-width:calc(100% - 260px)}
-.legend i{display:inline-block;width:5px;height:12px;vertical-align:-2px;margin-right:3px}
-.legend i.bd{width:13px;height:13px;border-radius:50%;font:700 8.5px/13px var(--mono);font-style:normal;text-align:center;color:var(--panel);vertical-align:-2px}
-.legend b{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}
 .card{position:absolute;right:62px;top:54px;width:min(330px,calc(100% - 80px));max-height:calc(100% - 120px);overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow);padding:10px 12px;font-size:13px;z-index:4}
 .card[hidden],.pop[hidden]{display:none}
 .pop{position:absolute;width:min(340px,calc(100% - 20px));max-height:60%;overflow:auto;background:var(--panel);border:1px solid var(--accent);border-radius:12px;box-shadow:0 8px 28px var(--shadow-pop);padding:10px 12px;font-size:13px;z-index:5}
@@ -126,7 +122,7 @@ canvas.main{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 .tour .td{border-bottom:0!important;padding:8px 12px!important}
 .tour[hidden]{display:none}
 body.touring .stage{bottom:36%}
-body.touring .legend,body.touring .mini{opacity:0;pointer-events:none}  /* the step's caption needs the bottom of the canvas */
+body.touring .mini{opacity:0;pointer-events:none}  /* the step's caption needs the bottom of the canvas */
 body.carded.touring .tour{right:380px}
 /* the card of a box docks where the tour panel does: the canvas makes room instead of hiding under it */
 body.carded .stage{right:380px}
@@ -146,8 +142,8 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
 .caption{position:absolute;left:50%;transform:translateX(-50%);bottom:60px;max-width:calc(100% - 100px);background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:5px 12px;font-family:var(--mono);font-size:12.5px;box-shadow:0 4px 18px var(--shadow-soft);pointer-events:none;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:3}
 .caption .z{display:block;font-family:var(--sans);font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
 .caption[hidden]{display:none}
-.rail,.mini,.legend{transition:opacity .25s}
-.stage.quiet .rail,.stage.quiet .mini,.stage.quiet .legend{opacity:0;pointer-events:none}
+.rail,.mini{transition:opacity .25s}
+.stage.quiet .rail,.stage.quiet .mini{opacity:0;pointer-events:none}
 @media (max-width:700px){
   .tour{height:46%;grid-template-columns:1fr;grid-template-rows:auto auto auto 1fr}
   .tour.listing{grid-template-rows:auto auto 1fr}.tour.listing .rf{grid-column:1;flex-wrap:wrap}
@@ -169,7 +165,6 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   .crumbs{top:92px;right:10px;font-size:10.5px}
   .rail{top:auto;bottom:70px;transform:none}.rail button{width:34px;height:34px;font-size:13px}.rail .lvl{display:none}
   .mini{width:96px;height:68px}
-  .legend{display:none}
   .card{left:8px;right:8px;width:auto;top:auto;bottom:10px;max-height:46%}
 }
 </style>
@@ -187,11 +182,10 @@ body.carded .card{position:fixed;right:0;top:0;bottom:0;width:380px;max-height:n
   <canvas class="main" id="cv" aria-label="/*TITLE*/: the whole model, zoomable"></canvas>
   <div class="crumbs" id="crumbs"></div>
   <div class="caption" id="caption" hidden></div>
-  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button></div>
+  <div class="tools"><span class="persp" role="group" aria-label="perspective"><button data-p="structure" aria-pressed="true" title="what there is: the boxes, what they hold, what derives from what">structure</button><button data-p="behaviour" aria-pressed="false" title="what happens: who calls whom, and the behaviours to replay">behaviour</button><button data-p="logic" aria-pressed="false" title="what holds: the rules, where they live and what breaks them; the requirements">logic</button></span><button id="tours" aria-pressed="false" title="replay the behaviour over the structure">tours</button><button id="reqs" aria-pressed="false" title="every requirement and constraint, what answers to it and what proves it">requirements</button><button data-fam="inheritance" aria-pressed="true" title="inheritance and realisation, always drawn as lines">inheritance</button><button id="iso" aria-pressed="false" title="show only the selected box (i adds or removes the selection, Esc with nothing selected shows everything); what it uses from outside stays as ghosts">isolate</button><button id="priv" aria-pressed="false">hide private</button><button id="fs">⛶</button><button id="mode" title="Theme">◐</button></div>
   <div class="pop" id="pop" hidden></div>
   <div class="rail"><button id="up" aria-label="Up one level">▲</button><div class="lvl" id="lvl"></div><button id="down" aria-label="Go in">▼</button><button id="home" aria-label="See everything">⤢</button></div>
   <canvas class="mini" id="mini" aria-label="Minimap"></canvas>
-  <div class="legend"><span><i class="bd" style="background:var(--k-class)">C</i>class</span><span><i class="bd" style="background:var(--k-function)">F</i>function</span><span><i class="bd" style="background:var(--k-dataclass)">D</i>dataclass</span><span><i class="bd" style="background:var(--k-enum)">E</i>enum</span><span><b style="background:var(--ok);border-radius:2px"></b>linked to a requirement</span><span><b style="background:var(--warn);border-radius:2px"></b>no requirement</span><span>members: <b style="background:var(--v-pub)"></b>public <b style="background:var(--v-priv)"></b>private</span><span>dashed: private</span><span>◁ inherits · ◁┄ realises</span><span>on touching a box: <b style="background:var(--r-owns)"></b>composes <b style="background:var(--r-agg)"></b>aggregates <b style="background:var(--r-calls)"></b>calls <b style="background:var(--r-uses)"></b>uses</span></div>
   <div class="card" id="card" hidden></div>
 </div>
 <aside class="tour" id="tour" hidden aria-label="Tour">
@@ -771,6 +765,9 @@ document.getElementById('priv').onclick=e=>{showPriv=!showPriv; e.target.setAttr
   const t0=performance.now(); lanim=now=>{let k=Math.min(1,(now-t0)/450); k=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
     moves.forEach(([n,a,b])=>{if(!b) return; n.x=a[0]+(b[0]-a[0])*k; n.y=a[1]+(b[1]-a[1])*k; n.w=a[2]+(b[2]-a[2])*k; n.h=a[3]+(b[3]-a[3])*k;});
     if(k>=1){if(showPriv) ORDER.forEach(id=>{N[id].hidden=false;}); lanim=null; ROUTES=new Map(); if(SEL) select(SEL); return false;} return true;}; loop();};
+// light or dark, as the playground switches it; kept by the viewer (the colours follow at once: css() watches data-theme)
+document.getElementById('mode').onclick=()=>{const r=document.documentElement; r.dataset.theme=r.dataset.theme==='light'?'dark':'light';
+  try{localStorage.setItem('ds-viewer-theme',r.dataset.theme);}catch(e){}};
 // embedded in a page (the live session), the page goes fullscreen whole, its panels with it (DS-141)
 document.getElementById('fs').onclick=()=>{if(parent!==window){try{parent.postMessage({ds:'fullscreen'},'*'); return;}catch(e){}}if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});};
 

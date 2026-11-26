@@ -151,7 +151,7 @@ const char* const ViewerVariables::kStylesheet = R"CSS(:root{
   --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   --sans:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
   --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
   --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
   --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
@@ -159,7 +159,7 @@ const char* const ViewerVariables::kStylesheet = R"CSS(:root{
   --r-owns:{{r-owns:dark}};--r-agg:{{r-agg:dark}};--r-uses:{{r-uses:dark}};--r-calls:{{r-calls:dark}};
   --rule:{{rule:dark}};--r-inherits:{{r-inherits:dark}};--r-has:{{r-has:dark}};--r-refers:{{r-refers:dark}};--v-pub:{{v-pub:dark}};--v-prot:{{v-prot:dark}};--v-priv:{{v-priv:dark}};--s-ty:{{s-ty:dark}};--s-pn:{{s-pn:dark}};
   --you:{{you:dark}};}}
-:root[data-theme="dark"]{
+:root:where([data-theme="dark"]){
   --bg:{{bg:dark}};--panel:{{panel:dark}};--fg:{{fg:dark}};--muted:{{muted:dark}};--line:{{line:dark}};--soft:{{soft:dark}};
   --accent:{{accent:dark}};--accent-soft:{{accent-soft:dark}};--req:{{req:dark}};--req-soft:{{req-soft:dark}};
   --priv:{{priv:dark}};--pkg:{{pkg:dark}};--mod:{{mod:dark}};--ifc:{{ifc:dark}};
