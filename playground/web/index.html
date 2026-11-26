@@ -435,6 +435,25 @@ main { flex: 1; display: flex; min-height: 0; }
   header nav#site a { padding: 4px 4px; }
   header #theme { padding: 3px 6px; }
 }
+/* the big design (DS-510): an animation while the engine reads, checks and draws it, then how long it took.
+   The spinner is a transform animation, so the compositor keeps it turning while the engine holds the main thread. */
+#bigload { position: fixed; inset: 0; z-index: 70; display: none; place-items: center; background: color-mix(in srgb, var(--page) 70%, transparent); }
+#bigload.on { display: grid; }
+#bigload .bl-card { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 28px; max-width: 360px; text-align: center;
+  background: var(--raised); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px var(--shadow-float); font: 13px/1.5 var(--sans); }
+#bigload .bl-spin { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--coach); animation: bl-spin .8s linear infinite; will-change: transform; }
+@keyframes bl-spin { to { transform: rotate(360deg); } }
+#bigload .bl-sub { color: var(--muted); font-size: 12px; }
+.coach p.c-note { color: var(--muted); font-size: 12.5px; }
+
+/* the live viewer on the home page, in a recorded clip (DS-510; remade by playground/live/record.mjs) */
+.livesec { width: 100%; max-width: 1360px; margin: 0 auto 88px; padding: 0 clamp(20px, 4vw, 56px); display: grid; grid-template-columns: minmax(0, 9fr) minmax(0, 15fr); gap: 44px; align-items: center; }
+.livesec h2 { font-size: clamp(24px, 2.6vw, 34px); margin: 0 0 12px; letter-spacing: -0.01em; }
+.livesec p { color: var(--muted); line-height: 1.6; margin: 0 0 14px; }
+.live-cmd { font: 12.5px var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 0 0 18px; overflow-x: auto; }
+.live-demo { position: relative; }
+.live-clip { display: block; width: 100%; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 14px 34px -14px var(--shadow-card); background: var(--panel); }
+@media (max-width: 900px) { .livesec { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -714,6 +733,18 @@ definition module-depends(m, n) {
       <h2 data-t="w3"></h2><p data-t="w3p"></p>
     </div>
   </div></div>
+  <div class="livesec">
+    <div class="live-say">
+      <h2 data-t="lvT"></h2><p data-t="lvP"></p>
+      <pre class="live-cmd">pip install driftspec
+driftspec-live serve design --open</pre>
+      <p class="live-mcp" data-t="lvM"></p>
+      <pre class="live-cmd">claude mcp add driftspec-live -- driftspec-live mcp</pre>
+    </div>
+    <div class="live-demo" aria-hidden="true">
+      <video class="live-clip" autoplay muted loop playsinline preload="metadata"><source src="live/live.webm" type="video/webm"><source src="live/live.mp4" type="video/mp4"></video>
+    </div>
+  </div>
 </section>
 <main>
     <aside id="tree">
@@ -791,6 +822,9 @@ const UI = {
         homeTitle: "Design specifications as code.",
         homeText: "DriftSpec is a tool for writing the design of a piece of software as text and keeping it consistent. It checks every contradiction, draws the diagrams, and joins requirements, design and tests in one model.",
         kClass: "class", kSequence: "sequence", cTitle: "Title", cKept: "Satisfied by",
+        lvT: "Live, beside your editor",
+        lvP: "Save a file and the viewer draws the design again, where you were looking, with its findings beside it. Every save, every view.",
+        lvM: "Your agent sees the same design: it can open a view, point at a class and leave a note, through MCP.",
         w1: "Detailed, and coherent",
         w1p: "A specification detailed enough to build from, checked as it is written. A reference to nothing, a call to an operation that does not exist, two states that hold at once: each is a finding, not something left for a reviewer to catch.",
         w2: "Three perspectives, one model",
@@ -809,6 +843,9 @@ const UI = {
         homeTitle: "Especificaciones de diseño como código.",
         homeText: "DriftSpec es una herramienta para escribir el diseño de un software como texto y mantenerlo consistente. Comprueba cada contradicción, dibuja los diagramas y une requisitos, diseño y pruebas en un solo modelo.",
         kClass: "clases", kSequence: "secuencia", cTitle: "Título", cKept: "Lo cumple",
+        lvT: "En vivo, junto a tu editor",
+        lvP: "Guardas un fichero y el visor vuelve a dibujar el diseño, donde estabas mirando, con sus hallazgos al lado. Cada vez que guardas, en cada vista.",
+        lvM: "Tu agente ve el mismo diseño: puede abrir una vista, señalar una clase y dejar una nota, por MCP.",
         w1: "Detallada y coherente",
         w1p: "Una especificación con el detalle suficiente para construir a partir de ella, comprobada mientras se escribe. Una referencia a nada, una llamada a una operación que no existe, dos estados que se cumplen a la vez: cada una es un aviso, no algo que se deja para que lo cace un revisor.",
         w2: "Tres perspectivas, un modelo",
@@ -1328,6 +1365,69 @@ function advance(byEngine) {
   else go();
 }
 
+// ---- the big design (DS-510) -----------------------------------------------------------------
+// A first visit opens the small first lesson at once and plays the tour's first cards over it; at the card that
+// says the real design is loaded, the tour loads it, with an animation, and says how long it took and what that
+// time bought, beside what PlantUML takes only to draw (measured: bench/NOTE.md).
+const TOUR_ID = "00-a-tour";
+const BIG = 200000;  // characters of files: a workspace this large takes seconds to read, check and draw
+const PLANTUML = { perDiagramCold: 0.57, start: 0.44, perDiagramWarm: 0.067, diagrams: 47 };  // bench/result.json
+const sizeOf = (ex) => Object.values(ex.files).reduce((n, s) => n + s.length, 0);
+const twoFrames = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+const ranOnce = () => new Promise((r) => { const w = () => (state.out && !running ? r() : requestAnimationFrame(w)); w(); });
+let CHECKS = null;  // DriftSpec's own checks: the codes of its catalogue
+
+function loadAny(example) { return sizeOf(example) > BIG ? loadBig(example) : load(example); }
+
+
+// what the load bought, said by the coach in the card that talks about the loaded design (DS-510)
+function loadLine(ms) {
+  const out = state.out, D = out.diagrams.length, E = out.report.entities, F = Object.keys(state.files).length;
+  const R = Object.values(state.files).reduce((n, s) => n + (s.match(/^\s*rule\s+[\w.-]+\s*\{/gm) || []).length, 0);
+  if (CHECKS == null) CHECKS = new Set(JSON.stringify(manual("codes")).match(/\b[EWI]-[A-Z][A-Z-]+[A-Z]\b/g) || []).size;
+  const n = (x, d = 1) => x.toLocaleString(lang, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const cold = D * PLANTUML.perDiagramCold;
+  return t({
+    en: `Done: ${n(ms / 1000)} s. In that time I read ${F} files, checked ${R} rules and my ${CHECKS} own checks over ${n(E, 0)} entities, and drew ${D} diagrams. It may seem long, but PlantUML takes about ${n(cold, 0)} s just to draw ${D} diagrams, one by one.`,
+    es: `Listo: ${n(ms / 1000)} s. En ese tiempo he leído ${F} ficheros, he comprobado ${R} reglas y mis ${CHECKS} comprobaciones propias sobre ${n(E, 0)} entidades, y he dibujado ${D} diagramas. Puede parecer mucho, pero PlantUML tarda unos ${n(cold, 0)} s solo en dibujar ${D} diagramas, uno a uno.`,
+  });
+}
+
+async function loadBig(example, after) {
+  let box = $("bigload");
+  if (!box) {
+    box = document.createElement("div"); box.id = "bigload"; box.setAttribute("role", "status");
+    box.innerHTML = `<div class="bl-card"><div class="bl-spin"></div><div class="bl-what"></div><div class="bl-sub"></div></div>`;
+    document.body.append(box);
+  }
+  const name = example.id === TOUR_ID || example.id === "driftspec" ? t({ en: "DriftSpec's own design", es: "el diseño del propio DriftSpec" })
+    : t(example.lesson?.title) || t(example.title) || example.name;
+  box.querySelector(".bl-what").textContent = t({ en: `Loading ${name}…`, es: `Cargando ${name}…` });
+  box.querySelector(".bl-sub").textContent = t({ en: "Reading, checking and drawing it, here in your browser", es: "Leyéndolo, comprobándolo y dibujándolo, aquí en tu navegador" });
+  box.classList.add("on");
+  await twoFrames();  // the animation is on screen before the engine takes the main thread
+  const t0 = performance.now();
+  state.out = null;
+  load(example);
+  after?.();
+  await ranOnce();
+  await twoFrames();  // and the diagrams are painted
+  const ms = performance.now() - t0;
+  box.classList.remove("on");
+  return ms;  // the coach says it, in its own card
+}
+
+
+// the tour opened straight away (Owner, DS-510): the load is shown, and the coach says what it bought at the card
+// that talks about the loaded design
+async function openTour() {
+  const tour = state.examples.find((e) => e.id === TOUR_ID);
+  const ms = await loadBig(tour);
+  let at = tour.lesson.steps.findIndex((s) => /loaded a real/i.test(s.text?.en || ""));
+  coach.note = { at: at < 0 ? 0 : at, text: loadLine(ms) };
+  if (coach.lesson && coach.step === coach.note.at) { coach.el?.remove(); coach.el = null; showCoach(coach.lesson.steps[coach.step]); }
+}
+
 // back to the last card the reader answered with its button: to read it again, nothing is undone
 const backTo = () => { for (let i = coach.step - 1; i >= 0; i--) if (coach.lesson.steps[i].done.ack) return i; return -1; };
 function goBack() {
@@ -1340,7 +1440,7 @@ function goBack() {
 // a lesson just finished: a card offers the next one
 function showNext() {
   const i = state.examples.indexOf(state.example);
-  const next = state.examples.slice(i + 1).find((e) => e.lesson);
+  const next = state.example.id === TOUR_ID ? state.examples.find((e) => e.lesson && e.id !== TOUR_ID) : state.examples.slice(i + 1).find((e) => e.lesson);
   const el = document.createElement("div");
   el.className = "coach next";
   el.setAttribute("role", "dialog");
@@ -1350,7 +1450,7 @@ function showNext() {
     <div class="c-foot">${next ? `<button class="c-ack c-next">${ui("cont")}</button>` : ""}</div>`;
   el.querySelector(".c-x").onclick = () => el.remove();
   const go = el.querySelector(".c-next");
-  if (go) go.onclick = () => { el.remove(); $("example").value = next.name; store.set("ds-playground-example", next.name); load(next); };
+  if (go) go.onclick = () => { el.remove(); $("example").value = next.name; loadAny(next); };
   document.body.append(el);
   el.style.left = (innerWidth - el.offsetWidth) / 2 + "px";
   el.style.top = Math.max(80, innerHeight * 0.3) + "px";
@@ -1384,7 +1484,7 @@ function showCoach(st) {
       ? (st.write ? `<span class="c-wait"><i></i><span>${ui("writing")}</span></span>` : "") + `<button class="c-ack">${escapeHtml(t(st.done.ack))}</button>`
       : (st.solution ? `<button class="c-for-me">${[].concat(st.solution)[0].ui ? ui("showMe") : ui("writeForMe")}</button>` : "") + `<span class="c-wait"><i></i><span>${ui("waiting")}</span></span>`;
     el.innerHTML = `${PET}<div class="c-head"><span class="c-dots">${dots}</span><span>${coach.step + 1} / ${steps.length}</span><span class="spacer"></span>
-      <button class="icon-btn c-x" title="${ui("leave")}">${XMARK}</button></div><p>${fmt(t(st.text))}</p><div class="c-foot">${backTo() >= 0 ? `<button class="c-back">${ui("back")}</button>` : ""}${foot}</div>`;
+      <button class="icon-btn c-x" title="${ui("leave")}">${XMARK}</button></div><p>${fmt(t(st.text))}</p>${coach.note && coach.note.at === coach.step ? `<p class="c-note">${escapeHtml(coach.note.text)}</p>` : ""}<div class="c-foot">${backTo() >= 0 ? `<button class="c-back">${ui("back")}</button>` : ""}${foot}</div>`;
     const back = el.querySelector(".c-back");
     if (back) back.onclick = goBack;
     el.querySelector(".c-x").onclick = () => { coach.step = steps.length; hideCoach(); };
@@ -1502,7 +1602,10 @@ function placeCoach(st) {
     if (free) { const b = el.getBoundingClientRect(); fix(coach.el, { x: b.right + 16, y: b.bottom - coach.el.offsetHeight - 24 }); }  // low, where the code rarely reaches
   } else if (at.panel === "centre") {  // about nothing on the page: the card in the middle of it
     shown();
-    if (free) fix(coach.el, { x: (innerWidth - coach.el.offsetWidth) / 2, y: (innerHeight - coach.el.offsetHeight) / 2 });
+    // centred on its real size: the first card is measured before it is laid out and before the web fonts arrive,
+    // so it is centred again on the next frame and once the fonts are in (DS-510)
+    const centre = () => { if (coach.el) fix(coach.el, { x: (innerWidth - coach.el.offsetWidth) / 2, y: (innerHeight - coach.el.offsetHeight) / 2 }); };
+    if (free) { centre(); requestAnimationFrame(() => requestAnimationFrame(centre)); document.fonts?.ready.then(centre); }
   } else if (at.panel === "code" || at.panel === "diagrams") {  // a whole half of the page: the card sits inside it, low
     const el = $(at.panel === "code" ? "left" : "right"); el.classList.add("coached"); coach.mark = { el };
     shown();
@@ -2106,12 +2209,18 @@ $("narrow").querySelector("button").onclick = () => { $("narrow").hidden = true;
 // The site's tabs (DS-257). A link that names something of the editor (an example, a replay, a line) opens it;
 // otherwise ?tab= says which page, and the home page is the default. The tab is kept in the address.
 const TABS = ["home", "docs", "editor"];
+let pendingTour = null, pendingBig = null;  // what waits for the editor to show: the first visit's tour, a big design (DS-510)
 function showTab(tab, push) {
   if (!TABS.includes(tab)) tab = "home";
   document.body.dataset.tab = tab;
   for (const a of document.querySelectorAll("nav#site a")) a.classList.toggle("on", a.dataset.tab === tab);
   for (const page of document.querySelectorAll("section.page")) page.hidden = page.id !== tab;
   if (tab === "editor") requestAnimationFrame(() => editor.refresh());
+  if (tab === "editor" && pendingTour) { pendingTour = null; openTour(); }
+  if (tab === "editor" && pendingBig) { const big = pendingBig; pendingBig = null; loadAny(big); }
+  // the coach's card is hidden outside the editor, so a card placed while the home page showed was measured at
+  // no size: placed again once the editor is on screen
+  if (tab === "editor") requestAnimationFrame(() => { if (coach.el && coach.lesson) { coach.placed = -1; placeCoach(coach.lesson.steps[coach.step]); } });
   if (tab === "home") requestAnimationFrame(() => home.shown?.refresh());
   if (tab === "docs") paintDocs();
   const url = new URL(location.href);
@@ -2152,11 +2261,22 @@ function labelExamples() {
 for (const ex of state.examples) groups[ex.group === "examples" ? "examples" : "lessons"].append(new Option(ex.name, ex.name));
 for (const g of Object.values(groups)) if (g.children.length) sel.append(g);
 labelExamples();
-const want = new URLSearchParams(location.search).get("example") || store.get("ds-playground-example") || state.examples[0].name;
+const asked = new URLSearchParams(location.search).get("example") || store.get("ds-playground-chosen");
+const shop = state.examples.find((e) => e.group === "examples" && /shop/i.test(e.name));  // the first visit's fallback, with no tour
+const tourEx = state.examples.find((e) => e.id === TOUR_ID);
+const want = asked || (tourEx || shop || state.examples[0]).name;  // a first visit opens the tour, with its load shown (Owner, DS-510)
 const byId = state.examples.find((e) => e.id === want);
 sel.value = byId ? byId.name : state.examples.some((e) => e.name === want) ? want : state.examples[0].name;
-sel.onchange = () => { store.set("ds-playground-example", sel.value); load(state.examples.find((e) => e.name === sel.value)); };
-load(state.examples.find((e) => e.name === sel.value));
+sel.onchange = () => { store.set("ds-playground-chosen", sel.value); loadAny(state.examples.find((e) => e.name === sel.value)); };
+const opening = state.examples.find((e) => e.name === sel.value);
+// only the reader's own choice is remembered (DS-510). The tour, and any big design, starts once the editor is on
+// screen: a visit to the home page alone loads no big design
+if (!asked && tourEx) {
+  if (document.body.dataset.tab === "editor") openTour(); else pendingTour = tourEx;
+} else if (document.body.dataset.tab !== "editor" && sizeOf(opening) > BIG) {
+  // a big design chosen on a past visit loads when the editor opens, never behind the home page
+  pendingBig = opening;
+} else loadAny(opening);
 // ?play=SEQ_Buy starts the replay of that sequence once it is drawn, so a link can show a behaviour moving
 const playing = new URLSearchParams(location.search).get("play");
 if (playing) {
@@ -2167,6 +2287,7 @@ const pick = new URLSearchParams(location.search).get("select");
 if (pick) setTimeout(() => { for (const p of state.panes.values()) { const b = p.body.querySelector(`.pr-box[data-id="${CSS.escape(pick)}"]`); if (b) b.dispatchEvent(new MouseEvent("click", { bubbles: true })); } }, 600);
 const at = location.hash.match(/^#(?:(.+):)?L(\d+)$/);  // #L82 or #core/Greeter.ds:L12
 if (at) setTimeout(() => jump(at[1] ? decodeURIComponent(at[1]) : state.current, +at[2]), 300);
+
 </script>
 </body>
 </html>
